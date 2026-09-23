@@ -1,0 +1,12 @@
+pandas
+numpy
+scikit-learn
+xgboost
+transformers
+sentence-transformers
+spacy
+indic-nlp-library
+matplotlib
+plotly
+Flask
+python-dotenv

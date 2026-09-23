@@ -35,3 +35,51 @@ The goal of CivicLens TN is to enhance transparency and understanding of politic
 
 ## Implementation Note
 Implementation of the various modules (budget, promises, news, etc.) will be done incrementally. This repository currently contains the foundational structure.
+
+## Setup and Development Guide
+
+Follow these steps to set up the local development environment:
+
+### 1. Create the Virtual Environment
+Navigate to the project root and create a Python virtual environment:
+```bash
+python -m venv venv
+```
+
+### 2. Activate the Virtual Environment
+- On **Windows**:
+  ```bash
+  .\venv\Scripts\activate
+  ```
+- On **macOS/Linux**:
+  ```bash
+  source venv/bin/activate
+  ```
+
+### 3. Install Dependencies
+The project maintains a separation between runtime and development dependencies.
+To install the dependencies for development (which includes runtime dependencies):
+```bash
+pip install -r requirements-dev.txt
+```
+For a production environment, you would only run `pip install -r requirements.txt`.
+
+### 4. Configure Environment Variables
+Copy the example environment file and configure your local settings:
+```bash
+# On Windows
+copy .env.example .env
+
+# On macOS/Linux
+cp .env.example .env
+```
+Ensure you do not commit the `.env` file to version control, as it may contain sensitive information.
+
+### 5. Run the Project
+*Note: The application modules are currently under development. At this foundation stage, there is no active server to run.*
+
+In the future, you will be able to start the backend API using:
+```bash
+# Example for Flask API
+flask run
+```
