@@ -10,3 +10,5 @@ matplotlib
 plotly
 Flask
 python-dotenv
+SQLAlchemy
+alembic
