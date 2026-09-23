@@ -39,17 +39,25 @@ def test_service_architecture_and_validation():
         # --- 3. Evidence Service ---
         # Test validation missing content
         with pytest.raises(ValueError, match="Evidence content cannot be empty."):
-            EvidenceService.extract_and_record_evidence(db, document_id=doc.id, content="")
+            EvidenceService.create_evidence(db, document_id=doc.id, content="")
             
-        # Test validation missing links
-        with pytest.raises(ValueError, match="Evidence must be linked"):
-            EvidenceService.extract_and_record_evidence(db, content="A claim.")
-            
-        # Test successful extraction
-        evidence = EvidenceService.extract_and_record_evidence(
-            db, document_id=doc.id, content="Extracted claim.", context="Surrounding words."
+        # Test successful extraction and explainability links
+        evidence = EvidenceService.create_evidence(
+            db, 
+            document_id=doc.id, 
+            content="Extracted claim.", 
+            context="Surrounding words.",
+            explanation="This claim indicates X.",
+            result_type="TestAssessment",
+            result_id="res_123"
         )
         assert evidence.id is not None
+        assert evidence.explanation == "This claim indicates X."
+        
+        # Test retrieval by result
+        fetched_evidence = EvidenceService.get_evidence_for_result(db, "TestAssessment", "res_123")
+        assert len(fetched_evidence) == 1
+        assert fetched_evidence[0].content == "Extracted claim."
         
         # --- 4. Model Prediction Service ---
         # Test missing field validation

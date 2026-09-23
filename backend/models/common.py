@@ -76,6 +76,12 @@ class Evidence(Base):
     page_number = Column(Integer, nullable=True)
     context = Column(Text, nullable=True) # Surrounding context to help human evaluators
     
+    # Explainability fields
+    explanation = Column(Text, nullable=True) # Human-readable explanation of why this evidence matters
+    supporting_values = Column(JSON, nullable=True) # Numerical or structured values extracted
+    result_type = Column(String, nullable=True) # Type of result this supports (e.g. 'BudgetAnomaly')
+    result_id = Column(String, nullable=True) # ID of the result this supports
+    
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
