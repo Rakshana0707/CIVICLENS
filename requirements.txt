@@ -12,3 +12,4 @@ Flask
 python-dotenv
 SQLAlchemy
 alembic
+Flask-Cors
