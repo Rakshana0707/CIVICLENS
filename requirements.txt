@@ -13,3 +13,4 @@ python-dotenv
 SQLAlchemy
 alembic
 Flask-Cors
+streamlit
