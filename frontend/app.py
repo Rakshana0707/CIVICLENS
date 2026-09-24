@@ -1,5 +1,7 @@
 import streamlit as st
 
+from frontend.services.api import api_client
+
 st.set_page_config(
     page_title="CivicLens TN",
     page_icon="🔍",
@@ -9,6 +11,16 @@ st.set_page_config(
 
 st.title("🔍 CivicLens TN")
 st.subheader("AI-Powered Public Accountability & Policy Intelligence for Tamil Nadu")
+
+# Check backend status with a loading state
+with st.spinner("Connecting to CivicLens Backend..."):
+    is_healthy, health_data = api_client.get_health()
+
+if is_healthy:
+    st.success("✅ Connected to Backend API securely.")
+else:
+    error_msg = health_data.get("message", "Unknown error")
+    st.error(f"❌ Backend API is currently unreachable. Some features may not work. (Error: {error_msg})")
 
 st.markdown("""
 Welcome to **CivicLens TN**. This platform aims to enhance transparency and understanding of political processes, policy implementations, and civic issues in Tamil Nadu through AI-driven insights.
