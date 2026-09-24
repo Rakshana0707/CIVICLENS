@@ -34,14 +34,44 @@ class BaseDataPipeline(ABC):
 
     def run(self, source: Any) -> Any:
         """
-        Executes the full pipeline sequentially and safely.
+        Executes the full pipeline sequentially, safely wrapped with error tracking.
         """
-        data = self.ingest(source)
+        from backend.core.logger import setup_logger
+        logger = setup_logger("civiclens.pipeline")
         
-        if not self.validate(data):
-            raise ValueError("Data validation failed during pipeline execution.")
+        try:
+            logger.info("Starting pipeline execution: Ingestion")
+            data = self.ingest(source)
+        except Exception as e:
+            logger.error(f"Data ingestion failure: {str(e)}")
+            raise
             
-        data = self.clean(data)
-        data = self.transform(data)
-        
-        return self.store(data)
+        try:
+            logger.info("Pipeline stage: Validation")
+            if not self.validate(data):
+                logger.warning("Data validation failed conditions.")
+                raise ValueError("Data validation failed during pipeline execution.")
+        except Exception as e:
+            logger.error(f"Preprocessing/Validation failure: {str(e)}")
+            raise
+            
+        try:
+            logger.info("Pipeline stage: Cleaning")
+            data = self.clean(data)
+        except Exception as e:
+            logger.error(f"Data cleaning failure: {str(e)}")
+            raise
+            
+        try:
+            logger.info("Pipeline stage: Transformation")
+            data = self.transform(data)
+        except Exception as e:
+            logger.error(f"Data transformation failure: {str(e)}")
+            raise
+            
+        try:
+            logger.info("Pipeline stage: Storage")
+            return self.store(data)
+        except Exception as e:
+            logger.error(f"Database/Storage failure: {str(e)}")
+            raise

@@ -26,3 +26,18 @@ class BaseMLModel(ABC):
     def load(self, path: str) -> None:
         """Load the model architecture and weights from disk."""
         pass
+
+    def load_safe(self, path: str) -> bool:
+        """
+        Safely attempts to load the ML model and logs explicit failures, 
+        preventing unexpected runtime crashes on corrupted model files.
+        """
+        from backend.core.logger import setup_logger
+        logger = setup_logger("civiclens.ml")
+        try:
+            logger.info(f"Loading ML model from {path}")
+            self.load(path)
+            return True
+        except Exception as e:
+            logger.error(f"Model loading failure from {path}: {str(e)}")
+            return False
