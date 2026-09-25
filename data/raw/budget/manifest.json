@@ -1,0 +1,26 @@
+{
+  "datasets": [
+    {
+      "id": "DDG_Demand_43_2024_25",
+      "filename": "Demand_43_School_Education_2024_25.pdf",
+      "source_url": "http://www.tnbudget.tn.gov.in/tnweb_files/demands/2024_25/Demand43.pdf",
+      "source_title": "Detailed Demand for Grants - Demand 43 - School Education Department",
+      "financial_year": "2024-25",
+      "collection_date": "2026-09-25",
+      "file_format": "PDF",
+      "source_organization": "Tamil Nadu Finance Department",
+      "notes": "Pending manual download due to strict server-side connection blocking/TLS timeouts on the automated crawler."
+    },
+    {
+      "id": "DDG_Demand_19_2024_25",
+      "filename": "Demand_19_Health_and_Family_Welfare_2024_25.pdf",
+      "source_url": "http://www.tnbudget.tn.gov.in/tnweb_files/demands/2024_25/Demand19.pdf",
+      "source_title": "Detailed Demand for Grants - Demand 19 - Health and Family Welfare Department",
+      "financial_year": "2024-25",
+      "collection_date": "2026-09-25",
+      "file_format": "PDF",
+      "source_organization": "Tamil Nadu Finance Department",
+      "notes": "Pending manual download due to strict server-side connection blocking/TLS timeouts on the automated crawler."
+    }
+  ]
+}
