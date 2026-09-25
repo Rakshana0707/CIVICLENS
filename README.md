@@ -75,11 +75,30 @@ cp .env.example .env
 ```
 Ensure you do not commit the `.env` file to version control, as it may contain sensitive information.
 
-### 5. Run the Project
-*Note: The application modules are currently under development. At this foundation stage, there is no active server to run.*
+### 5. Run the Project (Developer Scripts)
+The project includes simple PowerShell scripts in the `scripts/` directory to streamline local development on Windows. Ensure your virtual environment is activated before running them.
 
-In the future, you will be able to start the backend API using:
-```bash
-# Example for Flask API
-flask run
-```
+1. **Initialize the Database**: Set up the SQLite schema before the first run.
+   ```powershell
+   .\scripts\init_db.ps1
+   ```
+
+2. **Start the Backend API**: Launches the Flask server locally.
+   ```powershell
+   .\scripts\start_backend.ps1
+   ```
+
+3. **Start the Citizen Dashboard**: Launches the Streamlit frontend.
+   ```powershell
+   .\scripts\start_frontend.ps1
+   ```
+
+4. **Check System Health**: Rapidly verifies backend and database connectivity.
+   ```powershell
+   .\scripts\check_health.ps1
+   ```
+
+5. **Run the Test Suite**: Executes all `pytest` unit and integration tests.
+   ```powershell
+   .\scripts\run_tests.ps1
+   ```
