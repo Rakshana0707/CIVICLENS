@@ -16,7 +16,7 @@ def test_api_unexpected_error_debug(monkeypatch):
         res = client.get("/crash")
         assert res.status_code == 500
         data = res.get_json()
-        assert "Oops!" in data["details"] # Stack trace included
+        assert "Oops!" in data["details"]
 
 def test_api_unexpected_error_prod(monkeypatch):
     monkeypatch.setattr(config, "DEBUG", False)
@@ -31,7 +31,7 @@ def test_api_unexpected_error_prod(monkeypatch):
         res = client.get("/crash")
         assert res.status_code == 500
         data = res.get_json()
-        assert data.get("details") is None # Stack trace hidden for safety
+        assert data.get("details") is None
 
 def test_api_database_error(monkeypatch):
     monkeypatch.setattr(config, "DEBUG", False)
@@ -47,4 +47,4 @@ def test_api_database_error(monkeypatch):
         assert res.status_code == 503
         data = res.get_json()
         assert data["message"] == "A database error occurred."
-        assert data.get("details") is None # Safe database logging
+        assert data.get("details") is None

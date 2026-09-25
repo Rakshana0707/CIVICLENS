@@ -1,3 +1,4 @@
+import unicodedata
 from backend.nlp.preprocessing import (
     normalize_whitespace,
     normalize_unicode,
@@ -11,12 +12,9 @@ def test_whitespace_normalization():
     assert normalize_whitespace(None) == ""
 
 def test_unicode_normalization():
-    # Tamil letter 'க' (U+0B95) + vowel sign 'ா' (U+0BBE) = 'கா'
     composed = "\u0b95\u0bbe" # கா
-    # Decomposed version might look identical but is byte-wise different
-    decomposed = unicodedata_test_str = "\u0b95" + "\u0bbe"
+    decomposed = "\u0b95" + "\u0bbe"
     
-    # NFC normalization should render them identical
     assert normalize_unicode(composed) == normalize_unicode(decomposed)
 
 def test_punctuation_handling():
@@ -24,11 +22,9 @@ def test_punctuation_handling():
     assert remove_punctuation("Tamil!") == "Tamil"
 
 def test_tamil_text_normalization():
-    # Mix of erratic spacing, punctuation, and Tamil script
     tamil_text = "   தமிழ்   மொழி, மிகத் தொன்மையானது!  "
     normalized = normalize_tamil_text(tamil_text)
     
-    # Assert punctuation is gone and spacing is clean
     assert normalized == "தமிழ் மொழி மிகத் தொன்மையானது"
 
 def test_nlp_result_structure():

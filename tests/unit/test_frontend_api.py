@@ -5,8 +5,6 @@ from frontend.services.api import APIClient
 
 @patch("frontend.services.api.requests.get")
 def test_api_client_health_success(mock_get):
-    """Test successful un-wrapping of backend JSON success payloads."""
-    # Setup mock response imitating Flask responses.py
     mock_response = Mock()
     mock_response.ok = True
     mock_response.json.return_value = {"status": "success", "data": {"status": "healthy"}}
@@ -21,8 +19,6 @@ def test_api_client_health_success(mock_get):
 
 @patch("frontend.services.api.requests.get")
 def test_api_client_health_failure(mock_get):
-    """Test resilience against network failure when backend is down."""
-    # Simulate server down (ConnectionError)
     mock_get.side_effect = requests.exceptions.ConnectionError("Failed to connect to localhost:5000")
     
     client = APIClient(base_url="http://test-server")
@@ -33,7 +29,6 @@ def test_api_client_health_failure(mock_get):
 
 @patch("frontend.services.api.requests.get")
 def test_api_client_bad_json(mock_get):
-    """Test resilience against malformed non-JSON server responses."""
     mock_response = Mock()
     mock_response.ok = False
     mock_response.json.side_effect = ValueError("No JSON object could be decoded")

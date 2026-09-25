@@ -1,11 +1,6 @@
 from backend.core.results import ExplainableResult, EvidenceItem, SourceReference
 
 def test_explainable_result_structure():
-    """
-    Test that the ExplainableResult correctly accommodates non-binary, 
-    evidence-based statistical assessments.
-    """
-    
     source_ref = SourceReference(
         source_name="TN Finance Dept",
         url="http://tn.gov.in/budget",
@@ -32,7 +27,6 @@ def test_explainable_result_structure():
         limitations=["Only considers current year projections, excluding revised estimates."]
     )
     
-    # Assertions
     assert result.result_type == "BudgetAnomalyDetection"
     assert "deviation" in result.numerical_indicators
     assert result.confidence == 0.88
