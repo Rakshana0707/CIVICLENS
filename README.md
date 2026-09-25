@@ -1,4 +1,5 @@
 # CivicLens TN
+![Phase 0](https://img.shields.io/badge/Phase%200-Foundation%20Complete-success)
 
 ## What is CivicLens TN?
 CivicLens TN is an AI-powered public accountability and policy intelligence platform specifically focused on the state of Tamil Nadu. 
