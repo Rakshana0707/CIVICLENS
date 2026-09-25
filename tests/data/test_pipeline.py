@@ -9,7 +9,7 @@ class DummyPipeline(BaseDataPipeline):
     def validate(self, data):
         return validate_required_columns(data, ["id", "text"])
     def clean(self, data):
-        return detect_duplicates(data, subset=["id"]).drop_duplicates(subset=["id"])
+        return data.drop_duplicates(subset=["id"])
     def transform(self, data):
         data['text'] = data['text'].apply(normalize_text)
         return data
