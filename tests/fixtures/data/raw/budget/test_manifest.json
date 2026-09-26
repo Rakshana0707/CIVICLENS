@@ -1,0 +1,18 @@
+{
+  "datasets": [
+    {
+      "dataset_id": "TEST_BUDGET_01",
+      "source_organization": "Test Org",
+      "dataset_title": "Test Budget Title",
+      "official_source_url": "http://example.com/test.csv",
+      "financial_year": "2024-25",
+      "original_filename": "test_fixture.csv",
+      "file_format": "CSV",
+      "collection_date": "2026-09-26",
+      "coverage": "Testing only",
+      "limitations": "Synthetic data for tests",
+      "collection_status": "verified",
+      "checksum": "dummy_hash"
+    }
+  ]
+}
