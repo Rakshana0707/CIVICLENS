@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from backend.models.budget import BudgetRecord, BudgetStage
 from backend.ingestion.readers import get_reader_for_format
 from backend.ingestion.validator import BudgetValidator
+from backend.ingestion.cleaner import BudgetCleaner
 from backend.database.session import SessionLocal
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -106,15 +107,23 @@ class BudgetIngestor:
                 batch.append(record)
                 
             logger.info(f"Validating {len(batch)} records...")
-            valid, invalid, report = self.validator.validate_batch(batch)
+            valid, invalid, val_report = self.validator.validate_batch(batch)
             
-            logger.info(f"Validation Report for {ds.get('dataset_id')}: {json.dumps(report, indent=2)}")
+            logger.info(f"Validation Report for {ds.get('dataset_id')}: {json.dumps(val_report, indent=2)}")
             if invalid:
-                logger.warning(f"Found {len(invalid)} invalid records. Sample rejection reasons: {list(report['rejection_reasons'].keys())[:3]}")
+                logger.warning(f"Found {len(invalid)} invalid records. Sample rejection reasons: {list(val_report['rejection_reasons'].keys())[:3]}")
 
-            # Safely insert valid records
+            logger.info(f"Cleaning {len(valid)} valid records...")
+            cleaner = BudgetCleaner()
+            cleaned, unresolved, clean_report = cleaner.clean_batch(valid)
+            
+            logger.info(f"Cleaning Report for {ds.get('dataset_id')}: {json.dumps(clean_report, indent=2)}")
+            if unresolved:
+                logger.warning(f"Found {len(unresolved)} unresolved records after cleaning.")
+
+            # Safely insert cleaned records
             added, skipped = 0, 0
-            for record in valid:
+            for record in cleaned:
                 self.db.add(record)
                 try:
                     self.db.commit()

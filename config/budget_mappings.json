@@ -1,0 +1,9 @@
+{
+    "departments": {
+        "Sch Edn": "School Education",
+        "H & FW": "Health and Family Welfare"
+    },
+    "schemes": {
+        "MDM": "Mid Day Meal Scheme"
+    }
+}
