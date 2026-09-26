@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from backend.models.budget import BudgetRecord, BudgetStage
 from backend.ingestion.readers import get_reader_for_format
+from backend.ingestion.validator import BudgetValidator
 from backend.database.session import SessionLocal
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -17,6 +18,7 @@ class BudgetIngestor:
         self.db = db_session
         self.manifest_path = manifest_path
         self.raw_dir = raw_dir
+        self.validator = BudgetValidator()
 
     def _map_raw_to_canonical(self, raw_row: Dict, metadata: Dict) -> BudgetRecord:
         """
@@ -26,36 +28,38 @@ class BudgetIngestor:
         # Convert all keys/values to string for safe heuristic checking
         safe_row = {str(k).lower(): str(v).strip() for k, v in raw_row.items() if not str(k).startswith('_')}
         
-        # Heuristics based on provisional schema
-        department_name = safe_row.get('department_name', metadata.get('dataset_title', 'Unknown Department'))
-        scheme_name = safe_row.get('scheme_name') or safe_row.get('description') or safe_row.get('sub_head') or 'Unclassified Scheme'
+        # Heuristics based on provisional schema - NO INVENTION OF DATA ALLOWED
+        department_name = safe_row.get('department_name', metadata.get('dataset_title', ''))
+        scheme_name = safe_row.get('scheme_name') or safe_row.get('description') or safe_row.get('sub_head') or ''
         
         try:
-            amount = float(safe_row.get('amount', safe_row.get('budget_estimate', 0)))
+            amount_str = safe_row.get('amount', safe_row.get('budget_estimate', ''))
+            amount = float(amount_str) if amount_str else None
         except ValueError:
             amount = None
 
         # Determine stage heuristically
-        stage = BudgetStage.budget_estimate
+        stage = None
         if 'actuals' in safe_row or 'accounts' in safe_row:
             stage = BudgetStage.actual_expenditure
         elif 'revised_estimate' in safe_row:
             stage = BudgetStage.revised_estimate
+        elif 'budget_estimate' in safe_row or 'amount' in safe_row:
+            stage = BudgetStage.budget_estimate
 
-        # Generate a deterministic ID based on unique constraint fields
         record_id = str(uuid.uuid4())
 
         return BudgetRecord(
             record_id=record_id,
             department_name=department_name,
             scheme_name=scheme_name,
-            head_of_account=safe_row.get('head_of_account', 'Unknown'),
-            original_category=str(raw_row), # Preserve exact original row payload
-            financial_year=metadata.get('financial_year', 'Unknown'),
+            head_of_account=safe_row.get('head_of_account', ''),
+            original_category=str(raw_row), 
+            financial_year=metadata.get('financial_year', ''),
             budget_stage=stage,
             amount=amount,
             currency_unit="INR_Absolute",
-            source_document_id=metadata.get('dataset_id', 'Unknown'),
+            source_document_id=metadata.get('dataset_id', ''),
             source_page_number=raw_row.get('_source_page_number')
         )
 
@@ -72,11 +76,11 @@ class BudgetIngestor:
 
         datasets = manifest_data.get('datasets', [])
         if not datasets:
-            logger.warning("Manifest contains no dataset entries. Are we still pending manual acquisition?")
+            logger.warning("Manifest contains no dataset entries.")
             return
 
-        records_added = 0
-        records_skipped = 0
+        total_records_added = 0
+        total_records_skipped = 0
 
         for ds in datasets:
             status = ds.get('collection_status')
@@ -95,25 +99,35 @@ class BudgetIngestor:
                 logger.error(str(e))
                 continue
             
-            logger.info(f"Processing dataset {ds.get('dataset_id')}")
+            logger.info(f"Extracting dataset {ds.get('dataset_id')}...")
+            batch = []
             for raw_row in reader.extract_records(file_path):
                 record = self._map_raw_to_canonical(raw_row, ds)
+                batch.append(record)
                 
-                # Check for completeness based on strict rules
-                if not record.department_name or not record.scheme_name:
-                    logger.warning(f"Dropping incomplete record from {ds['dataset_id']}")
-                    continue
-                
-                # Add to DB safely (idempotent insert)
+            logger.info(f"Validating {len(batch)} records...")
+            valid, invalid, report = self.validator.validate_batch(batch)
+            
+            logger.info(f"Validation Report for {ds.get('dataset_id')}: {json.dumps(report, indent=2)}")
+            if invalid:
+                logger.warning(f"Found {len(invalid)} invalid records. Sample rejection reasons: {list(report['rejection_reasons'].keys())[:3]}")
+
+            # Safely insert valid records
+            added, skipped = 0, 0
+            for record in valid:
                 self.db.add(record)
                 try:
                     self.db.commit()
-                    records_added += 1
+                    added += 1
                 except IntegrityError:
                     self.db.rollback()
-                    records_skipped += 1
+                    skipped += 1
+            
+            logger.info(f"Dataset {ds.get('dataset_id')} -> Inserted: {added}, Duplicates Skipped: {skipped}")
+            total_records_added += added
+            total_records_skipped += skipped
                     
-        logger.info(f"Ingestion complete. Added: {records_added}, Skipped (Duplicates): {records_skipped}")
+        logger.info(f"Total Ingestion Complete. Inserted: {total_records_added}, Skipped (Duplicates): {total_records_skipped}")
 
 def run_ingestion():
     db = SessionLocal()
