@@ -1,10 +1,11 @@
 import pytest
-from backend.models.budget import BudgetRecord, BudgetStage
+from backend.models.budget import BudgetStage
+from backend.ingestion.models import RawBudgetRecord
 from backend.ingestion.validator import BudgetValidator
 
 @pytest.fixture
 def base_valid_record():
-    return BudgetRecord(
+    return RawBudgetRecord(
         record_id="test-1",
         department_name="Health",
         scheme_name="Primary Care",
@@ -65,7 +66,7 @@ def test_null_amounts_handling(base_valid_record):
 def test_duplicate_detection_within_batch(base_valid_record):
     # Two identical records
     validator = BudgetValidator()
-    rec2 = BudgetRecord(
+    rec2 = RawBudgetRecord(
         record_id="test-2",
         department_name="Health",
         scheme_name="Primary Care",

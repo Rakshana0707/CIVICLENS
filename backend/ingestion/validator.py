@@ -1,7 +1,7 @@
 import re
 import logging
 from typing import List, Dict, Tuple, Any
-from backend.models.budget import BudgetRecord
+from backend.ingestion.models import RawBudgetRecord
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class BudgetValidator:
             "strict_numeric_amounts": True
         }
 
-    def validate_batch(self, records: List[BudgetRecord]) -> Tuple[List[BudgetRecord], List[Dict], Dict]:
+    def validate_batch(self, records: List[RawBudgetRecord]) -> Tuple[List[RawBudgetRecord], List[Dict], Dict]:
         """
         Validates a batch of records.
         Returns: (valid_records, invalid_records_with_reasons, report_summary)

@@ -34,7 +34,7 @@ def test_ingestion_pipeline_with_csv_fixture(db_session):
     # Since Mid Day Meal has both 'budget_estimate' and 'actuals', it will map based on 'actuals' because of the priority in our naive map logic.
     # This proves the pipeline works.
     assert len(records) > 0
-    assert records[0].source_document_id == "TEST_BUDGET_01"
+    assert records[0].source_document.manifest_dataset_id == "TEST_BUDGET_01"
     assert records[0].financial_year == "2024-25"
-    assert records[0].department_name == "School Education"
+    assert records[0].scheme.department.name == "School Education"
     assert records[0].currency_unit == "INR_Absolute"

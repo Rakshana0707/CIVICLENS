@@ -5,7 +5,8 @@ import uuid
 from typing import List, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from backend.models.budget import BudgetRecord, BudgetStage
+from backend.models.budget import BudgetRecord, BudgetStage, BudgetDepartment, BudgetScheme, BudgetSourceDocument, BudgetImportBatch
+from backend.ingestion.models import RawBudgetRecord
 from backend.ingestion.readers import get_reader_for_format
 from backend.ingestion.validator import BudgetValidator
 from backend.ingestion.cleaner import BudgetCleaner
@@ -21,7 +22,7 @@ class BudgetIngestor:
         self.raw_dir = raw_dir
         self.validator = BudgetValidator()
 
-    def _map_raw_to_canonical(self, raw_row: Dict, metadata: Dict) -> BudgetRecord:
+    def _map_raw_to_canonical(self, raw_row: Dict, metadata: Dict) -> RawBudgetRecord:
         """
         Maps a raw extracted row to the Canonical BudgetRecord.
         If real data structure is unknown, applies a fallback heuristic.
@@ -50,7 +51,7 @@ class BudgetIngestor:
 
         record_id = str(uuid.uuid4())
 
-        return BudgetRecord(
+        return RawBudgetRecord(
             record_id=record_id,
             department_name=department_name,
             scheme_name=scheme_name,
@@ -121,9 +122,61 @@ class BudgetIngestor:
             if unresolved:
                 logger.warning(f"Found {len(unresolved)} unresolved records after cleaning.")
 
-            # Safely insert cleaned records
+            # DB Insertion for Normalized Schema
             added, skipped = 0, 0
-            for record in cleaned:
+            
+            # 1. Ensure Source Document exists
+            doc = self.db.query(BudgetSourceDocument).filter_by(manifest_dataset_id=ds.get('dataset_id')).first()
+            if not doc:
+                doc = BudgetSourceDocument(
+                    manifest_dataset_id=ds.get('dataset_id', ''),
+                    title=ds.get('dataset_title', ''),
+                    financial_year_coverage=ds.get('financial_year', '')
+                )
+                self.db.add(doc)
+                self.db.commit()
+
+            # 2. Get or Create Batch
+            batch = BudgetImportBatch(notes=f"Ingesting {ds.get('dataset_id')}")
+            self.db.add(batch)
+            self.db.commit()
+
+            for raw_record in cleaned:
+                # 3. Get or Create Department
+                dept = self.db.query(BudgetDepartment).filter_by(name=raw_record.department_name).first()
+                if not dept:
+                    dept = BudgetDepartment(name=raw_record.department_name)
+                    self.db.add(dept)
+                    self.db.commit()
+
+                # 4. Get or Create Scheme
+                scheme = self.db.query(BudgetScheme).filter_by(
+                    department_id=dept.id, 
+                    name=raw_record.scheme_name,
+                    head_of_account=raw_record.head_of_account
+                ).first()
+                if not scheme:
+                    scheme = BudgetScheme(
+                        department_id=dept.id,
+                        name=raw_record.scheme_name,
+                        head_of_account=raw_record.head_of_account
+                    )
+                    self.db.add(scheme)
+                    self.db.commit()
+
+                # 5. Insert Record
+                record = BudgetRecord(
+                    scheme_id=scheme.id,
+                    source_document_id=doc.id,
+                    import_batch_id=batch.id,
+                    financial_year=raw_record.financial_year,
+                    budget_stage=raw_record.budget_stage,
+                    amount=raw_record.amount,
+                    currency_unit=raw_record.currency_unit,
+                    source_page_number=raw_record.source_page_number,
+                    original_category_text=raw_record.original_category
+                )
+                
                 self.db.add(record)
                 try:
                     self.db.commit()
@@ -131,6 +184,11 @@ class BudgetIngestor:
                 except IntegrityError:
                     self.db.rollback()
                     skipped += 1
+            
+            batch.records_added = added
+            batch.records_skipped = skipped
+            self.db.commit()
+
             
             logger.info(f"Dataset {ds.get('dataset_id')} -> Inserted: {added}, Duplicates Skipped: {skipped}")
             total_records_added += added

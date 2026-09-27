@@ -1,32 +1,116 @@
-from sqlalchemy import Column, String, Integer, Float, Enum, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Float, Enum, DateTime, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy.orm import relationship
 import enum
 from backend.database.base_class import Base
 from datetime import datetime
 
-class BudgetStage(enum.Enum):
+class BudgetStage(str, enum.Enum):
     budget_estimate = "budget_estimate"
     revised_estimate = "revised_estimate"
     actual_expenditure = "actual_expenditure"
 
+class BudgetDepartment(Base):
+    """
+    Represents a government department for budget allocations.
+    """
+    __tablename__ = 'budget_departments'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True, index=True)
+    code = Column(String, nullable=True, index=True)  # E.g., Demand Number
+
+    # Relationships
+    schemes = relationship("BudgetScheme", back_populates="department")
+
+
+class BudgetScheme(Base):
+    """
+    Represents a specific scheme or budget line item under a department.
+    """
+    __tablename__ = 'budget_schemes'
+
+    id = Column(Integer, primary_key=True, index=True)
+    department_id = Column(Integer, ForeignKey('budget_departments.id'), nullable=False)
+    name = Column(String, nullable=False, index=True)
+    
+    # Not all records have a scheme-level identifier (head of account)
+    head_of_account = Column(String, nullable=True, index=True)
+    normalized_category = Column(String, nullable=True)
+
+    # Relationships
+    department = relationship("BudgetDepartment", back_populates="schemes")
+    records = relationship("BudgetRecord", back_populates="scheme")
+
+    __table_args__ = (
+        UniqueConstraint('department_id', 'name', 'head_of_account', name='uq_budget_scheme'),
+    )
+
+
+class BudgetSourceDocument(Base):
+    """
+    Tracks the specific budget document (e.g., DDG PDF) a record came from.
+    """
+    __tablename__ = 'budget_source_documents'
+
+    id = Column(Integer, primary_key=True, index=True)
+    manifest_dataset_id = Column(String, unique=True, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    official_source_url = Column(String, nullable=True)
+    financial_year_coverage = Column(String, nullable=True)
+    checksum = Column(String, nullable=True)
+    
+    # Relationships
+    records = relationship("BudgetRecord", back_populates="source_document")
+
+
+class BudgetImportBatch(Base):
+    """
+    Tracks an ingestion batch run for auditing.
+    """
+    __tablename__ = 'budget_import_batches'
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    status = Column(String, nullable=False, default="SUCCESS")
+    records_added = Column(Integer, default=0)
+    records_skipped = Column(Integer, default=0)
+    notes = Column(String, nullable=True)
+
+    # Relationships
+    records = relationship("BudgetRecord", back_populates="import_batch")
+
+
 class BudgetRecord(Base):
+    """
+    The transactional record for a specific budget allocation or expenditure.
+    Multiple stages (BE, RE, Actuals) and years exist for the same scheme.
+    """
     __tablename__ = 'budget_records'
 
-    record_id = Column(String, primary_key=True, index=True)
-    department_name = Column(String, nullable=False, index=True)
-    department_code = Column(String, nullable=True)
-    scheme_name = Column(String, nullable=False, index=True)
-    head_of_account = Column(String, nullable=True, index=True)
-    original_category = Column(String, nullable=True)
-    normalized_category = Column(String, nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    
+    scheme_id = Column(Integer, ForeignKey('budget_schemes.id'), nullable=False)
+    source_document_id = Column(Integer, ForeignKey('budget_source_documents.id'), nullable=False)
+    import_batch_id = Column(Integer, ForeignKey('budget_import_batches.id'), nullable=True)
+
     financial_year = Column(String, nullable=False, index=True)
-    budget_stage = Column(Enum(BudgetStage), nullable=False)
+    budget_stage = Column(Enum(BudgetStage), nullable=False, index=True)
     amount = Column(Float, nullable=True)
     currency_unit = Column(String, nullable=False, default="INR_Absolute")
-    source_document_id = Column(String, nullable=False)
+    
+    # Traceability
     source_page_number = Column(Integer, nullable=True)
+    original_category_text = Column(String, nullable=True) # The exact text from the source
+    source_metadata = Column(JSON, nullable=True) # Any other source-specific metadata
+
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Ensure idempotency
+    # Relationships
+    scheme = relationship("BudgetScheme", back_populates="records")
+    source_document = relationship("BudgetSourceDocument", back_populates="records")
+    import_batch = relationship("BudgetImportBatch", back_populates="records")
+
+    # Prevent duplicate records for the exact same entity, year, stage, and source
     __table_args__ = (
-        UniqueConstraint('source_document_id', 'department_name', 'scheme_name', 'head_of_account', 'financial_year', 'budget_stage', name='uq_budget_record'),
+        UniqueConstraint('scheme_id', 'financial_year', 'budget_stage', 'source_document_id', name='uq_budget_record_entry'),
     )

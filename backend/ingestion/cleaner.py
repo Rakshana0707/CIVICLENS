@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from typing import List, Dict, Tuple
-from backend.models.budget import BudgetRecord
+from backend.ingestion.models import RawBudgetRecord
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class BudgetCleaner:
         # Strip leading/trailing
         return text.strip()
 
-    def clean_batch(self, records: List[BudgetRecord]) -> Tuple[List[BudgetRecord], List[Dict], Dict]:
+    def clean_batch(self, records: List[RawBudgetRecord]) -> Tuple[List[RawBudgetRecord], List[Dict], Dict]:
         """
         Cleans a batch of validated records.
         Returns: (cleaned_records, unresolved_records, cleaning_report)

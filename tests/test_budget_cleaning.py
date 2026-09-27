@@ -1,7 +1,8 @@
 import pytest
 import os
 import json
-from backend.models.budget import BudgetRecord, BudgetStage
+from backend.models.budget import BudgetStage
+from backend.ingestion.models import RawBudgetRecord
 from backend.ingestion.cleaner import BudgetCleaner
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def mock_mappings_file(tmp_path):
 
 @pytest.fixture
 def dirty_record():
-    return BudgetRecord(
+    return RawBudgetRecord(
         record_id="test-clean-1",
         department_name="  H & FW  ", # Needs mapping and strip
         scheme_name="  MDM  ", # Needs mapping and strip
@@ -71,7 +72,7 @@ def test_missing_mappings_graceful_fallback(dirty_record):
 def test_unresolved_records():
     cleaner = BudgetCleaner()
     # A record that gets its department stripped to empty string
-    empty_dept_record = BudgetRecord(
+    empty_dept_record = RawBudgetRecord(
         record_id="test-clean-2",
         department_name="   ", 
         scheme_name="Valid Scheme",

@@ -12,3 +12,10 @@ from backend.models.common import (
     ModelPrediction, 
     ModelEvaluation
 )
+from backend.models.budget import (
+    BudgetDepartment,
+    BudgetScheme,
+    BudgetSourceDocument,
+    BudgetImportBatch,
+    BudgetRecord
+)
