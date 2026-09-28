@@ -19,7 +19,7 @@ def test_db_health_endpoint(api_client):
 
 def test_placeholder_routes(api_client):
     endpoints = [
-        '/api/budget/', '/api/schemes/', '/api/promises/', '/api/news/', 
+        '/api/schemes/', '/api/promises/', '/api/news/', 
         '/api/representatives/', '/api/funding/', '/api/claims/', '/api/evidence/'
     ]
     for endpoint in endpoints:

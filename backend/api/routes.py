@@ -1,5 +1,6 @@
 from flask import Blueprint
 from backend.api.responses import error_response
+from backend.api.budget import budget_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -7,9 +8,12 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 def not_implemented():
     return error_response(message="Module not implemented yet.", status_code=501)
 
+# Register real blueprints
+api_bp.register_blueprint(budget_bp)
+
 # Register placeholder namespaces for future module routing
 namespaces = [
-    'budget', 'schemes', 'promises', 'news', 
+    'schemes', 'promises', 'news', 
     'representatives', 'funding', 'claims', 'evidence'
 ]
 

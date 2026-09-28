@@ -1,0 +1,93 @@
+import pytest
+from backend.models.budget import BudgetDepartment, BudgetScheme, BudgetRecord, BudgetStage, BudgetSourceDocument
+from backend.database.session import SessionLocal
+
+@pytest.fixture(autouse=True)
+def setup_teardown_db():
+    db = SessionLocal()
+    # Seed data
+    dept = BudgetDepartment(name="Education")
+    db.add(dept)
+    db.commit()
+    
+    scheme = BudgetScheme(name="Scholarships", department_id=dept.id)
+    db.add(scheme)
+    db.commit()
+    
+    doc = BudgetSourceDocument(manifest_dataset_id="doc1", title="test")
+    db.add(doc)
+    db.commit()
+    
+    record = BudgetRecord(
+        scheme_id=scheme.id,
+        source_document_id=doc.id,
+        financial_year="2023-24",
+        budget_stage=BudgetStage.budget_estimate,
+        amount=500.0,
+        currency_unit="INR_Absolute"
+    )
+    db.add(record)
+    db.commit()
+    
+    yield
+    
+    # Teardown
+    db.delete(record)
+    db.delete(doc)
+    db.delete(scheme)
+    db.delete(dept)
+    db.commit()
+    db.close()
+
+def test_get_years(api_client):
+    res = api_client.get('/api/budget/years')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert "2023-24" in data
+
+def test_get_departments(api_client):
+    res = api_client.get('/api/budget/departments')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert any(d['name'] == "Education" for d in data)
+
+def test_get_schemes(api_client):
+    res = api_client.get('/api/budget/schemes?search=Scholar')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert any(s['name'] == "Scholarships" for s in data)
+
+def test_get_records(api_client):
+    res = api_client.get('/api/budget/records?financial_year=2023-24')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert data['total_count'] >= 1
+    assert data['records'][0]['department_name'] == "Education"
+    assert data['records'][0]['amount'] == 500.0
+
+def test_get_records_invalid_stage(api_client):
+    res = api_client.get('/api/budget/records?budget_stage=fake_stage')
+    assert res.status_code == 400
+    assert "Invalid budget_stage" in res.get_json()['message']
+
+def test_summarize_year(api_client):
+    res = api_client.get('/api/budget/summarize/year?budget_stage=budget_estimate')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert data["2023-24"] >= 500.0
+
+def test_summarize_year_missing_stage(api_client):
+    res = api_client.get('/api/budget/summarize/year')
+    assert res.status_code == 400
+
+def test_summarize_department(api_client):
+    res = api_client.get('/api/budget/summarize/department?budget_stage=budget_estimate&financial_year=2023-24')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert data["Education"] >= 500.0
+
+def test_summarize_scheme(api_client):
+    res = api_client.get('/api/budget/summarize/scheme?budget_stage=budget_estimate&financial_year=2023-24')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert data["Scholarships"] >= 500.0
