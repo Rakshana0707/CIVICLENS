@@ -1,6 +1,7 @@
 from flask import Blueprint
 from backend.api.responses import error_response
 from backend.api.budget import budget_bp
+from backend.api.ml import ml_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -10,6 +11,7 @@ def not_implemented():
 
 # Register real blueprints
 api_bp.register_blueprint(budget_bp)
+api_bp.register_blueprint(ml_bp)
 
 # Register placeholder namespaces for future module routing
 namespaces = [

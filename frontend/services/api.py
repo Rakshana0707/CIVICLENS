@@ -101,6 +101,21 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    def get_ml_clustering(self, budget_stage: str, algorithm: str = 'kmeans', department_id: int = None, **kwargs) -> Tuple[bool, Any]:
+        params = {
+            'budget_stage': budget_stage,
+            'algorithm': algorithm
+        }
+        if department_id is not None:
+            params['department_id'] = department_id
+        for k, v in kwargs.items():
+            if v is not None:
+                params[k] = v
+        try:
+            response = requests.get(f"{self.base_url}/api/ml/budget/clustering", params=params, timeout=20)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()

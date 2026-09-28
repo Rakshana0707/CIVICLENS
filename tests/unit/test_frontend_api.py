@@ -94,3 +94,17 @@ def test_api_client_scheme_trends(mock_get):
     assert success is True
     assert "Scholarships" in data
     mock_get.assert_called_once_with("http://test-server/api/budget/analysis/scheme-trends", params={"budget_stage": "budget_estimate", "department_id": 1}, timeout=10)
+
+@patch("frontend.services.api.requests.get")
+def test_api_client_ml_clustering(mock_get):
+    mock_response = Mock()
+    mock_response.ok = True
+    mock_response.json.return_value = {"status": "success", "data": {"algorithm": "kmeans", "data_points": []}}
+    mock_get.return_value = mock_response
+    
+    client = APIClient(base_url="http://test-server")
+    success, data = client.get_ml_clustering(budget_stage="budget_estimate", algorithm="kmeans", department_id=1, k=3)
+    
+    assert success is True
+    assert data["algorithm"] == "kmeans"
+    mock_get.assert_called_once_with("http://test-server/api/ml/budget/clustering", params={"budget_stage": "budget_estimate", "algorithm": "kmeans", "department_id": 1, "k": 3}, timeout=20)
