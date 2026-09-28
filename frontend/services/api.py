@@ -43,5 +43,41 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": f"DB Connection failed: {str(e)}"}
 
+    def get_budget_years(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/years", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+            
+    def get_budget_departments(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/departments", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_budget_schemes(self, department_id: int = None) -> Tuple[bool, Any]:
+        params = {}
+        if department_id is not None:
+            params['department_id'] = department_id
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/schemes", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_budget_records(self, skip: int = 0, limit: int = 50, filters: Dict = None) -> Tuple[bool, Any]:
+        params = {"skip": skip, "limit": limit}
+        if filters:
+            for k, v in filters.items():
+                if v:
+                    params[k] = v
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/records", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 # Global instance for use across Streamlit pages
 api_client = APIClient()
