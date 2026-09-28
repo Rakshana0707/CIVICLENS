@@ -50,6 +50,34 @@ class BudgetAnalysisService:
         return summary
 
     @staticmethod
+    def calculate_year_trend(records: List[BudgetRecord]) -> Dict[str, Dict[str, Any]]:
+        """
+        Calculates year-wise totals and year-over-year percentage changes.
+        Expects records to be of a single BudgetStage.
+        Returns ordered dict by year (ascending).
+        """
+        summary = BudgetAnalysisService.summarize_by_year(records)
+        
+        # Sort years ascending
+        sorted_years = sorted(summary.keys())
+        
+        trend = {}
+        prev_val = None
+        for year in sorted_years:
+            val = summary[year]
+            pct_change = None
+            if prev_val is not None and prev_val != 0:
+                pct_change = ((val - prev_val) / prev_val) * 100
+            
+            trend[year] = {
+                "total": val,
+                "percentage_change": pct_change
+            }
+            prev_val = val
+            
+        return trend
+
+    @staticmethod
     def summarize_by_department(records: List[BudgetRecord]) -> Dict[str, float]:
         """
         Summarizes budget amounts grouped by department name.

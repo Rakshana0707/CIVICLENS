@@ -79,3 +79,25 @@ Sums budget allocations grouped by scheme.
 - `financial_year` (string, **required**)
 - `department_id` (int, optional)
 **Response**: `{"Scholarships": 200.0, "Mid Day Meal": 500.0}`
+
+### `GET /api/budget/analysis/trend`
+Calculates year-wise totals and year-over-year percentage changes.
+**Query Parameters**:
+- `budget_stage` (string, **required**)
+- `department_id` (int, optional)
+- `scheme_id` (int, optional)
+
+**Response Data**:
+```json
+{
+  "2023-24": {
+    "total": 900.0,
+    "percentage_change": null
+  },
+  "2024-25": {
+    "total": 1000.5,
+    "percentage_change": 11.16
+  }
+}
+```
+

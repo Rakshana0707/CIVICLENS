@@ -79,5 +79,18 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    def get_budget_trend(self, budget_stage: str, department_id: int = None, scheme_id: int = None) -> Tuple[bool, Any]:
+        params = {"budget_stage": budget_stage}
+        if department_id is not None:
+            params["department_id"] = department_id
+        if scheme_id is not None:
+            params["scheme_id"] = scheme_id
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/analysis/trend", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 # Global instance for use across Streamlit pages
 api_client = APIClient()
+

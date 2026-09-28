@@ -131,5 +131,51 @@ else:
                 st.session_state.budget_skip += LIMIT
                 st.rerun()
 
+    # --- Year-Wise Analysis ---
+    st.markdown("---")
+    st.subheader("dY"^ Year-Wise Analysis")
+    
+    if selected_stage == "All":
+        st.info("dY"i Please select a specific **Budget Stage** (e.g., 'budget_estimate') from the sidebar to view year-over-year trends. Mixing different budget stages in a single trend line is invalid and unsupported.")
+    else:
+        with st.spinner("Calculating trends..."):
+            trend_ok, trend_data = api_client.get_budget_trend(
+                budget_stage=selected_stage,
+                department_id=selected_dept_id,
+                scheme_id=selected_scheme_id
+            )
+            
+        if trend_ok and trend_data:
+            st.markdown(f"**Stage:** `{selected_stage}` | **Coverage:** {min(trend_data.keys())} to {max(trend_data.keys())}")
+            
+            # Prepare data for chart
+            trend_records = []
+            for y, stats in trend_data.items():
+                trend_records.append({
+                    "Financial Year": y,
+                    "Total Amount": stats["total"],
+                    "Percentage Change": stats["percentage_change"]
+                })
+            
+            trend_df = pd.DataFrame(trend_records)
+            
+            # Show chart
+            st.bar_chart(data=trend_df, x="Financial Year", y="Total Amount", use_container_width=True)
+            
+            # Show descriptive data
+            st.dataframe(
+                trend_df.style.format({
+                    "Total Amount": "{:,.2f}",
+                    "Percentage Change": "{:,.2f}%"
+                }, na_rep="N/A"),
+                use_container_width=True,
+                hide_index=True
+            )
+            
+            # Disclaimers
+            st.caption("dY"i **Note:** Missing years indicate no matching official data was found. We do not interpolate or fabricate missing years. Percentage changes reflect nominal values and are not adjusted for inflation. Descriptive comparisons do not imply causation.")
+        else:
+            st.warning("Not enough data to calculate year-over-year trends for this selection.")
+
 st.markdown("---")
 st.caption("dY"i CivicLens TN ensures transparency by providing source traceability for all data points. See 'Source Document' for exact origins.")
