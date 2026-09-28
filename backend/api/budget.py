@@ -180,3 +180,28 @@ def get_trend():
         return success_response(data=trend)
     finally:
         db.close()
+
+@budget_bp.route('/analysis/scheme-trends', methods=['GET'])
+def get_scheme_trends():
+    """Calculates year-wise totals and trends grouped by scheme."""
+    stage_str = request.args.get('budget_stage')
+    dept_id = request.args.get('department_id', type=int)
+    
+    if not stage_str:
+        return error_response("budget_stage is required for trend analysis.", status_code=400)
+    
+    try:
+        stage = BudgetStage(stage_str)
+    except ValueError:
+        return error_response("Invalid budget_stage", status_code=400)
+
+    db = SessionLocal()
+    try:
+        records, _ = budget_service.get_filtered_records(
+            db, skip=0, limit=1000000, budget_stage=stage, 
+            department_id=dept_id
+        )
+        trends = budget_service.calculate_scheme_trends(records)
+        return success_response(data=trends)
+    finally:
+        db.close()

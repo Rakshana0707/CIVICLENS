@@ -104,6 +104,38 @@ class BudgetAnalysisService:
         return summary
 
     @staticmethod
+    def calculate_scheme_trends(records: List[BudgetRecord]) -> Dict[str, Dict[str, Any]]:
+        """
+        Groups records by scheme name, then computes year-wise totals and trends.
+        Expects records of a single BudgetStage.
+        Includes available budget stages in the summary metadata.
+        """
+        # Group by scheme name
+        scheme_groups = {}
+        for record in records:
+            if record.amount is None or not record.scheme:
+                continue
+            s_name = record.scheme.name
+            if s_name not in scheme_groups:
+                scheme_groups[s_name] = []
+            scheme_groups[s_name].append(record)
+
+        trends = {}
+        for s_name, s_records in scheme_groups.items():
+            # Get available budget stages for this scheme (overall metadata info)
+            available_stages = list({r.budget_stage.value for r in s_records})
+            
+            # Use existing trend calculator for the scheme's records
+            yearly_trend = BudgetAnalysisService.calculate_year_trend(s_records)
+            
+            trends[s_name] = {
+                "available_stages": available_stages,
+                "yearly_trend": yearly_trend
+            }
+            
+        return trends
+
+    @staticmethod
     def compare_stages(
         records: List[BudgetRecord], 
         stage_a: BudgetStage, 

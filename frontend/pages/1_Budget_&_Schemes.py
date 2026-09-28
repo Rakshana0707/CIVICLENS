@@ -177,5 +177,45 @@ else:
         else:
             st.warning("Not enough data to calculate year-over-year trends for this selection.")
 
+    # --- Scheme-Level Analysis ---
+    if selected_scheme_id is None:
+        st.markdown("---")
+        st.subheader("dY"i Scheme-Level Trend Comparison")
+        if selected_stage == "All":
+             st.info("dY"i Please select a specific **Budget Stage** to compare scheme allocations over time.")
+        else:
+            with st.spinner("Fetching scheme trends..."):
+                sch_trend_ok, sch_trend_data = api_client.get_scheme_trends(
+                    budget_stage=selected_stage,
+                    department_id=selected_dept_id
+                )
+            if sch_trend_ok and sch_trend_data:
+                st.markdown(f"**Stage:** `{selected_stage}`")
+                
+                # Transform data for line chart
+                chart_data = {}
+                scheme_meta = []
+                for s_name, data in sch_trend_data.items():
+                    scheme_meta.append({
+                        "Scheme": s_name, 
+                        "Available Stages in Records": ", ".join(data["available_stages"])
+                    })
+                    for year, stats in data["yearly_trend"].items():
+                        if year not in chart_data:
+                            chart_data[year] = {}
+                        chart_data[year][s_name] = stats["total"]
+                
+                if chart_data:
+                    trend_chart_df = pd.DataFrame.from_dict(chart_data, orient="index")
+                    trend_chart_df.index.name = "Financial Year"
+                    
+                    st.line_chart(trend_chart_df, use_container_width=True)
+                    
+                    with st.expander("View Scheme Metadata"):
+                        st.dataframe(pd.DataFrame(scheme_meta), hide_index=True, use_container_width=True)
+                        st.caption("Notice: We rely on documented mappings to match scheme name aliases safely. Uncertain matches are ignored to preserve data integrity. We do not infer implementation success from allocation changes.")
+                else:
+                    st.warning("No scheme-level trend data available for this selection.")
+
 st.markdown("---")
 st.caption("dY"i CivicLens TN ensures transparency by providing source traceability for all data points. See 'Source Document' for exact origins.")

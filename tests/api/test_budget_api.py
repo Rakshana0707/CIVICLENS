@@ -99,3 +99,12 @@ def test_trend_analysis(api_client):
     assert "2023-24" in data
     assert data["2023-24"]["total"] >= 500.0
     assert data["2023-24"]["percentage_change"] is None
+
+def test_scheme_trends(api_client):
+    res = api_client.get('/api/budget/analysis/scheme-trends?budget_stage=budget_estimate')
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert "Scholarships" in data
+    assert "available_stages" in data["Scholarships"]
+    assert "yearly_trend" in data["Scholarships"]
+    assert "2023-24" in data["Scholarships"]["yearly_trend"]

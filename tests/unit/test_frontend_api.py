@@ -80,3 +80,17 @@ def test_api_client_budget_trend(mock_get):
     assert success is True
     assert "2024-25" in data
     mock_get.assert_called_once_with("http://test-server/api/budget/analysis/trend", params={"budget_stage": "budget_estimate", "department_id": 1}, timeout=10)
+
+@patch("frontend.services.api.requests.get")
+def test_api_client_scheme_trends(mock_get):
+    mock_response = Mock()
+    mock_response.ok = True
+    mock_response.json.return_value = {"status": "success", "data": {"Scholarships": {"available_stages": [], "yearly_trend": {}}}}
+    mock_get.return_value = mock_response
+    
+    client = APIClient(base_url="http://test-server")
+    success, data = client.get_scheme_trends(budget_stage="budget_estimate", department_id=1)
+    
+    assert success is True
+    assert "Scholarships" in data
+    mock_get.assert_called_once_with("http://test-server/api/budget/analysis/scheme-trends", params={"budget_stage": "budget_estimate", "department_id": 1}, timeout=10)

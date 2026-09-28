@@ -101,3 +101,25 @@ Calculates year-wise totals and year-over-year percentage changes.
 }
 ```
 
+
+### `GET /api/budget/analysis/scheme-trends`
+Calculates year-wise totals and trends grouped by scheme.
+**Query Parameters**:
+- `budget_stage` (string, **required**)
+- `department_id` (int, optional)
+
+**Response Data**:
+```json
+{
+  "Scholarships": {
+    "available_stages": ["budget_estimate", "revised_estimate"],
+    "yearly_trend": {
+      "2023-24": {
+        "total": 900.0,
+        "percentage_change": null
+      }
+    }
+  }
+}
+```
+
