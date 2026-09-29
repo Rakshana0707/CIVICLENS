@@ -15,5 +15,20 @@
     "collection_status": "identified",
     "checksum": null
   },
-  "datasets": []
+  "datasets": [
+    {
+      "dataset_id": "TN_BUDGET_PORTAL_2024_25",
+      "source_organization": "Finance Department, Government of Tamil Nadu",
+      "dataset_title": "Official Tamil Nadu State Budget Documents",
+      "official_source_url": "https://financedept.tn.gov.in/budget/",
+      "financial_year": "2024-25",
+      "original_filename": "pending",
+      "file_format": "unknown",
+      "collection_date": null,
+      "coverage": "Tamil Nadu State Budget",
+      "limitations": "Direct automated extraction blocked (Timeout/Geoblock). Requires manual download.",
+      "collection_status": "identified",
+      "checksum": null
+    }
+  ]
 }
