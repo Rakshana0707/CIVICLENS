@@ -22,48 +22,75 @@ class BudgetIngestor:
         self.raw_dir = raw_dir
         self.validator = BudgetValidator()
 
-    def _map_raw_to_canonical(self, raw_row: Dict, metadata: Dict) -> RawBudgetRecord:
+    def _map_raw_to_canonical(self, raw_row: Dict, metadata: Dict) -> list:
         """
-        Maps a raw extracted row to the Canonical BudgetRecord.
-        If real data structure is unknown, applies a fallback heuristic.
+        Maps a raw extracted row to a list of Canonical BudgetRecords (one per budget stage).
         """
-        # Convert all keys/values to string for safe heuristic checking
-        safe_row = {str(k).lower(): str(v).strip() for k, v in raw_row.items() if not str(k).startswith('_')}
+        records = []
+        department_name = metadata.get('dataset_title', 'Unknown Department')
+        scheme_name = raw_row.get('scheme_name') or 'Unknown Scheme'
+        head_of_account = raw_row.get('head_of_account', '')
+        financial_year = metadata.get('financial_year', '')
         
-        # Heuristics based on provisional schema - NO INVENTION OF DATA ALLOWED
-        department_name = safe_row.get('department_name', metadata.get('dataset_title', ''))
-        scheme_name = safe_row.get('scheme_name') or safe_row.get('description') or safe_row.get('sub_head') or ''
-        
-        try:
-            amount_str = safe_row.get('amount', safe_row.get('budget_estimate', ''))
-            amount = float(amount_str) if amount_str else None
-        except ValueError:
-            amount = None
+        # In our PDF reader, raw_row gives us actuals, revised_estimate, and budget_estimate natively!
+        if raw_row.get('actuals'):
+            try:
+                amt = float(raw_row['actuals'])
+                records.append(RawBudgetRecord(
+                    record_id=str(uuid.uuid4()),
+                    department_name=department_name,
+                    scheme_name=scheme_name,
+                    head_of_account=head_of_account,
+                    original_category=str(raw_row),
+                    financial_year=financial_year,
+                    budget_stage=BudgetStage.actual_expenditure,
+                    amount=amt,
+                    currency_unit="INR_Thousands",
+                    source_document_id=metadata.get('dataset_id', ''),
+                    source_page_number=raw_row.get('_source_page_number')
+                ))
+            except ValueError:
+                pass
 
-        # Determine stage heuristically
-        stage = None
-        if 'actuals' in safe_row or 'accounts' in safe_row:
-            stage = BudgetStage.actual_expenditure
-        elif 'revised_estimate' in safe_row:
-            stage = BudgetStage.revised_estimate
-        elif 'budget_estimate' in safe_row or 'amount' in safe_row:
-            stage = BudgetStage.budget_estimate
+        if raw_row.get('revised_estimate'):
+            try:
+                amt = float(raw_row['revised_estimate'])
+                records.append(RawBudgetRecord(
+                    record_id=str(uuid.uuid4()),
+                    department_name=department_name,
+                    scheme_name=scheme_name,
+                    head_of_account=head_of_account,
+                    original_category=str(raw_row),
+                    financial_year=financial_year,
+                    budget_stage=BudgetStage.revised_estimate,
+                    amount=amt,
+                    currency_unit="INR_Thousands",
+                    source_document_id=metadata.get('dataset_id', ''),
+                    source_page_number=raw_row.get('_source_page_number')
+                ))
+            except ValueError:
+                pass
 
-        record_id = str(uuid.uuid4())
+        if raw_row.get('budget_estimate'):
+            try:
+                amt = float(raw_row['budget_estimate'])
+                records.append(RawBudgetRecord(
+                    record_id=str(uuid.uuid4()),
+                    department_name=department_name,
+                    scheme_name=scheme_name,
+                    head_of_account=head_of_account,
+                    original_category=str(raw_row),
+                    financial_year=financial_year,
+                    budget_stage=BudgetStage.budget_estimate,
+                    amount=amt,
+                    currency_unit="INR_Thousands",
+                    source_document_id=metadata.get('dataset_id', ''),
+                    source_page_number=raw_row.get('_source_page_number')
+                ))
+            except ValueError:
+                pass
 
-        return RawBudgetRecord(
-            record_id=record_id,
-            department_name=department_name,
-            scheme_name=scheme_name,
-            head_of_account=safe_row.get('head_of_account', ''),
-            original_category=str(raw_row), 
-            financial_year=metadata.get('financial_year', ''),
-            budget_stage=stage,
-            amount=amount,
-            currency_unit="INR_Absolute",
-            source_document_id=metadata.get('dataset_id', ''),
-            source_page_number=raw_row.get('_source_page_number')
-        )
+        return records
 
     def ingest(self):
         """Reads the manifest and ingests all verified/collected datasets."""
@@ -104,8 +131,8 @@ class BudgetIngestor:
             logger.info(f"Extracting dataset {ds.get('dataset_id')}...")
             batch = []
             for raw_row in reader.extract_records(file_path):
-                record = self._map_raw_to_canonical(raw_row, ds)
-                batch.append(record)
+                records = self._map_raw_to_canonical(raw_row, ds)
+                batch.extend(records)
                 
             logger.info(f"Validating {len(batch)} records...")
             valid, invalid, val_report = self.validator.validate_batch(batch)
