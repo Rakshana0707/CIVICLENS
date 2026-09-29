@@ -8,15 +8,15 @@ CivicLens TN is an AI-powered public accountability and policy intelligence plat
 The goal of CivicLens TN is to enhance transparency and understanding of political processes, policy implementations, and civic issues. It aims to empower citizens, journalists, and researchers with AI-driven insights into state policies, political promises, public spending, and more.
 
 ## Major Planned Modules
-- **Budget Analysis (Phase 1 Complete - Infrastructure Ready)**
-- Historical Scheme Intelligence
-- Political Promise Analysis
-- Tamil News Framing Analysis
-- Representative Performance
-- Political Funding Transparency
-- Claim Verification
-- Explainability
-- Reinforcement-Learning Recommendation Module (Optional)
+- [x] **Budget Analysis (Phase 1 Complete - Real Data Verified)**
+- [ ] **Historical Scheme Intelligence (Phase 2)**
+- [ ] Political Promise Analysis
+- [ ] Tamil News Framing Analysis
+- [ ] Representative Performance
+- [ ] Political Funding Transparency
+- [ ] Claim Verification
+- [ ] Explainability
+- [ ] Reinforcement-Learning Recommendation Module (Optional)
 
 ## Planned ML Categories
 - Natural Language Processing (NLP) for Tamil news and text analysis
