@@ -156,3 +156,18 @@ def test_ml_clustering_dbscan(api_client):
     assert data["algorithm"] == "dbscan"
     assert "summaries" in data
     assert len(data["data_points"]) > 0
+    assert "source_documents" in data["data_points"][0]
+
+def test_ml_anomaly_detection(api_client):
+    res = api_client.get('/api/ml/budget/anomaly?budget_stage=budget_estimate&contamination=0.1')
+    if res.status_code != 200:
+        print(res.get_json())
+    assert res.status_code == 200
+    data = res.get_json()['data']
+    assert data["algorithm"] == "isolation_forest"
+    assert "flagged_summary" in data
+    assert "metadata" in data
+    assert len(data["data_points"]) > 0
+    assert "is_anomaly" in data["data_points"][0]
+    assert "anomaly_score" in data["data_points"][0]
+    assert "source_documents" in data["data_points"][0]

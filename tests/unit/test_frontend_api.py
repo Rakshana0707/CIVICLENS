@@ -108,3 +108,17 @@ def test_api_client_ml_clustering(mock_get):
     assert success is True
     assert data["algorithm"] == "kmeans"
     mock_get.assert_called_once_with("http://test-server/api/ml/budget/clustering", params={"budget_stage": "budget_estimate", "algorithm": "kmeans", "department_id": 1, "k": 3}, timeout=20)
+
+@patch("frontend.services.api.requests.get")
+def test_api_client_ml_anomaly(mock_get):
+    mock_response = Mock()
+    mock_response.ok = True
+    mock_response.json.return_value = {"status": "success", "data": {"algorithm": "isolation_forest", "data_points": []}}
+    mock_get.return_value = mock_response
+    
+    client = APIClient(base_url="http://test-server")
+    success, data = client.get_ml_anomaly(budget_stage="budget_estimate", contamination="0.05", department_id=1)
+    
+    assert success is True
+    assert data["algorithm"] == "isolation_forest"
+    mock_get.assert_called_once_with("http://test-server/api/ml/budget/anomaly", params={"budget_stage": "budget_estimate", "contamination": "0.05", "department_id": 1}, timeout=20)
