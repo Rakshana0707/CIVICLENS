@@ -45,3 +45,13 @@ To maintain data provenance, all future additions must follow this strict workfl
     *   Record the resulting hash in the `checksum` field of the manifest.
     *   Update `collection_status` to `verified`.
     *   Commit the updated `manifest.json` to Git. (Note: Raw datasets themselves may remain git-ignored depending on repository policy, but their metadata is fully tracked).
+## Current Phase 1 Data Status (End of Phase 1 Infrastructure Build)
+**Status:** ALL official data is currently pending collection.
+
+As of the conclusion of the Phase 1 infrastructure build, no official Tamil Nadu budget datasets have been formally collected, verified, or OCR'd. 
+The system architecture (ingestion, validation, schema, ML, and frontend) has been thoroughly verified using isolated mock testing fixtures.
+
+**Constraint Adherence:** 
+* No fabricated data is injected into the production environment. 
+* Empty databases gracefully return HTTP 400 limitations.
+* The frontend Citizen Dashboard will remain empty (or display appropriate error states) until official datasets transition to the erified collection status within the manifest.

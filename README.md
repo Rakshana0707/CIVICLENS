@@ -1,5 +1,5 @@
 # CivicLens TN
-![Phase 0](https://img.shields.io/badge/Phase%200-Foundation%20Complete-success)
+![Phase 1](https://img.shields.io/badge/Phase%201-Budget%20Analyzer%20Complete-success)
 
 ## What is CivicLens TN?
 CivicLens TN is an AI-powered public accountability and policy intelligence platform specifically focused on the state of Tamil Nadu. 
@@ -8,7 +8,7 @@ CivicLens TN is an AI-powered public accountability and policy intelligence plat
 The goal of CivicLens TN is to enhance transparency and understanding of political processes, policy implementations, and civic issues. It aims to empower citizens, journalists, and researchers with AI-driven insights into state policies, political promises, public spending, and more.
 
 ## Major Planned Modules
-- Budget Analysis
+- **Budget Analysis (Phase 1 Complete - Infrastructure Ready)**
 - Historical Scheme Intelligence
 - Political Promise Analysis
 - Tamil News Framing Analysis
