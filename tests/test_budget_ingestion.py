@@ -37,4 +37,4 @@ def test_ingestion_pipeline_with_csv_fixture(db_session):
     assert records[0].source_document.manifest_dataset_id == "TEST_BUDGET_01"
     assert records[0].financial_year == "2024-25"
     assert records[0].scheme.department.name == "School Education"
-    assert records[0].currency_unit == "INR_Absolute"
+    assert records[0].currency_unit == "INR_Thousands"
