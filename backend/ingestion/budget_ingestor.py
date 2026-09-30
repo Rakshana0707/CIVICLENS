@@ -27,8 +27,8 @@ class BudgetIngestor:
         Maps a raw extracted row to a list of Canonical BudgetRecords (one per budget stage).
         """
         records = []
-        department_name = metadata.get('dataset_title', 'Unknown Department')
-        scheme_name = raw_row.get('scheme_name') or 'Unknown Scheme'
+        department_name = raw_row.get('department_name') or metadata.get('dataset_title', 'Unknown Department')
+        scheme_name = raw_row.get('scheme_name') or raw_row.get('description') or 'Unknown Scheme'
         head_of_account = raw_row.get('head_of_account', '')
         financial_year = metadata.get('financial_year', '')
         

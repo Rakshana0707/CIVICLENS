@@ -3,8 +3,8 @@ import pandas as pd
 import plotly.express as px
 from frontend.services.api import api_client
 
-st.set_page_config(page_title="Budget Insights - CivicLens TN", page_icon="dY"b", layout="wide")
-st.title("dY"b Budget Insights & Pattern Discovery")
+st.set_page_config(page_title="Budget Insights - CivicLens TN", layout="wide")
+st.title(" Budget Insights & Pattern Discovery")
 st.markdown("""
 Explore machine learning groups (clusters) and statistical anomalies within the official budget data. 
 **Notice:** Models identify *mathematical deviations* (variance, budget size, year-over-year changes). 
@@ -27,7 +27,7 @@ dept_options = ["All"] + list(dept_map.keys())
 selected_dept_name = st.sidebar.selectbox("Department Filter", options=dept_options)
 selected_dept_id = dept_map.get(selected_dept_name) if selected_dept_name != "All" else None
 
-tab1, tab2 = st.tabs(["dY"C Clustering Analysis", "dY"a Anomaly Detection"])
+tab1, tab2 = st.tabs([" Clustering Analysis", " Anomaly Detection"])
 
 with tab1:
     st.subheader("Clustering Configuration")

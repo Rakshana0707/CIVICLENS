@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from frontend.services.api import api_client
 
-st.set_page_config(page_title="Budget & Schemes - CivicLens TN", page_icon="dY"%", layout="wide")
-st.title("dY"% Budget & Scheme Explorer")
+st.set_page_config(page_title="Budget & Schemes - CivicLens TN", layout="wide")
+st.title(" Budget & Scheme Explorer")
 st.markdown("Explore official Tamil Nadu budget allocations, historical scheme intelligence, and actual expenditures.")
 
 # --- Sidebar Filters ---
@@ -78,7 +78,7 @@ total_count = response_data.get("total_count", 0)
 
 # --- Main Content ---
 if total_count == 0:
-    st.info("dY"" No budget records found for the selected filters. The database might be empty or your filters are too restrictive.")
+    st.info("No budget records found for the selected filters. The database might be empty or your filters are too restrictive.")
 else:
     st.write(f"**Showing {min(len(records), LIMIT)} of {total_count} records.**")
     
@@ -116,7 +116,7 @@ else:
     
     with col1:
         if st.session_state.budget_skip > 0:
-            if st.button("dY"  Previous"):
+            if st.button("< Previous"):
                 st.session_state.budget_skip -= LIMIT
                 st.rerun()
                 
@@ -127,16 +127,16 @@ else:
         
     with col3:
         if st.session_state.budget_skip + LIMIT < total_count:
-            if st.button("Next dY" "):
+            if st.button("Next >"):
                 st.session_state.budget_skip += LIMIT
                 st.rerun()
 
     # --- Year-Wise Analysis ---
     st.markdown("---")
-    st.subheader("dY"^ Year-Wise Analysis")
+    st.subheader("^ Year-Wise Analysis")
     
     if selected_stage == "All":
-        st.info("dY"i Please select a specific **Budget Stage** (e.g., 'budget_estimate') from the sidebar to view year-over-year trends. Mixing different budget stages in a single trend line is invalid and unsupported.")
+        st.info(" Please select a specific **Budget Stage** (e.g., 'budget_estimate') from the sidebar to view year-over-year trends. Mixing different budget stages in a single trend line is invalid and unsupported.")
     else:
         with st.spinner("Calculating trends..."):
             trend_ok, trend_data = api_client.get_budget_trend(
@@ -173,16 +173,16 @@ else:
             )
             
             # Disclaimers
-            st.caption("dY"i **Note:** Missing years indicate no matching official data was found. We do not interpolate or fabricate missing years. Percentage changes reflect nominal values and are not adjusted for inflation. Descriptive comparisons do not imply causation.")
+            st.caption(" **Note:** Missing years indicate no matching official data was found. We do not interpolate or fabricate missing years. Percentage changes reflect nominal values and are not adjusted for inflation. Descriptive comparisons do not imply causation.")
         else:
             st.warning("Not enough data to calculate year-over-year trends for this selection.")
 
     # --- Scheme-Level Analysis ---
     if selected_scheme_id is None:
         st.markdown("---")
-        st.subheader("dY"i Scheme-Level Trend Comparison")
+        st.subheader(" Scheme-Level Trend Comparison")
         if selected_stage == "All":
-             st.info("dY"i Please select a specific **Budget Stage** to compare scheme allocations over time.")
+             st.info(" Please select a specific **Budget Stage** to compare scheme allocations over time.")
         else:
             with st.spinner("Fetching scheme trends..."):
                 sch_trend_ok, sch_trend_data = api_client.get_scheme_trends(
@@ -218,4 +218,4 @@ else:
                     st.warning("No scheme-level trend data available for this selection.")
 
 st.markdown("---")
-st.caption("dY"i CivicLens TN ensures transparency by providing source traceability for all data points. See 'Source Document' for exact origins.")
+st.caption(" CivicLens TN ensures transparency by providing source traceability for all data points. See 'Source Document' for exact origins.")
