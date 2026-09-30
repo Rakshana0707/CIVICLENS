@@ -1,0 +1,33 @@
+{
+  "_schema_version": "1.0",
+  "datasets": [
+    {
+      "dataset_id": "TN_POLICY_NOTES_ARCHIVE",
+      "source_organization": "Government of Tamil Nadu",
+      "dataset_title": "Departmental Policy Notes",
+      "official_source_url": "https://tnbudget.tn.gov.in/",
+      "financial_year": "Multiple (e.g., 2011-2025)",
+      "original_filename": "",
+      "file_format": "pdf",
+      "collection_date": "2026-09-30",
+      "coverage": "Tamil Nadu State Departments",
+      "limitations": "Formatting inconsistencies across departments and years.",
+      "collection_status": "pending",
+      "checksum": ""
+    },
+    {
+      "dataset_id": "TN_BUDGET_SPEECHES_ARCHIVE",
+      "source_organization": "Finance Department, Government of Tamil Nadu",
+      "dataset_title": "Annual Budget Speeches",
+      "official_source_url": "https://tnbudget.tn.gov.in/",
+      "financial_year": "Multiple (e.g., 2011-2025)",
+      "original_filename": "",
+      "file_format": "pdf",
+      "collection_date": "2026-09-30",
+      "coverage": "Tamil Nadu State Major Schemes",
+      "limitations": "Provides high-level intent but lacks granular eligibility criteria.",
+      "collection_status": "pending",
+      "checksum": ""
+    }
+  ]
+}
