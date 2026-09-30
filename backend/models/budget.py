@@ -114,3 +114,37 @@ class BudgetRecord(Base):
     __table_args__ = (
         UniqueConstraint('scheme_id', 'financial_year', 'budget_stage', 'source_document_id', name='uq_budget_record_entry'),
     )
+
+class HistoricalScheme(Base):
+    """
+    Phase 2: Represents qualitative intelligence for a historical scheme.
+    """
+    __tablename__ = 'historical_schemes'
+
+    id = Column(Integer, primary_key=True, index=True)
+    original_source_identifier = Column(String, nullable=True) # e.g. from original system
+    budget_scheme_id = Column(Integer, ForeignKey('budget_schemes.id'), nullable=True, index=True)
+    department_id = Column(Integer, ForeignKey('budget_departments.id'), nullable=False, index=True)
+    source_document_id = Column(Integer, ForeignKey('budget_source_documents.id'), nullable=False)
+    
+    financial_year = Column(String, nullable=False, index=True)
+    scheme_name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    objectives = Column(String, nullable=True)
+    target_beneficiaries = Column(String, nullable=True)
+    sector_category = Column(String, nullable=True)
+    source_page_number = Column(Integer, nullable=True)
+    
+    # Matching metadata
+    is_uncertain_match = Column(Integer, default=0) # 0 False, 1 True
+    match_confidence = Column(Float, nullable=True)
+    
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('scheme_name', 'department_id', 'financial_year', 'source_document_id', name='uq_historical_scheme'),
+    )
+
+    budget_scheme = relationship("BudgetScheme", foreign_keys=[budget_scheme_id])
+    department = relationship("BudgetDepartment", foreign_keys=[department_id])
+    source_document = relationship("BudgetSourceDocument", foreign_keys=[source_document_id])
+
