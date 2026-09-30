@@ -2,32 +2,32 @@
   "_schema_version": "1.0",
   "datasets": [
     {
-      "dataset_id": "TN_POLICY_NOTES_ARCHIVE",
-      "source_organization": "Government of Tamil Nadu",
-      "dataset_title": "Departmental Policy Notes",
-      "official_source_url": "https://tnbudget.tn.gov.in/",
-      "financial_year": "Multiple (e.g., 2011-2025)",
-      "original_filename": "",
-      "file_format": "pdf",
-      "collection_date": "2026-09-30",
-      "coverage": "Tamil Nadu State Departments",
-      "limitations": "Formatting inconsistencies across departments and years.",
-      "collection_status": "pending",
-      "checksum": ""
-    },
-    {
-      "dataset_id": "TN_BUDGET_SPEECHES_ARCHIVE",
+      "dataset_id": "TN_BUDGET_SPEECH_2023_24",
       "source_organization": "Finance Department, Government of Tamil Nadu",
-      "dataset_title": "Annual Budget Speeches",
+      "dataset_title": "Budget Speech 2023-2024",
       "official_source_url": "https://tnbudget.tn.gov.in/",
-      "financial_year": "Multiple (e.g., 2011-2025)",
-      "original_filename": "",
+      "financial_year": "2023-24",
+      "original_filename": "Appendix_Budget_Speech.pdf",
       "file_format": "pdf",
       "collection_date": "2026-09-30",
       "coverage": "Tamil Nadu State Major Schemes",
       "limitations": "Provides high-level intent but lacks granular eligibility criteria.",
-      "collection_status": "pending",
-      "checksum": ""
+      "collection_status": "verified",
+      "checksum": "8863F5ABB006059477204C3DF3A27AE2BFDEC2ECAEE02349BD57EE9527901533"
+    },
+    {
+      "dataset_id": "TN_POLICY_NOTE_SCHOOL_ED_2023_24",
+      "source_organization": "School Education Department, Government of Tamil Nadu",
+      "dataset_title": "Policy Note 2023-2024 (School Education)",
+      "official_source_url": "https://tnbudget.tn.gov.in/",
+      "financial_year": "2023-24",
+      "original_filename": "DemandBook_43-2.pdf",
+      "file_format": "pdf",
+      "collection_date": "2026-09-30",
+      "coverage": "School Education Schemes",
+      "limitations": "Formatting inconsistencies across chapters.",
+      "collection_status": "verified",
+      "checksum": "76AA1CD3A552B4510C4C4D2BA7AF60B0A91F798CE5DE9705D179BFF310A3DDC6"
     }
   ]
 }
