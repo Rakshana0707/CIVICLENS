@@ -207,3 +207,11 @@ api_client = APIClient()
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
+    def compare_schemes(self, scheme_ids: List[int]) -> Tuple[bool, Any]:
+        try:
+            ids_str = ",".join(map(str, scheme_ids))
+            response = requests.get(f"{self.base_url}/api/schemes/compare", params={"ids": ids_str}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}

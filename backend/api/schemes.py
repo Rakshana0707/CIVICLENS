@@ -203,3 +203,82 @@ def semantic_text_search():
         return success_response(results)
     except Exception as e:
         return error_response(f"Semantic search failed: {str(e)}", status_code=500)
+@schemes_bp.route('/compare', methods=['GET'])
+def compare_schemes():
+    try:
+        db: Session = next(get_db())
+    except Exception as e:
+        return error_response(f"Database error: {str(e)}", status_code=500)
+        
+    ids_param = request.args.get('ids')
+    if not ids_param:
+        return error_response("Query parameter 'ids' is required (comma-separated).", status_code=400)
+        
+    try:
+        scheme_ids = [int(i.strip()) for i in ids_param.split(',') if i.strip().isdigit()]
+    except ValueError:
+        return error_response("Invalid IDs format.", status_code=400)
+        
+    if len(scheme_ids) < 2:
+        return error_response("At least two scheme IDs are required for comparison.", status_code=400)
+        
+    try:
+        schemes = db.query(HistoricalScheme).filter(HistoricalScheme.id.in_(scheme_ids)).all()
+        if not schemes:
+            return error_response("No schemes found for provided IDs.", status_code=404)
+            
+        from backend.nlp.similarity import cosine_similarity
+        
+        # Build scheme payload
+        results = []
+        for s in schemes:
+            dept_name = s.department.name if s.department else "Unknown"
+            
+            # Fetch sources
+            from backend.models.budget import SchemeSourceRelationship, BudgetSourceDocument
+            rels = db.query(SchemeSourceRelationship).filter(SchemeSourceRelationship.historical_scheme_id == s.id).all()
+            sources = []
+            for rel in rels:
+                doc = db.query(BudgetSourceDocument).filter(BudgetSourceDocument.id == rel.source_document_id).first()
+                if doc:
+                    sources.append({"title": doc.title, "page": rel.source_page_number})
+                    
+            vec = s.embedding.get("vector") if (s.embedding and isinstance(s.embedding, dict)) else []
+            
+            results.append({
+                "id": s.id,
+                "scheme_name": s.scheme_name,
+                "financial_year": s.financial_year,
+                "department": dept_name,
+                "description": s.description,
+                "objectives": s.objectives,
+                "target_beneficiaries": s.target_beneficiaries,
+                "sources": sources,
+                "vector": vec  # Temporarily included for matrix calculation, removed later
+            })
+            
+        # Calculate N x N similarity matrix
+        similarity_matrix = {}
+        for i, s1 in enumerate(results):
+            similarity_matrix[s1["id"]] = {}
+            for j, s2 in enumerate(results):
+                if i == j:
+                    similarity_matrix[s1["id"]][s2["id"]] = 1.0
+                else:
+                    if s1["vector"] and s2["vector"]:
+                        score = cosine_similarity(s1["vector"], s2["vector"])
+                        similarity_matrix[s1["id"]][s2["id"]] = round(score, 4)
+                    else:
+                        similarity_matrix[s1["id"]][s2["id"]] = 0.0
+                        
+        # Strip vectors before sending
+        for r in results:
+            del r["vector"]
+            
+        return success_response({
+            "schemes": results,
+            "similarity_matrix": similarity_matrix
+        })
+        
+    except Exception as e:
+        return error_response(f"Comparison failed: {str(e)}", status_code=500)
