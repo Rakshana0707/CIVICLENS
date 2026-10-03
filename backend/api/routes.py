@@ -2,6 +2,7 @@ from flask import Blueprint
 from backend.api.responses import error_response
 from backend.api.budget import budget_bp
 from backend.api.ml import ml_bp
+from backend.api.schemes import schemes_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -12,15 +13,21 @@ def not_implemented():
 # Register real blueprints
 api_bp.register_blueprint(budget_bp)
 api_bp.register_blueprint(ml_bp)
+api_bp.register_blueprint(schemes_bp)
 
 # Register placeholder namespaces for future module routing
 namespaces = [
-    'schemes', 'promises', 'news', 
+    'promises', 'news', 
     'representatives', 'funding', 'claims', 'evidence'
 ]
 
+# Provide fallback 501 for unbuilt components
 for ns in namespaces:
-    bp = Blueprint(ns, __name__, url_prefix=f'/{ns}')
-    # Bind a dummy route to reserve the namespace
-    bp.route('/', methods=['GET'])(not_implemented)
-    api_bp.register_blueprint(bp)
+    ns_bp = Blueprint(ns, __name__, url_prefix=f'/{ns}')
+    
+    @ns_bp.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
+    @ns_bp.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+    def handle_unimplemented(path):
+        return not_implemented()
+        
+    api_bp.register_blueprint(ns_bp)
