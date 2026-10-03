@@ -142,3 +142,44 @@ def get_scheme_categories():
     categories = db.query(SchemeCategory).all()
     data = [{"id": c.id, "name": c.name, "description": c.description} for c in categories]
     return success_response(data)
+@schemes_bp.route('/<int:scheme_id>/similar', methods=['GET'])
+def get_similar_schemes(scheme_id: int):
+    try:
+        db: Session = next(get_db())
+    except Exception as e:
+        return error_response(f"Database error: {str(e)}", status_code=500)
+        
+    top_k = request.args.get('top_k', 5, type=int)
+    threshold = request.args.get('threshold', 0.3, type=float)
+    
+    try:
+        from backend.nlp.similarity import SemanticSchemeSearcher
+        searcher = SemanticSchemeSearcher(db)
+        results = searcher.search_by_scheme_id(scheme_id, top_k=top_k, threshold=threshold)
+        return success_response(results)
+    except ValueError as ve:
+        return error_response(str(ve), status_code=404)
+    except Exception as e:
+        return error_response(f"Similarity search failed: {str(e)}", status_code=500)
+
+@schemes_bp.route('/semantic_search', methods=['GET'])
+def semantic_text_search():
+    try:
+        db: Session = next(get_db())
+    except Exception as e:
+        return error_response(f"Database error: {str(e)}", status_code=500)
+        
+    query = request.args.get('query', type=str)
+    if not query:
+        return error_response("Query parameter is required.", status_code=400)
+        
+    top_k = request.args.get('top_k', 5, type=int)
+    threshold = request.args.get('threshold', 0.3, type=float)
+    
+    try:
+        from backend.nlp.similarity import SemanticSchemeSearcher
+        searcher = SemanticSchemeSearcher(db)
+        results = searcher.search_by_text(query, top_k=top_k, threshold=threshold)
+        return success_response(results)
+    except Exception as e:
+        return error_response(f"Semantic search failed: {str(e)}", status_code=500)
