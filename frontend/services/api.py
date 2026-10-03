@@ -183,3 +183,27 @@ api_client = APIClient()
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
+    def get_similar_schemes(self, scheme_id, top_k=5, threshold=0.3, page=1, department_id=None, year=None, category_id=None) -> Tuple[bool, Any]:
+        params = {"top_k": top_k, "threshold": threshold, "page": page}
+        if department_id and department_id != 0: params["department_id"] = department_id
+        if year and year != "All": params["year"] = year
+        if category_id and category_id != 0: params["category_id"] = category_id
+        
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/{scheme_id}/similar", params=params, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def semantic_search_schemes(self, query, top_k=5, threshold=0.3, page=1, department_id=None, year=None, category_id=None) -> Tuple[bool, Any]:
+        params = {"query": query, "top_k": top_k, "threshold": threshold, "page": page}
+        if department_id and department_id != 0: params["department_id"] = department_id
+        if year and year != "All": params["year"] = year
+        if category_id and category_id != 0: params["category_id"] = category_id
+        
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/semantic_search", params=params, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
