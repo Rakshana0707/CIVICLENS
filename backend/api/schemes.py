@@ -151,11 +151,21 @@ def get_similar_schemes(scheme_id: int):
         
     top_k = request.args.get('top_k', 5, type=int)
     threshold = request.args.get('threshold', 0.3, type=float)
+    page = request.args.get('page', 1, type=int)
+    department_id = request.args.get('department_id', type=int)
+    year = request.args.get('year', type=str)
+    category_id = request.args.get('category_id', type=int)
+    
+    if page < 1: return error_response("Page must be >= 1", status_code=400)
+    if top_k < 1 or top_k > 100: return error_response("top_k must be between 1 and 100", status_code=400)
     
     try:
         from backend.nlp.similarity import SemanticSchemeSearcher
         searcher = SemanticSchemeSearcher(db)
-        results = searcher.search_by_scheme_id(scheme_id, top_k=top_k, threshold=threshold)
+        results = searcher.search_by_scheme_id(
+            scheme_id, top_k=top_k, threshold=threshold, page=page,
+            department_id=department_id, year=year, category_id=category_id
+        )
         return success_response(results)
     except ValueError as ve:
         return error_response(str(ve), status_code=404)
@@ -175,11 +185,21 @@ def semantic_text_search():
         
     top_k = request.args.get('top_k', 5, type=int)
     threshold = request.args.get('threshold', 0.3, type=float)
+    page = request.args.get('page', 1, type=int)
+    department_id = request.args.get('department_id', type=int)
+    year = request.args.get('year', type=str)
+    category_id = request.args.get('category_id', type=int)
+    
+    if page < 1: return error_response("Page must be >= 1", status_code=400)
+    if top_k < 1 or top_k > 100: return error_response("top_k must be between 1 and 100", status_code=400)
     
     try:
         from backend.nlp.similarity import SemanticSchemeSearcher
         searcher = SemanticSchemeSearcher(db)
-        results = searcher.search_by_text(query, top_k=top_k, threshold=threshold)
+        results = searcher.search_by_text(
+            query, top_k=top_k, threshold=threshold, page=page,
+            department_id=department_id, year=year, category_id=category_id
+        )
         return success_response(results)
     except Exception as e:
         return error_response(f"Semantic search failed: {str(e)}", status_code=500)
