@@ -135,3 +135,51 @@ class APIClient:
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
+
+    def get_departments(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/budget/departments", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def search_schemes(self, name=None, description=None, year=None, department_id=None, category_id=None, page=1, limit=50) -> Tuple[bool, Any]:
+        params = {"page": page, "limit": limit}
+        if name: params["name"] = name
+        if description: params["description"] = description
+        if year and year != "All": params["year"] = year
+        if department_id and department_id != 0: params["department_id"] = department_id
+        if category_id and category_id != 0: params["category_id"] = category_id
+        
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/search", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_scheme(self, scheme_id) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/{scheme_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_scheme_history(self, scheme_id) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/{scheme_id}/history", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_scheme_sources(self, scheme_id) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/{scheme_id}/sources", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+    def get_scheme_categories(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/categories", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}

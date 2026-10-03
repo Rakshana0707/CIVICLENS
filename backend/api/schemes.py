@@ -136,3 +136,9 @@ def get_scheme_sources(scheme_id: int):
         })
         
     return success_response(data)
+@schemes_bp.route('/categories', methods=['GET'])
+def get_scheme_categories():
+    db: Session = next(get_db())
+    categories = db.query(SchemeCategory).all()
+    data = [{"id": c.id, "name": c.name, "description": c.description} for c in categories]
+    return success_response(data)
