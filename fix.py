@@ -1,21 +1,22 @@
-import os
 import re
 
-for file_name in os.listdir('frontend/pages'):
-    if file_name.endswith('.py'):
-        path = os.path.join('frontend/pages', file_name)
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
-            
-        for i, line in enumerate(lines):
-            if 'st.set_page_config' in line:
-                # Replace the whole line with a safe version
-                title = line.split('page_title="')[1].split('"')[0] if 'page_title="' in line else 'CivicLens TN'
-                lines[i] = f'st.set_page_config(page_title="{title}", layout="wide")\n'
-            if 'st.title' in line:
-                # Clean up title line
-                lines[i] = re.sub(r'dY\"[a-zA-Z%]+\"?\s*', '', lines[i])
-                lines[i] = lines[i].replace('?? ', '')
-                
-        with open(path, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+path = r'E:\CIVCLENS\backend\api\schemes.py'
+with open(path, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# The first occurrence is the old one. The second occurrence is the new one.
+# Let's split on "@schemes_bp.route('/<int:scheme_id>/similar'"
+parts = content.split("@schemes_bp.route('/<int:scheme_id>/similar', methods=['GET'])")
+
+if len(parts) == 3:
+    # Parts[0] is the top of the file
+    # Parts[1] is the old similar and semantic_search routes
+    # Parts[2] is the new similar and semantic_search routes
+    
+    # We want to keep parts[0] + the new routes marker + parts[2]
+    new_content = parts[0] + "@schemes_bp.route('/<int:scheme_id>/similar', methods=['GET'])" + parts[2]
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    print("Fixed duplicates.")
+else:
+    print("Unexpected parts length:", len(parts))
