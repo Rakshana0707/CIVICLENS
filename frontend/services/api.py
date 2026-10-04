@@ -133,8 +133,6 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
-# Global instance for use across Streamlit pages
-api_client = APIClient()
 
     def get_departments(self) -> Tuple[bool, Any]:
         try:
@@ -226,3 +224,6 @@ api_client = APIClient()
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
+# Global instance for use across Streamlit pages
+api_client = APIClient()
