@@ -1,0 +1,54 @@
+[
+  {
+    "organization": "Dravida Munnetra Kazhagam (DMK)",
+    "election_year": "2024 Lok Sabha Elections",
+    "source_url": "https://data.opencity.in/dataset/76e54184-f294-44e4-a40c-8594ccb410c8/resource/c86a0519-1a32-407c-8381-41659734f9a2/download/a7964b61-ee79-4f84-9e1b-e3e28be52e04.pdf",
+    "document_title": "DMK Lok Sabha Elections 2024 Manifesto",
+    "language": "English",
+    "format": "PDF",
+    "publication_date": "2024-03-20",
+    "is_complete": true,
+    "contains_specific_promises": true,
+    "accessibility_restrictions": "None",
+    "source_reliability_tier": 3
+  },
+  {
+    "organization": "Dravida Munnetra Kazhagam (DMK)",
+    "election_year": "2021 Tamil Nadu Legislative Assembly Election",
+    "source_url": "https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf",
+    "document_title": "DMK Election Manifesto 2021",
+    "language": "Tamil",
+    "format": "PDF",
+    "publication_date": "2021-03-13",
+    "is_complete": true,
+    "contains_specific_promises": true,
+    "accessibility_restrictions": "None",
+    "source_reliability_tier": 5
+  },
+  {
+    "organization": "All India Anna Dravida Munnetra Kazhagam (AIADMK)",
+    "election_year": "2021 Tamil Nadu Legislative Assembly Election",
+    "source_url": "https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf",
+    "document_title": "AIADMK Election Manifesto 2021",
+    "language": "Tamil",
+    "format": "PDF",
+    "publication_date": "2021-03-14",
+    "is_complete": true,
+    "contains_specific_promises": true,
+    "accessibility_restrictions": "None",
+    "source_reliability_tier": 5
+  },
+  {
+    "organization": "Bharatiya Janata Party (BJP)",
+    "election_year": "2021 Tamil Nadu Legislative Assembly Election",
+    "source_url": "https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf",
+    "document_title": "BJP Tamil Nadu Vision Document 2021",
+    "language": "Tamil",
+    "format": "PDF",
+    "publication_date": "2021-03-22",
+    "is_complete": true,
+    "contains_specific_promises": true,
+    "accessibility_restrictions": "None",
+    "source_reliability_tier": 1
+  }
+]
