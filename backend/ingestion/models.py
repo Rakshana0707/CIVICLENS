@@ -16,6 +16,7 @@ class RawBudgetRecord:
     amount: Optional[float] = None
     currency_unit: str = "INR_Absolute"
     source_page_number: Optional[int] = None
+
 @dataclass
 class RawSchemeRecord:
     record_id: str
@@ -30,3 +31,19 @@ class RawSchemeRecord:
     sector_category: Optional[str] = None
     allocation_amount: Optional[str] = None
     implementation_details: Optional[str] = None
+
+@dataclass
+class ExtractedManifestoSegment:
+    """
+    Represents an extracted segment of a political manifesto.
+    Preserves original text, language, and precise source location.
+    """
+    manifesto_id: str
+    page_number: Optional[int] = None
+    section: Optional[str] = None
+    original_text: str = ""
+    normalized_text: Optional[str] = None
+    language: str = "Unknown"
+    extraction_method: str = "pdfplumber"
+    OCR_used: bool = False
+    extraction_confidence: float = 1.0
