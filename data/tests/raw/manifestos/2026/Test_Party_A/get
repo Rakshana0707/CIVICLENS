@@ -1,0 +1,11 @@
+{
+  "args": {}, 
+  "headers": {
+    "Accept-Encoding": "identity", 
+    "Host": "httpbin.org", 
+    "User-Agent": "CIVICLENS_TN_Bot/1.0 (Research Project; contact@civiclens.org)", 
+    "X-Amzn-Trace-Id": "Root=1-6ac20cf6-6708c5874423ee90146d3dfa"
+  }, 
+  "origin": "49.206.118.224", 
+  "url": "https://httpbin.org/get"
+}

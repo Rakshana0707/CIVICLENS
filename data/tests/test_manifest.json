@@ -1,0 +1,31 @@
+[
+  {
+    "manifesto_id": "TEST_FIXTURE_1",
+    "party": "Test Party A",
+    "election": "Test Election",
+    "election_year": 2026,
+    "source_url": "https://httpbin.org/get",
+    "source_type": "primary",
+    "source_tier": 1,
+    "retrieval_status": "collected",
+    "retrieval_method": "PoliteHTTPClient_GET",
+    "collection_timestamp": "2026-10-04T08:23:15.609968+00:00",
+    "storage_path": "data/tests/raw/manifestos/2026/Test_Party_A/get",
+    "content_hash": "5734c3d6d67d433a65c9d6807882a5b0410690300e61971eb7446875faa67065",
+    "checksum": "5734c3d6d67d433a65c9d6807882a5b0410690300e61971eb7446875faa67065",
+    "file_size": 321,
+    "document_format": "UNKNOWN"
+  },
+  {
+    "manifesto_id": "TEST_FIXTURE_2",
+    "party": "Test Party B",
+    "election": "Test Election",
+    "election_year": 2026,
+    "source_url": "https://httpbin.org/status/404",
+    "source_type": "archive",
+    "source_tier": 3,
+    "retrieval_status": "manual_acquisition_required",
+    "retrieval_method": "PoliteHTTPClient_GET",
+    "collection_timestamp": "2026-10-04T08:23:17.472276+00:00"
+  }
+]
