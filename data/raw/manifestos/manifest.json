@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "party": "Tamilaga Vettri Kazhagam (TVK)",
+    "election_year": 2026,
+    "election_type": "Tamil Nadu Legislative Assembly Election",
+    "manifesto_title": "TVK Assembly Election Manifesto 2026",
+    "source_organization": "Tamilaga Vettri Kazhagam",
+    "source_url": "https://tvkvijay.com/manifesto2026.pdf",
+    "source_type": "primary",
+    "source_tier": 1,
+    "language": "Tamil",
+    "format": "PDF",
+    "availability": "Available",
+    "verification_status": "Verified",
+    "notes": "Official party website copy. Full text confirmed."
+  },
+  {
+    "party": "Dravida Munnetra Kazhagam (DMK)",
+    "election_year": 2026,
+    "election_type": "Tamil Nadu Legislative Assembly Election",
+    "manifesto_title": "DMK Assembly Election Manifesto 2026",
+    "source_organization": "OpenCity Data Repository",
+    "source_url": "https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf",
+    "source_type": "archive",
+    "source_tier": 3,
+    "language": "Tamil",
+    "format": "PDF",
+    "availability": "Available",
+    "verification_status": "Verified",
+    "notes": "Original DMK site link rotated; sourced from reputable OpenCity data archive."
+  },
+  {
+    "party": "Dravida Munnetra Kazhagam (DMK)",
+    "election_year": 2021,
+    "election_type": "Tamil Nadu Legislative Assembly Election",
+    "manifesto_title": "DMK Assembly Election Manifesto 2021",
+    "source_organization": "TN234 Political Archive",
+    "source_url": "https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf",
+    "source_type": "archive",
+    "source_tier": 3,
+    "language": "Tamil",
+    "format": "PDF",
+    "availability": "Available",
+    "verification_status": "Verified",
+    "notes": "Retrieved from TN234 election archive as party site no longer hosts 2021 documents."
+  },
+  {
+    "party": "All India Anna Dravida Munnetra Kazhagam (AIADMK)",
+    "election_year": 2021,
+    "election_type": "Tamil Nadu Legislative Assembly Election",
+    "manifesto_title": "AIADMK Assembly Election Manifesto 2021",
+    "source_organization": "TN234 Political Archive",
+    "source_url": "https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf",
+    "source_type": "archive",
+    "source_tier": 3,
+    "language": "Tamil",
+    "format": "PDF",
+    "availability": "Available",
+    "verification_status": "Verified",
+    "notes": "Validated complete manifesto from historical archive."
+  }
+]
