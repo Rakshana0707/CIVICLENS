@@ -11,3 +11,16 @@
 2026-10-04 12:27:07,494 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf: 403
 2026-10-04 12:27:07,495 - __main__ - ERROR - Failed to download https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf: failed_http_403
 2026-10-04 12:27:07,497 - __main__ - INFO - Manifesto download process completed.
+2026-10-04 12:56:20,021 - __main__ - INFO - Processing https://tvkvijay.com/manifesto2026.pdf
+2026-10-04 12:56:20,675 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tvkvijay.com/manifesto2026.pdf: 404
+2026-10-04 12:56:20,675 - __main__ - ERROR - Failed to download https://tvkvijay.com/manifesto2026.pdf: failed_http_404
+2026-10-04 12:56:20,676 - __main__ - INFO - Processing https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf
+2026-10-04 12:56:21,115 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf: 404
+2026-10-04 12:56:21,116 - __main__ - ERROR - Failed to download https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf: failed_http_404
+2026-10-04 12:56:21,116 - __main__ - INFO - Processing https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf
+2026-10-04 12:56:22,571 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf: 404
+2026-10-04 12:56:22,572 - __main__ - ERROR - Failed to download https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf: failed_http_404
+2026-10-04 12:56:22,573 - __main__ - INFO - Processing https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf
+2026-10-04 12:56:24,576 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf: 404
+2026-10-04 12:56:24,577 - __main__ - ERROR - Failed to download https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf: failed_http_404
+2026-10-04 12:56:24,580 - __main__ - INFO - Manifesto download process completed.
