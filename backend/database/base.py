@@ -19,3 +19,8 @@ from backend.models.budget import (
     BudgetImportBatch,
     BudgetRecord
 )
+from backend.models.manifesto import (
+    ManifestoSource,
+    ManifestoDocument,
+    Manifesto
+)
