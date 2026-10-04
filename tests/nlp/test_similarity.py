@@ -44,13 +44,14 @@ def test_semantic_searcher():
     searcher = SemanticSchemeSearcher(mock_db, mock_embedder)
     results = searcher.search_by_text("Find me health", top_k=5, threshold=0.5)
     
-    assert len(results) == 1
-    assert results[0]["id"] == 1
-    assert results[0]["similarity_score"] == 1.0
-    assert "disclaimer" in results[0]
+    assert results["total"] == 1
+    assert len(results["items"]) == 1
+    assert results["items"][0]["id"] == 1
+    assert results["items"][0]["similarity_score"] == 1.0
+    assert "disclaimer" in results["items"][0]
     
     print("All tests passed.")
     
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_cosine_similarity()
     test_semantic_searcher()
