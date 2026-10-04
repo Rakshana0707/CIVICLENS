@@ -36,7 +36,7 @@ def main():
     fixture_dir = "data/tests/fixtures/processing"
     fixtures = create_fixtures(fixture_dir)
     
-    processor = DocumentProcessor()
+    processor = DocumentProcessor(allow_mock=True)  # TEST_FIXTURE run only
     
     for file_path, manifesto_id, language in fixtures:
         logger.info(f"--- Testing {file_path} ---")

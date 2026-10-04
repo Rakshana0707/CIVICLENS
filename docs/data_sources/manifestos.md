@@ -1,79 +1,43 @@
 # Manifesto Source Registry
 
-This document serves as the verified registry of manifesto sources for the Tamil Nadu Assembly Elections (2021 and 2026). The registry strictly follows the CIVICLENS TN source discovery and verification hierarchy.
+Scope: Tamil Nadu Legislative Assembly elections, 2021 and 2026.
 
-## Discovery and Verification Process
-For each party, the following steps were taken:
-1. Searched the official party website (Tier 1).
-2. Checked official archives and document sections.
-3. If unavailable, fell back to reputable public archives like TN234 or OpenCity (Tier 2/3).
-4. News/research sources (Tier 4) were used only for discovery and validation, never as primary sources.
-5. Verification involved confirming the actual manifesto material, party, year, language, and completeness.
+## Current status
 
----
+**No manifesto source has been verified yet.** `data/raw/manifestos/manifest.json` is intentionally empty.
 
-## 2026 Tamil Nadu Assembly Election
+A source may only be added to the manifest after all of these checks pass:
 
-### Tamilaga Vettri Kazhagam (TVK) - 2026
-*   **Party:** Tamilaga Vettri Kazhagam (TVK)
-*   **Election Year:** 2026
-*   **Election Type:** Tamil Nadu Legislative Assembly Election
-*   **Manifesto Title:** TVK Assembly Election Manifesto 2026
-*   **Source Organization:** Tamilaga Vettri Kazhagam
-*   **Source URL:** https://tvkvijay.com/manifesto2026.pdf
-*   **Source Type:** `primary`
-*   **Source Tier:** Tier 1 (Primary source)
-*   **Language:** Tamil
-*   **Format:** PDF
-*   **Availability:** Available
-*   **Verification Status:** Verified
-*   **Notes:** Official party website copy. Full text confirmed.
+1. Open the source.
+2. Confirm the document/page actually contains manifesto material.
+3. Confirm the party and election year.
+4. Confirm the language.
+5. Confirm the document is complete where possible.
 
-### Dravida Munnetra Kazhagam (DMK) - 2026
-*   **Party:** Dravida Munnetra Kazhagam (DMK)
-*   **Election Year:** 2026
-*   **Election Type:** Tamil Nadu Legislative Assembly Election
-*   **Manifesto Title:** DMK Assembly Election Manifesto 2026
-*   **Source Organization:** OpenCity Data Repository
-*   **Source URL:** https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf
-*   **Source Type:** `archive`
-*   **Source Tier:** Tier 3 (Reputable public dataset)
-*   **Language:** Tamil
-*   **Format:** PDF
-*   **Availability:** Available
-*   **Verification Status:** Verified
-*   **Notes:** Original DMK site link rotated; sourced from reputable OpenCity data archive.
+Source tiers and source types (`primary`, `secondary`, `archive`, `discovery_only`) follow
+[docs/phase3/manifesto_source_policy.md](../phase3/manifesto_source_policy.md).
 
----
+## Verified sources
 
-## 2021 Tamil Nadu Assembly Election
+_None._
 
-### Dravida Munnetra Kazhagam (DMK) - 2021
-*   **Party:** Dravida Munnetra Kazhagam (DMK)
-*   **Election Year:** 2021
-*   **Election Type:** Tamil Nadu Legislative Assembly Election
-*   **Manifesto Title:** DMK Assembly Election Manifesto 2021
-*   **Source Organization:** TN234 Political Archive
-*   **Source URL:** https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf
-*   **Source Type:** `archive`
-*   **Source Tier:** Tier 3 (Reputable archive)
-*   **Language:** Tamil
-*   **Format:** PDF
-*   **Availability:** Available
-*   **Verification Status:** Verified
-*   **Notes:** Retrieved from TN234 election archive as party site no longer hosts 2021 documents.
+## Rejected / unverified candidate URLs — do not use
 
-### All India Anna Dravida Munnetra Kazhagam (AIADMK) - 2021
-*   **Party:** All India Anna Dravida Munnetra Kazhagam (AIADMK)
-*   **Election Year:** 2021
-*   **Election Type:** Tamil Nadu Legislative Assembly Election
-*   **Manifesto Title:** AIADMK Assembly Election Manifesto 2021
-*   **Source Organization:** TN234 Political Archive
-*   **Source URL:** https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf
-*   **Source Type:** `archive`
-*   **Source Tier:** Tier 3 (Reputable archive)
-*   **Language:** Tamil
-*   **Format:** PDF
-*   **Availability:** Available
-*   **Verification Status:** Verified
-*   **Notes:** Validated complete manifesto from historical archive.
+These URLs were previously added to this registry and incorrectly marked "Verified".
+They were never opened before being recorded, and they appear to have been constructed
+from search-result summaries rather than found on the hosting sites. When the
+acquisition pipeline requested them on 2026-10-04, every one returned **HTTP 404 (Not Found)**.
+They are kept here only so they aren't re-added by mistake.
+
+| Party | Election | Candidate URL | Result |
+|---|---|---|---|
+| TVK | 2026 | `https://tvkvijay.com/manifesto2026.pdf` | HTTP 404, unverified |
+| DMK | 2026 | `https://opencity.in/data/tn-elections/dmk-manifesto-2026.pdf` | HTTP 404, unverified |
+| DMK | 2021 | `https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf` | HTTP 404, unverified |
+| AIADMK | 2021 | `https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf` | HTTP 404, unverified |
+
+## Discovery leads (not sources)
+
+Web searches suggest that the DMK released its 2026 manifesto on 2026-03-29 and that the TVK
+released its manifesto on 2026-04-16. The party sites (`dmk.in`, `tvkvijay.com`) and
+OpenCity may host copies. These are leads for manual discovery only and have **not** been verified.

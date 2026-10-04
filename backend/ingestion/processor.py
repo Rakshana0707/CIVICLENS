@@ -12,9 +12,10 @@ class DocumentProcessor:
     Raw PDF/HTML -> File Validation -> Document Type Detection -> Text Extraction -> Page/Section Preservation -> OCR if necessary -> Extracted Document
     """
     
-    def __init__(self):
-        # We could initialize specific readers here
-        pass
+    def __init__(self, allow_mock: bool = False):
+        # allow_mock enables the fake PDF extractor. TEST USE ONLY: it decodes raw
+        # bytes as text and would produce garbage for a real PDF.
+        self.allow_mock = allow_mock
         
     def _validate_file(self, file_path: str) -> bool:
         """Validates that the file exists and has size > 0."""
@@ -38,15 +39,20 @@ class DocumentProcessor:
             
     def _extract_pdf(self, file_path: str, manifesto_id: str, language: str) -> Iterator[ExtractedManifestoSegment]:
         """Routes to PDF reader logic, handling text and OCR."""
-        # For the architecture simulation, we use a mock reader if pdfplumber is missing
+        # Real extraction needs pdfplumber. The mock is only used when allow_mock=True.
         try:
-            import pdfplumber
-            from backend.ingestion.readers import ManifestoPDFReader
-            reader = ManifestoPDFReader()
-            yield from reader.extract_segments(file_path, manifesto_id, language)
+            import pdfplumber  # noqa: F401
         except ImportError:
-            logger.warning("pdfplumber not found. Using Mock PDF Extractor for architecture testing.")
+            if not self.allow_mock:
+                raise RuntimeError(
+                    "pdfplumber is not installed; cannot extract PDF text. "
+                    "Install it (pip install pdfplumber) before processing real manifestos."
+                )
+            logger.warning("pdfplumber not found. allow_mock=True: using MOCK PDF extractor (tests only).")
             yield from self._mock_pdf_extractor(file_path, manifesto_id, language)
+            return
+        from backend.ingestion.readers import ManifestoPDFReader
+        yield from ManifestoPDFReader().extract_segments(file_path, manifesto_id, language)
             
     def _extract_html(self, file_path: str, manifesto_id: str, language: str) -> Iterator[ExtractedManifestoSegment]:
         """Routes to HTML reader logic."""
