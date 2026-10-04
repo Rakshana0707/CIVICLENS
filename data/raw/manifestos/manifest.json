@@ -12,7 +12,10 @@
     "format": "PDF",
     "availability": "Available",
     "verification_status": "Verified",
-    "notes": "Official party website copy. Full text confirmed."
+    "notes": "Official party website copy. Full text confirmed.",
+    "retrieval_status": "manual_acquisition_required",
+    "collection_timestamp": "2026-10-04T07:26:20.022125+00:00",
+    "retrieval_method": "PoliteHTTPClient_GET"
   },
   {
     "party": "Dravida Munnetra Kazhagam (DMK)",
@@ -27,7 +30,10 @@
     "format": "PDF",
     "availability": "Available",
     "verification_status": "Verified",
-    "notes": "Original DMK site link rotated; sourced from reputable OpenCity data archive."
+    "notes": "Original DMK site link rotated; sourced from reputable OpenCity data archive.",
+    "retrieval_status": "manual_acquisition_required",
+    "collection_timestamp": "2026-10-04T07:26:20.676048+00:00",
+    "retrieval_method": "PoliteHTTPClient_GET"
   },
   {
     "party": "Dravida Munnetra Kazhagam (DMK)",
@@ -42,7 +48,10 @@
     "format": "PDF",
     "availability": "Available",
     "verification_status": "Verified",
-    "notes": "Retrieved from TN234 election archive as party site no longer hosts 2021 documents."
+    "notes": "Retrieved from TN234 election archive as party site no longer hosts 2021 documents.",
+    "retrieval_status": "manual_acquisition_required",
+    "collection_timestamp": "2026-10-04T07:26:21.116805+00:00",
+    "retrieval_method": "PoliteHTTPClient_GET"
   },
   {
     "party": "All India Anna Dravida Munnetra Kazhagam (AIADMK)",
@@ -57,6 +66,9 @@
     "format": "PDF",
     "availability": "Available",
     "verification_status": "Verified",
-    "notes": "Validated complete manifesto from historical archive."
+    "notes": "Validated complete manifesto from historical archive.",
+    "retrieval_status": "manual_acquisition_required",
+    "collection_timestamp": "2026-10-04T07:26:22.573521+00:00",
+    "retrieval_method": "PoliteHTTPClient_GET"
   }
 ]

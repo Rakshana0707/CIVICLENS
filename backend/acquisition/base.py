@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from .models import AcquisitionMetadata
+from .models import SourceRecord
 
 class BaseAcquirer(ABC):
     """
@@ -15,7 +15,7 @@ class BaseAcquirer(ABC):
         pass
         
     @abstractmethod
-    def acquire(self, url: str) -> AcquisitionMetadata:
+    def acquire(self, url: str) -> SourceRecord:
         """
         Acquire the document from the given URL and return its provenance metadata.
         """

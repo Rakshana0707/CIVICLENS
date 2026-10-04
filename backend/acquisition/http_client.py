@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from urllib.error import URLError, HTTPError
 from datetime import datetime, timezone
 
-from .models import AcquisitionMetadata
+from .models import SourceRecord
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +43,11 @@ class PoliteHTTPClient:
             rp = urllib.robotparser.RobotFileParser()
             rp.set_url(urllib.parse.urljoin(domain, '/robots.txt'))
             try:
-                # Add headers for robots.txt fetch
                 req = urllib.request.Request(rp.url, headers={'User-Agent': self.user_agent})
                 with urllib.request.urlopen(req, timeout=10) as response:
                     rp.parse(response.read().decode('utf-8').splitlines())
             except Exception as e:
                 logger.warning(f"Could not fetch robots.txt for {domain}: {e}")
-                # If robots.txt is missing or fails, assume allow
                 rp.allow_all = True
             self.robot_parsers[domain] = rp
         
@@ -66,12 +64,12 @@ class PoliteHTTPClient:
                 time.sleep(self.politeness_delay - elapsed)
         self.last_request_time[domain] = time.time()
 
-    def fetch(self, url: str) -> Tuple[Optional[bytes], AcquisitionMetadata]:
-        metadata = AcquisitionMetadata(
-            url=url,
-            document_type="UNKNOWN",
+    def fetch(self, url: str) -> Tuple[Optional[bytes], SourceRecord]:
+        metadata = SourceRecord(
+            source_url=url,
+            document_format="UNKNOWN",
             retrieval_status="pending",
-            collection_timestamp=datetime.now(timezone.utc)
+            collection_date=datetime.now(timezone.utc)
         )
         
         domain = self._get_domain(url)
@@ -89,13 +87,14 @@ class PoliteHTTPClient:
             with urllib.request.urlopen(req, timeout=30) as response:
                 content = response.read()
                 status_code = response.getcode()
-                metadata.http_status = status_code
+                
+                # http_status isn't in SourceRecord, but we can store it in source_notes or implicitly handle it
+                metadata.source_notes = f"HTTP {status_code}"
                 
                 if status_code == 200:
                     metadata.retrieval_status = "success"
                     metadata.content_hash = hashlib.sha256(content).hexdigest()
                     
-                    # Try to get filename from URL
                     parsed = urllib.parse.urlparse(url)
                     filename = os.path.basename(parsed.path)
                     if not filename:
@@ -103,9 +102,9 @@ class PoliteHTTPClient:
                     metadata.original_filename = filename
                     
                     if url.lower().endswith(".pdf"):
-                        metadata.document_type = "PDF"
+                        metadata.document_format = "PDF"
                     elif url.lower().endswith(".html"):
-                        metadata.document_type = "HTML"
+                        metadata.document_format = "HTML"
                         
                     return content, metadata
                 else:
@@ -113,7 +112,6 @@ class PoliteHTTPClient:
                     return None, metadata
                     
         except HTTPError as e:
-            metadata.http_status = e.code
             metadata.retrieval_status = f"failed_http_{e.code}"
             logger.error(f"HTTP Error fetching {url}: {e.code}")
             return None, metadata
