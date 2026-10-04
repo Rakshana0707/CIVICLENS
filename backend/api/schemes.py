@@ -282,3 +282,25 @@ def compare_schemes():
         
     except Exception as e:
         return error_response(f"Comparison failed: {str(e)}", status_code=500)
+@schemes_bp.route('/themes', methods=['GET'])
+def analyze_scheme_themes():
+    try:
+        db: Session = next(get_db())
+    except Exception as e:
+        return error_response(f"Database error: {str(e)}", status_code=500)
+        
+    n_clusters = request.args.get('n_clusters', 5, type=int)
+    department_id = request.args.get('department_id', type=int)
+    
+    if n_clusters < 2 or n_clusters > 20:
+        return error_response("n_clusters must be between 2 and 20", status_code=400)
+        
+    try:
+        from backend.ml.theme_analysis import ThemeAnalyzer
+        analyzer = ThemeAnalyzer(db)
+        results = analyzer.analyze_themes(n_clusters=n_clusters, department_id=department_id)
+        return success_response(results)
+    except ValueError as ve:
+        return error_response(str(ve), status_code=400)
+    except Exception as e:
+        return error_response(f"Theme analysis failed: {str(e)}", status_code=500)

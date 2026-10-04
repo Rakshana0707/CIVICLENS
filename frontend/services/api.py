@@ -215,3 +215,14 @@ api_client = APIClient()
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
+    def analyze_scheme_themes(self, n_clusters: int = 5, department_id: int = None) -> Tuple[bool, Any]:
+        params = {"n_clusters": n_clusters}
+        if department_id and department_id != 0:
+            params["department_id"] = department_id
+            
+        try:
+            response = requests.get(f"{self.base_url}/api/schemes/themes", params=params, timeout=30)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
