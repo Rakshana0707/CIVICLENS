@@ -1,0 +1,130 @@
+{
+  "categories": [
+    {
+      "id": "Education",
+      "name": "Education",
+      "description": "Schools, higher education, scholarships, literacy, digital classrooms, teachers.",
+      "keywords_en": ["education", "school", "college", "university", "student", "teacher", "scholarship", "tuition", "classroom", "literacy"],
+      "keywords_ta": ["கல்வி", "பள்ளி", "கல்லூரி", "பல்கலைக்கழகம்", "மாணவர்", "ஆசிரியர்", "காரணி", "கல்வித்தொகை"]
+    },
+    {
+      "id": "Healthcare",
+      "name": "Healthcare",
+      "description": "Hospitals, medical insurance, public health, doctors, medicines, nutrition.",
+      "keywords_en": ["health", "healthcare", "hospital", "clinic", "doctor", "medical", "medicine", "nurse", "insurance", "sanitation", "nutrition"],
+      "keywords_ta": ["சுகாதாரம்", "மருத்துவமனை", "மருத்துவர்", "மருந்து", "மருத்துவ", "செவிலியர்", "காப்பீடு"]
+    },
+    {
+      "id": "Agriculture",
+      "name": "Agriculture",
+      "description": "Farming, crop loans, irrigation, MSP, fertilizers, farmers, fisheries, livestock.",
+      "keywords_en": ["agriculture", "farmer", "farm", "crop", "irrigation", "fertilizer", "paddy", "sugarcane", "msp", "loan waiver", "fisheries", "livestock"],
+      "keywords_ta": ["வேளாண்மை", "விவசாயி", "விவசாயம்", "பயிர்", "பாசனம்", "உரம்", "நெல்", "கரும்பு", "கடன்தள்ளுபடி", "மீனவர்"]
+    },
+    {
+      "id": "Employment",
+      "name": "Employment",
+      "description": "Jobs, recruitment, skill development, unemployment allowance, livelihoods.",
+      "keywords_en": ["job", "jobs", "employment", "recruitment", "vacancy", "vacancies", "unemployment", "skill", "apprenticeship", "livelihood"],
+      "keywords_ta": ["வேலைவாய்ப்பு", "வேலை", "பணியிடம்", "காலியிடம்", "பயிற்சி", "உழைப்பு"]
+    },
+    {
+      "id": "Welfare",
+      "name": "Welfare",
+      "description": "General welfare schemes, financial aid, pensions, subsidies, public assistance.",
+      "keywords_en": ["welfare", "pension", "subsidy", "financial assistance", "allowance", "aid", "grant", "scheme"],
+      "keywords_ta": ["நலன்", "நலத்திட்டம்", "ஓய்வூதியம்", "மானியம", "உதவித்தொகை", "நிதியுதவி"]
+    },
+    {
+      "id": "Women",
+      "name": "Women",
+      "description": "Women empowerment, financial support for women, safety, SHGs, maternity benefits.",
+      "keywords_en": ["women", "woman", "mother", "maternity", "girl", "female", "self help group", "shg", "magalir"],
+      "keywords_ta": ["பெண்கள்", "பெண்", "மகளிர்", "தாய்", "தாய்சேய்", "சுயஉதவிக்குழு"]
+    },
+    {
+      "id": "Youth",
+      "name": "Youth",
+      "description": "Youth development, sports, youth entrepreneurship, youth schemes.",
+      "keywords_en": ["youth", "sports", "young", "stadium", "sports complex", "fitness"],
+      "keywords_ta": ["இளைஞர்", "இளைஞர்கள்", "விளையாட்டு", "விளையாட்டரங்கம்"]
+    },
+    {
+      "id": "Infrastructure",
+      "name": "Infrastructure",
+      "description": "Roads, bridges, water supply, electricity, smart cities, urban development.",
+      "keywords_en": ["infrastructure", "road", "bridge", "highway", "water supply", "drinking water", "electricity", "power", "smart city", "urban"],
+      "keywords_ta": ["உள்கட்டமைப்பு", "சாலை", "பாலம்", "நெடுஞ்சாலை", "குடிநீர்", "மின்சாரம்", "மின்சார"]
+    },
+    {
+      "id": "Transport",
+      "name": "Transport",
+      "description": "Buses, metro, railways, public transport, fare waiver, connectivity.",
+      "keywords_en": ["transport", "bus", "buses", "metro", "railway", "train", "fare", "transit"],
+      "keywords_ta": ["போக்குவரத்து", "பேருந்து", "மெட்ரோ", "ரயில்", "கட்டணம்"]
+    },
+    {
+      "id": "Housing",
+      "name": "Housing",
+      "description": "Free housing, slum clearance, housing plots, concrete houses, shelter.",
+      "keywords_en": ["house", "housing", "home", "slum", "patta", "shelter", "tenement"],
+      "keywords_ta": ["வீடு", "வீட்டுவசதி", "பட்டா", "குடிசை", "வீட்டு மனை"]
+    },
+    {
+      "id": "Environment",
+      "name": "Environment",
+      "description": "Forests, pollution, climate change, renewable energy, rivers, lake restoration.",
+      "keywords_en": ["environment", "forest", "tree", "green", "pollution", "climate", "solar", "renewable", "river", "lake"],
+      "keywords_ta": ["சுற்றுச்சூழல்", "காடு", "மரம்", "பசுமை", "மாசு", "காலநிலை", "நதி", "ஏரி"]
+    },
+    {
+      "id": "Industry",
+      "name": "Industry",
+      "description": "Industrial parks, MSMEs, manufacturing, investment, textile, IT parks.",
+      "keywords_en": ["industry", "industrial", "msme", "manufacturing", "investment", "factory", "textile", "it park", "business"],
+      "keywords_ta": ["தொழில்", "தொழிற்சாலை", "முதலீடு", "நிறுவனம்", "சிறு தொழில்"]
+    },
+    {
+      "id": "Governance",
+      "name": "Governance",
+      "description": "Anti-corruption, administrative reforms, local bodies, transparency, grievance redressal.",
+      "keywords_en": ["governance", "corruption", "transparent", "administration", "panchayat", "municipal", "grievance", "lokayukta"],
+      "keywords_ta": ["நிர்வாகம்", "ஊழல்", "பஞ்சாயத்து", "நகராட்சி", "வெளிப்படைத்தன்மை"]
+    },
+    {
+      "id": "Finance",
+      "name": "Finance",
+      "description": "Taxation, state budget, debt management, fiscal policy, financial management.",
+      "keywords_en": ["finance", "tax", "budget", "fiscal", "revenue", "debt", "financial"],
+      "keywords_ta": ["நிதி", "வரி", "பட்ஜெட்", "வருவாய்", "கடன்"]
+    },
+    {
+      "id": "Digital services",
+      "name": "Digital services",
+      "description": "E-governance, internet, broadband, digital literacy, online services, AI.",
+      "keywords_en": ["digital", "internet", "broadband", "wifi", "e-governance", "online", "portal", "computer"],
+      "keywords_ta": ["டிஜிட்டல்", "இணையம்", "வைஃபை", "கணினி", "மின் ஆளுமை"]
+    },
+    {
+      "id": "Social protection",
+      "name": "Social protection",
+      "description": "Disabled/differently abled support, SC/ST welfare, minority rights, transgender support.",
+      "keywords_en": ["differently abled", "disabled", "sc/st", "tribal", "minority", "transgender", "social protection", "reservation"],
+      "keywords_ta": ["மாற்றுத்திறனாளி", "பழங்குடியினர்", "சிறுபான்மையினர்", "திருநங்கை", "இடஒதுக்கீடு"]
+    },
+    {
+      "id": "Other",
+      "name": "Other",
+      "description": "Specific promises that do not cleanly fit into the major categories above.",
+      "keywords_en": [],
+      "keywords_ta": []
+    },
+    {
+      "id": "Uncategorized",
+      "name": "Uncategorized",
+      "description": "Ambiguous, vague, or unclassifiable text segments.",
+      "keywords_en": [],
+      "keywords_ta": []
+    }
+  ]
+}
