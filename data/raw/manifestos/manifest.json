@@ -10,7 +10,13 @@
     "is_complete": true,
     "contains_specific_promises": true,
     "accessibility_restrictions": "None",
-    "source_reliability_tier": 3
+    "source_reliability_tier": 3,
+    "retrieval_status": "success",
+    "http_status": 200,
+    "collection_timestamp": "2026-10-04T06:57:03.329486+00:00",
+    "local_storage_path": "data/raw/manifestos\\Dravida_Munnetra_Kazhagam__DMK__2024_Lok_Sabha_Elections_a7964b61-ee79-4f84-9e1b-e3e28be52e04.pdf",
+    "content_hash": "c002990c4ed26d42669e9f860efbe4503a9a68d6cc5ed3dcd6eb99ecc4fa39c8",
+    "original_filename": "a7964b61-ee79-4f84-9e1b-e3e28be52e04.pdf"
   },
   {
     "organization": "Dravida Munnetra Kazhagam (DMK)",
@@ -23,7 +29,10 @@
     "is_complete": true,
     "contains_specific_promises": true,
     "accessibility_restrictions": "None",
-    "source_reliability_tier": 5
+    "source_reliability_tier": 5,
+    "retrieval_status": "failed_http_404",
+    "http_status": 404,
+    "collection_timestamp": "2026-10-04T06:57:03.725712+00:00"
   },
   {
     "organization": "All India Anna Dravida Munnetra Kazhagam (AIADMK)",
@@ -36,7 +45,10 @@
     "is_complete": true,
     "contains_specific_promises": true,
     "accessibility_restrictions": "None",
-    "source_reliability_tier": 5
+    "source_reliability_tier": 5,
+    "retrieval_status": "failed_http_404",
+    "http_status": 404,
+    "collection_timestamp": "2026-10-04T06:57:06.346478+00:00"
   },
   {
     "organization": "Bharatiya Janata Party (BJP)",
@@ -49,6 +61,9 @@
     "is_complete": true,
     "contains_specific_promises": true,
     "accessibility_restrictions": "None",
-    "source_reliability_tier": 1
+    "source_reliability_tier": 1,
+    "retrieval_status": "failed_http_403",
+    "http_status": 403,
+    "collection_timestamp": "2026-10-04T06:57:07.258463+00:00"
   }
 ]

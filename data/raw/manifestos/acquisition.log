@@ -1,0 +1,13 @@
+2026-10-04 12:27:03,328 - __main__ - INFO - Processing https://data.opencity.in/dataset/76e54184-f294-44e4-a40c-8594ccb410c8/resource/c86a0519-1a32-407c-8381-41659734f9a2/download/a7964b61-ee79-4f84-9e1b-e3e28be52e04.pdf
+2026-10-04 12:27:03,725 - __main__ - INFO - Successfully downloaded to data/raw/manifestos\Dravida_Munnetra_Kazhagam__DMK__2024_Lok_Sabha_Elections_a7964b61-ee79-4f84-9e1b-e3e28be52e04.pdf
+2026-10-04 12:27:03,725 - __main__ - INFO - Processing https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf
+2026-10-04 12:27:06,343 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf: 404
+2026-10-04 12:27:06,344 - __main__ - ERROR - Failed to download https://tn234.org/wp-content/uploads/2021/03/DMK-Manifesto-2021-Tamil.pdf: failed_http_404
+2026-10-04 12:27:06,346 - __main__ - INFO - Processing https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf
+2026-10-04 12:27:07,256 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf: 404
+2026-10-04 12:27:07,258 - __main__ - ERROR - Failed to download https://tn234.org/wp-content/uploads/2021/03/AIADMK-Election-Manifesto-2021.pdf: failed_http_404
+2026-10-04 12:27:07,258 - __main__ - INFO - Processing https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf
+2026-10-04 12:27:07,416 - backend.acquisition.http_client - WARNING - Could not fetch robots.txt for https://tamilnadu.bjp.org: HTTP Error 403: Forbidden
+2026-10-04 12:27:07,494 - backend.acquisition.http_client - ERROR - HTTP Error fetching https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf: 403
+2026-10-04 12:27:07,495 - __main__ - ERROR - Failed to download https://tamilnadu.bjp.org/wp-content/uploads/2021/03/TN-BJP-Vision-Document-2021.pdf: failed_http_403
+2026-10-04 12:27:07,497 - __main__ - INFO - Manifesto download process completed.
