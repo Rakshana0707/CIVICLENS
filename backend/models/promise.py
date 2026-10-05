@@ -118,6 +118,8 @@ class PromiseSchemeLink(Base):
     similarity_score = Column(Float, nullable=True)
     matching_method = Column(String, nullable=True)
     match_type = Column(String, nullable=True)  # e.g. "pre_existing_scheme", "new_scheme_instance"
+    model_name = Column(String, nullable=True)
+    model_version = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
