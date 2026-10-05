@@ -3,6 +3,7 @@ from backend.api.responses import error_response
 from backend.api.budget import budget_bp
 from backend.api.ml import ml_bp
 from backend.api.schemes import schemes_bp
+from backend.api.promises import promises_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -14,11 +15,12 @@ def not_implemented():
 api_bp.register_blueprint(budget_bp)
 api_bp.register_blueprint(ml_bp)
 api_bp.register_blueprint(schemes_bp)
+api_bp.register_blueprint(promises_bp)
 
-# Register placeholder namespaces for future module routing
+# Register placeholder namespaces for remaining future modules
 namespaces = [
-    'promises', 'news', 
-    'representatives', 'funding', 'claims', 'evidence'
+    'news', 
+    'representatives', 'funding', 'claims'
 ]
 
 # Provide fallback 501 for unbuilt components
