@@ -17,10 +17,22 @@ from backend.models.budget import (
     BudgetScheme,
     BudgetSourceDocument,
     BudgetImportBatch,
-    BudgetRecord
+    BudgetRecord,
+    HistoricalScheme,
+    SchemeCategory
 )
 from backend.models.manifesto import (
     ManifestoSource,
     ManifestoDocument,
     Manifesto
+)
+from backend.models.promise import (
+    PoliticalPromise,
+    PromiseCategory,
+    PromiseCategoryMapping,
+    PromiseEvidenceLink,
+    PromiseSchemeLink,
+    PromiseAssessment,
+    PromiseAssessmentHistory,
+    PromiseStatus
 )

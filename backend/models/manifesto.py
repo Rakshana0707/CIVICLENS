@@ -75,3 +75,4 @@ class Manifesto(Base):
     # Relationships
     source = relationship("ManifestoSource", back_populates="manifestos")
     document = relationship("ManifestoDocument", back_populates="manifestos")
+    promises = relationship("PoliticalPromise", back_populates="manifesto", cascade="all, delete-orphan")
