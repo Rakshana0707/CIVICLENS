@@ -149,6 +149,7 @@ class PromiseAssessment(Base):
     assessed_by = Column(String, nullable=True)  # e.g. "rule_engine_v1", "human_expert"
     assessment_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_current = Column(Boolean, default=True)
+    assessment_metadata = Column(JSON, nullable=True)  # evidence_ids, source_tiers, methodology details
 
     promise = relationship("PoliticalPromise", back_populates="assessments")
     history_entries = relationship("PromiseAssessmentHistory", back_populates="assessment", cascade="all, delete-orphan")
