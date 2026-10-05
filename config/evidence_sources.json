@@ -1,0 +1,56 @@
+{
+  "allowed_domains": [
+    "tn.gov.in",
+    "cms.tn.gov.in",
+    "budget.tn.gov.in",
+    "tnsocialwelfare.tn.gov.in",
+    "assembly.tn.gov.in",
+    "dipr.tn.gov.in",
+    "tnelections.tn.gov.in",
+    "httpbin.org"
+  ],
+  "sources": [
+    {
+      "domain": "tn.gov.in",
+      "source_name": "Tamil Nadu State Government Portal",
+      "source_type": "Government website",
+      "source_tier": 1
+    },
+    {
+      "domain": "cms.tn.gov.in",
+      "source_name": "TN Government Orders Portal",
+      "source_type": "Government Orders",
+      "source_tier": 1
+    },
+    {
+      "domain": "budget.tn.gov.in",
+      "source_name": "TN State Budget Portal",
+      "source_type": "Budget documents",
+      "source_tier": 1
+    },
+    {
+      "domain": "tnsocialwelfare.tn.gov.in",
+      "source_name": "Social Welfare & Women Empowerment Department",
+      "source_type": "Department pages",
+      "source_tier": 1
+    },
+    {
+      "domain": "assembly.tn.gov.in",
+      "source_name": "TN Legislative Assembly Portal",
+      "source_type": "Legislative documents",
+      "source_tier": 1
+    },
+    {
+      "domain": "dipr.tn.gov.in",
+      "source_name": "Department of Information and Public Relations",
+      "source_type": "Official press releases",
+      "source_tier": 1
+    },
+    {
+      "domain": "httpbin.org",
+      "source_name": "Test Fixture Endpoint",
+      "source_type": "TEST_FIXTURE",
+      "source_tier": 5
+    }
+  ]
+}
