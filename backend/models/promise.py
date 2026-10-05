@@ -94,7 +94,11 @@ class PromiseEvidenceLink(Base):
     evidence_id = Column(Integer, ForeignKey("evidence.id", ondelete="CASCADE"), nullable=False, index=True)
 
     similarity_score = Column(Float, nullable=True)
-    matching_method = Column(String, nullable=True)  # e.g. "vector_similarity", "keyword_exact"
+    relevance_score = Column(Float, nullable=True)
+    matching_method = Column(String, nullable=True)  # e.g. "multi_signal_hybrid_retrieval"
+    model_name = Column(String, nullable=True)
+    model_version = Column(String, nullable=True)
+    matched_metadata = Column(JSON, nullable=True)  # Signal scores, matched keywords/entities
     relevance_notes = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
