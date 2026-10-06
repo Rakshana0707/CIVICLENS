@@ -53,6 +53,9 @@ out/
 *.sqlite3
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/manifestos/
+data/raw/manifestos/*
+!data/raw/manifestos/manifest.json
 data/processed/*
 !data/processed/.gitkeep
 ml/models/*
