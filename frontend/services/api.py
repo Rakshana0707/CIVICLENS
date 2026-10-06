@@ -1,6 +1,6 @@
 import requests
 import logging
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List, Optional
 from frontend.config import settings
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,6 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
-
     def get_departments(self) -> Tuple[bool, Any]:
         try:
             response = requests.get(f"{self.base_url}/api/budget/departments", timeout=10)
@@ -175,6 +174,7 @@ class APIClient:
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
     def get_scheme_categories(self) -> Tuple[bool, Any]:
         try:
             response = requests.get(f"{self.base_url}/api/schemes/categories", timeout=10)
@@ -224,6 +224,100 @@ class APIClient:
             return self._handle_response(response)
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
+
+    # -----------------------------------------------------------------------
+    # POLITICAL PROMISE TRACKER API METHODS (PHASE 3)
+    # -----------------------------------------------------------------------
+    def get_promise_parties(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/parties", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_elections(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/elections", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_categories(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/categories", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promises(
+        self,
+        party: Optional[str] = None,
+        year: Optional[int] = None,
+        category: Optional[str] = None,
+        status: Optional[str] = None,
+        classification: Optional[str] = None,
+        language: Optional[str] = None,
+        search: Optional[str] = None,
+        page: int = 1,
+        limit: int = 20
+    ) -> Tuple[bool, Any]:
+        params = {"page": page, "limit": limit}
+        if party and party != "All": params["party"] = party
+        if year and year != "All": params["election_year"] = year
+        if category and category != "All": params["category"] = category
+        if status and status != "All": params["status"] = status
+        if classification and classification != "All": params["classification"] = classification
+        if language and language != "All": params["language"] = language
+        if search: params["search"] = search
+
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_detail(self, promise_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/{promise_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_scheme_matches(self, promise_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/{promise_id}/scheme-matches", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_evidence_matches(self, promise_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/{promise_id}/evidence-matches", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_assessment(self, promise_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/{promise_id}/assessment", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_history(self, promise_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/{promise_id}/history", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_promise_sources(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/promises/sources", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
