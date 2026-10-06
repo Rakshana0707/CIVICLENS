@@ -1,0 +1,216 @@
+{
+  "timestamp": "2026-10-06T10:15:56.987109+00:00",
+  "total_documents": 20,
+  "successfully_processed": 20,
+  "ocr_processed": 4,
+  "failed_documents": 0,
+  "unsupported_documents": 0,
+  "language_distribution": {
+    "Tamil": 6,
+    "English": 13,
+    "Mixed": 0,
+    "Unknown": 1
+  },
+  "results": [
+    {
+      "source_file_id": "MANIFESTO-FILE-001",
+      "filename": "Tamil_Nadu_Manifesto_Archive_1996.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 2,
+      "chars_extracted": 3638,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-001.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-002",
+      "filename": "Tamil_Nadu_Manifesto_Archive_1996_2011_Master.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 2,
+      "chars_extracted": 4103,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-002.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-003",
+      "filename": "Tamil_Nadu_Manifesto_Archive_2001.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 2,
+      "chars_extracted": 3690,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-003.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-004",
+      "filename": "Tamil_Nadu_Manifesto_Archive_2006.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 2,
+      "chars_extracted": 3147,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-004.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-005",
+      "filename": "Tamil_Nadu_Manifesto_Archive_2011.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 2,
+      "chars_extracted": 3700,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-005.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-006",
+      "filename": "ADMK-Therthal-Arikkai-2016-Tamil-PDF-Tamilnadu-Election-Manifesto-2016-Full-List.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 41,
+      "chars_extracted": 117309,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-006.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-007",
+      "filename": "Manifesto-Synopsis_2824129a.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 22,
+      "chars_extracted": 40542,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-007.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-008",
+      "filename": "congress.docx",
+      "status": "ocr_required_pending_layout",
+      "language": "Tamil",
+      "page_count": 1,
+      "chars_extracted": 0,
+      "ocr_used": true,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-008.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-009",
+      "filename": "dmk2016Manifesto_E_2811452a.pdf",
+      "status": "ocr_fallback",
+      "language": "Unknown",
+      "page_count": 144,
+      "chars_extracted": 563,
+      "ocr_used": true,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-009.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-010",
+      "filename": "4-AIADMK Election Manifesto - 14.03.2021.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 49,
+      "chars_extracted": 34941,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-010.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-011",
+      "filename": "501785333-DMK-Election-Manifesto-2021.pdf",
+      "status": "ocr_required_pending_tesseract",
+      "language": "Tamil",
+      "page_count": 128,
+      "chars_extracted": 0,
+      "ocr_used": true,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-011.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-012",
+      "filename": "MDMK Election Manifesto 2021.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 106,
+      "chars_extracted": 89692,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-012.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-013",
+      "filename": "MNM-MANIFESTO-DOCUMENT-19th mar 2021 (1).pdf",
+      "status": "success",
+      "language": "Tamil",
+      "page_count": 108,
+      "chars_extracted": 143183,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-013.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-014",
+      "filename": "Tamil Nadu 2021 Assembly Election BJP Vision Document vTamil (1).pdf",
+      "status": "success",
+      "language": "Tamil",
+      "page_count": 32,
+      "chars_extracted": 29822,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-014.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-015",
+      "filename": "DMK_Manifesto_English_2026.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 99,
+      "chars_extracted": 229176,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-015.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-016",
+      "filename": "aiadmk-election-manifesto-assembly-general-election-2026.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 54,
+      "chars_extracted": 82911,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-016.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-017",
+      "filename": "aiadmk-manifesto-2026-english.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 45,
+      "chars_extracted": 87325,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-017.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-018",
+      "filename": "ntk-2026-manifesto_compressed.pdf",
+      "status": "success",
+      "language": "English",
+      "page_count": 462,
+      "chars_extracted": 433767,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-018.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-019",
+      "filename": "tnbjp_manifesto_2026_compressed.pdf",
+      "status": "success",
+      "language": "Tamil",
+      "page_count": 114,
+      "chars_extracted": 123298,
+      "ocr_used": false,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-019.json"
+    },
+    {
+      "source_file_id": "MANIFESTO-FILE-020",
+      "filename": "tvk_manifesto_2026_compressed.pdf",
+      "status": "ocr_required_pending_tesseract",
+      "language": "Tamil",
+      "page_count": 96,
+      "chars_extracted": 0,
+      "ocr_used": true,
+      "saved_path": "data\\processed\\manifestos\\MANIFESTO-FILE-020.json"
+    }
+  ]
+}

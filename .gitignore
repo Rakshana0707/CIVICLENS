@@ -58,6 +58,9 @@ data/raw/manifestos/*
 !data/raw/manifestos/manifest.json
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/manifestos/
+data/processed/manifestos/*
+!data/processed/manifestos/processing_summary.json
 ml/models/*
 !ml/models/.gitkeep
 ml/embeddings/*
