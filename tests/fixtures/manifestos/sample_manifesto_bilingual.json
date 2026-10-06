@@ -1,0 +1,32 @@
+{
+  "notice": "TEST FIXTURE — NOT REAL POLITICAL DATA",
+  "manifesto_id": "MF-TEST-2026-BILINGUAL",
+  "party_code": "TEST_PARTY",
+  "party_name": "Synthetic Test Party",
+  "election_year": 2026,
+  "title": "Synthetic Bilingual Test Manifesto 2026",
+  "is_test_fixture": true,
+  "pages": [
+    {
+      "page_number": 1,
+      "section": "Education & Youth / கல்வி மற்றும் இளைஞர் நலன்",
+      "text_en": "We promise to establish 50 new primary health centres and 20 model higher secondary schools with ₹500 crore budget.",
+      "text_ta": "கிராமப்புற இளைஞர்களுக்கு 50,000 புதிய அரசு வேலைவாய்ப்புகள் அடுத்த 2 ஆண்டுகளில் உருவாக்கப்படும்.",
+      "ambiguous_text": "Youth are the backbone of our progressive society."
+    },
+    {
+      "page_number": 2,
+      "section": "Welfare & Women / மகளிர் மற்றும் சமூக நலம்",
+      "text_en": "A financial assistance of ₹1,000 per month will be transferred directly to all eligible women heads of households.",
+      "text_ta": "தகுதிவாய்ந்த குடும்பத் தலைவிகளுக்கு மாதம் ₹1,200 உரிமைத்தொகை நேரடியாக வழங்கப்படும்.",
+      "ambiguous_text": "We dream of an empowered, equal, and harmonious society."
+    },
+    {
+      "page_number": 3,
+      "section": "Agriculture & Environment / விவசாயம் மற்றும் சுற்றுச்சூழல்",
+      "text_en": "We will provide 100 free electricity units to all agricultural pump sets and build 500 solar cold storage units for ₹300 crore.",
+      "text_ta": "சிறு மற்றும் குறு விவசாயிகளுக்கு ₹50,000 வரையிலான வேளாண் கடன்கள் தள்ளுபடி செய்யப்படும்.",
+      "ambiguous_text": "Nature and agriculture must flourish together forever."
+    }
+  ]
+}

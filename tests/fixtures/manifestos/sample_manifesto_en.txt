@@ -1,0 +1,27 @@
+TEST FIXTURE — NOT REAL POLITICAL DATA
+================================================================================
+CIVICLENS TN Synthetic Test Manifesto 2026 (English Version)
+Notice: This document contains synthetic test data created solely for automated software testing.
+Do NOT use or cite this text as real political promises, policy, or public data.
+================================================================================
+
+[PAGE 1]
+Section 1: Education and Skill Development
+--------------------------------------------------------------------------------
+1. We promise to establish 50 new primary health centres and 20 model higher secondary schools across all districts of Tamil Nadu within 3 years with an allocation of ₹500 crore.
+2. Free laptops and digital tablets will be provided to 1,00,000 college students annually to enhance digital literacy among the youth.
+3. Education is the foundation of a bright future for all children.
+
+[PAGE 2]
+Section 2: Women Welfare and Social Security
+--------------------------------------------------------------------------------
+4. A financial assistance of ₹1,000 per month will be transferred directly to all eligible women heads of households.
+5. Maternity leave benefit will be enhanced to 12 months with full pay for state government employees.
+6. Empowering women will uplift the entire state towards unmatched prosperity.
+
+[PAGE 3]
+Section 3: Agriculture and Rural Infrastructure
+--------------------------------------------------------------------------------
+7. We will provide 100 free electricity units to all agricultural pump sets and small farmers.
+8. Construction of 500 solar-powered cold storage units near major agricultural markets with a total budget of ₹300 crore.
+9. We envision a greener, happier, and more prosperous countryside for everyone.
