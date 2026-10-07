@@ -9,7 +9,7 @@
 
 ## 1. Import Overview & Execution Metrics
 
-- **Execution Date**: `2026-10-07T09:41:15.328237+00:00`
+- **Execution Date**: `2026-10-07T10:35:01.549135+00:00`
 - **Target Database**: `civiclens.db`
 - **Source Corpus File**: `data/processed/promises/validated_promises.json`
 - **Source Manifest File**: `data/raw/manifestos/manifest.json`
