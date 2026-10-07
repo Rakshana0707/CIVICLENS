@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Acquisition Metrics
 
-- **Execution Timestamp**: `2026-10-07T10:35:04.596949+00:00`
+- **Execution Timestamp**: `2026-10-07T11:09:10.784317+00:00`
 - **Total Valid Promises Evaluated**: `1065`
 - **Official Government Evidence Items**: `12`
 - **Promises Linked to Candidate Evidence**: `10` (0.9%)

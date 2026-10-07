@@ -11,7 +11,7 @@
 
 ## 1. Overview & Assessment Execution Summary
 
-- **Execution Date**: `2026-10-07T10:35:35.052670+00:00`
+- **Execution Date**: `2026-10-07T11:09:26.299238+00:00`
 - **Total Real Promises Evaluated**: `1065`
 - **Assessment Methodology**: `transparent_rule_based_evidence_assessment_v1`
 - **Database Table**: `promise_assessments` in `civiclens.db`
