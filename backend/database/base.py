@@ -36,3 +36,23 @@ from backend.models.promise import (
     PromiseAssessmentHistory,
     PromiseStatus
 )
+from backend.models.news import (
+    NewsSource,
+    Article,
+    ArticleVersion,
+    PoliticalParty,
+    PoliticalPerson,
+    PoliticalEntity,
+    PoliticalEvent,
+    Topic,
+    ArticleEntity,
+    ArticleTopic,
+    ArticleEvent,
+    ArticleFeature,
+    CoverageMetric,
+    BiasIndicator,
+    SourceSnapshot,
+    SourceType,
+    ActiveStatus
+)
+
