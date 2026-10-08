@@ -53,6 +53,9 @@ from backend.models.news import (
     BiasIndicator,
     SourceSnapshot,
     SourceType,
-    ActiveStatus
+    ActiveStatus,
+    NewsIngestionFailure,
+    NewsProcessingQueue
 )
+
 

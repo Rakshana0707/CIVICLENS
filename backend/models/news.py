@@ -323,3 +323,38 @@ class SourceSnapshot(Base):
     snapshot_data = Column(JSON, nullable=True)
 
     source = relationship("NewsSource", back_populates="snapshots")
+
+
+class NewsIngestionFailure(Base):
+    """
+    Persistent record tracking failed article ingestion attempts (no silent drops).
+    """
+    __tablename__ = "news_ingestion_failures"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(String, ForeignKey("news_sources.source_id", ondelete="CASCADE"), nullable=True, index=True)
+    url = Column(String, nullable=False, index=True)
+    failure_type = Column(String, nullable=False, index=True)  # HTTP_ERROR, PARSER_ERROR, EMPTY_CONTENT, ROBOTS_DISALLOWED, VALIDATION_ERROR
+    error_details = Column(Text, nullable=True)
+    raw_html_path = Column(String, nullable=True)
+    failed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    source = relationship("NewsSource")
+
+
+class NewsProcessingQueue(Base):
+    """
+    Queue model managing downstream NLP analysis tasks for ingested articles.
+    """
+    __tablename__ = "news_processing_queue"
+
+    id = Column(Integer, primary_key=True, index=True)
+    article_id = Column(String, ForeignKey("news_articles.article_id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String, default="PENDING", index=True)  # PENDING, IN_PROGRESS, COMPLETED, FAILED
+    attempts = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    queued_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    processed_at = Column(DateTime, nullable=True)
+
+    article = relationship("Article")
+
