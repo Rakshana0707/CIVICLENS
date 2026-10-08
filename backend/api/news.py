@@ -2,7 +2,8 @@ from flask import Blueprint, request
 from backend.database.session import SessionLocal
 from backend.services.news_service import NewsService
 from backend.services.event_comparison_service import EventCandidateDetector, CrossSourceEventComparer, EventComparisonService
-from backend.models.news import NewsSource, Article, Topic, PoliticalEntity, PoliticalEvent, BiasIndicator
+from backend.services.bias_indicator_engine import BiasIndicatorEngine
+from backend.models.news import NewsSource, Article, Topic, PoliticalEntity, PoliticalEvent, BiasIndicator, CoverageMetric, SourceComparison
 from backend.api.responses import success_response, error_response
 
 news_bp = Blueprint('news', __name__, url_prefix='/news')
@@ -279,8 +280,102 @@ def get_bias_indicators():
             "indicator_value": ind.indicator_value,
             "statistical_confidence": ind.statistical_confidence,
             "interpretation_label": ind.interpretation_label,
+            "methodology_version": getattr(ind, 'methodology_version', 'v1.0'),
+            "calculation_version": getattr(ind, 'calculation_version', 'v1.0'),
             "metadata_json": ind.metadata_json
         } for ind in indicators]
         return success_response(data=data, message="Bias indicators retrieved successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/indicators/calculate', methods=['POST'])
+def calculate_indicators():
+    """Trigger calculation and persistence of 12 multi-dimensional bias indicators for a news source."""
+    payload = request.get_json() or {}
+    source_id = payload.get("source_id")
+    days_window = int(payload.get("days_window", 30))
+    if not source_id:
+        return error_response(message="Missing required field: source_id", status_code=400)
+
+    db = SessionLocal()
+    try:
+        engine = BiasIndicatorEngine(db)
+        indicators = engine.generate_and_persist_source_indicators(source_id, days_window=days_window)
+        data = [{
+            "indicator_id": ind.indicator_id,
+            "metric_type": ind.metric_type,
+            "indicator_value": ind.indicator_value,
+            "statistical_confidence": ind.statistical_confidence,
+            "methodology_version": ind.methodology_version,
+            "calculation_version": ind.calculation_version,
+            "metadata": ind.metadata_json
+        } for ind in indicators]
+        return success_response(data=data, message="Multi-dimensional bias indicators calculated successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/metrics/coverage', methods=['GET'])
+def get_coverage_metrics():
+    """Retrieve aggregated source-level coverage metrics and topic emphasis."""
+    source_id = request.args.get('source_id')
+    db = SessionLocal()
+    try:
+        query = db.query(CoverageMetric)
+        if source_id:
+            query = query.filter(CoverageMetric.source_id == source_id)
+        metrics = query.all()
+        data = [{
+            "metric_id": m.metric_id,
+            "source_id": m.source_id,
+            "time_period": m.time_period,
+            "total_articles": m.total_articles,
+            "article_frequency": m.article_frequency,
+            "avg_sentiment": m.avg_sentiment,
+            "methodology_version": m.methodology_version,
+            "calculation_version": m.calculation_version,
+            "metric_data": m.metric_data
+        } for m in metrics]
+        return success_response(data=data, message="Coverage metrics retrieved successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/comparisons', methods=['GET'])
+def get_source_comparisons():
+    """Retrieve or generate pairwise source comparison metrics."""
+    source_a = request.args.get('source_a')
+    source_b = request.args.get('source_b')
+    days_window = int(request.args.get('days_window', 30))
+
+    db = SessionLocal()
+    try:
+        engine = BiasIndicatorEngine(db)
+        if source_a and source_b:
+            comparison = engine.generate_and_persist_comparison(source_a, source_b, days_window=days_window)
+            data = {
+                "comparison_id": comparison.comparison_id,
+                "source_a_id": comparison.source_a_id,
+                "source_b_id": comparison.source_b_id,
+                "wording_similarity_score": comparison.wording_similarity_score,
+                "topic_emphasis_divergence": comparison.topic_emphasis_divergence,
+                "entity_prominence_divergence": comparison.entity_prominence_divergence,
+                "framing_divergence": comparison.framing_divergence,
+                "coverage_difference_score": comparison.coverage_difference_score,
+                "methodology_version": comparison.methodology_version,
+                "calculation_version": comparison.calculation_version,
+                "comparison_data": comparison.comparison_data
+            }
+        else:
+            records = db.query(SourceComparison).all()
+            data = [{
+                "comparison_id": c.comparison_id,
+                "source_a_id": c.source_a_id,
+                "source_b_id": c.source_b_id,
+                "wording_similarity_score": c.wording_similarity_score,
+                "framing_divergence": c.framing_divergence,
+                "coverage_difference_score": c.coverage_difference_score,
+                "methodology_version": c.methodology_version,
+                "calculation_version": c.calculation_version
+            } for c in records]
+        return success_response(data=data, message="Source comparisons retrieved successfully")
     finally:
         db.close()

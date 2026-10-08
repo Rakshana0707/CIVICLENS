@@ -291,6 +291,8 @@ class CoverageMetric(Base):
     article_frequency = Column(Float, default=0.0)
     avg_prominence = Column(Float, default=0.0)
     avg_sentiment = Column(Float, default=0.0)
+    methodology_version = Column(String, default="v1.0")
+    calculation_version = Column(String, default="v1.0")
     metric_data = Column(JSON, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -316,12 +318,43 @@ class BiasIndicator(Base):
     indicator_value = Column(Float, nullable=False)
     statistical_confidence = Column(Float, default=1.0)
     interpretation_label = Column(String, nullable=False)
+    methodology_version = Column(String, default="v1.0")
+    calculation_version = Column(String, default="v1.0")
     metadata_json = Column(JSON, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     source = relationship("NewsSource", foreign_keys=[source_id], back_populates="bias_indicators")
     compare_source = relationship("NewsSource", foreign_keys=[compare_source_id])
+
+
+class SourceComparison(Base):
+    """
+    Direct pairwise comparison metrics between two news outlets over a time window.
+    """
+    __tablename__ = "source_comparisons"
+
+    comparison_id = Column(String, primary_key=True, index=True)
+    source_a_id = Column(String, ForeignKey("news_sources.source_id", ondelete="CASCADE"), nullable=False, index=True)
+    source_b_id = Column(String, ForeignKey("news_sources.source_id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    window_start = Column(DateTime, nullable=False)
+    window_end = Column(DateTime, nullable=False)
+    
+    wording_similarity_score = Column(Float, default=0.0)
+    topic_emphasis_divergence = Column(Float, default=0.0)
+    entity_prominence_divergence = Column(Float, default=0.0)
+    framing_divergence = Column(Float, default=0.0)
+    coverage_difference_score = Column(Float, default=0.0)
+    
+    methodology_version = Column(String, default="v1.0")
+    calculation_version = Column(String, default="v1.0")
+    comparison_data = Column(JSON, nullable=True)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    source_a = relationship("NewsSource", foreign_keys=[source_a_id])
+    source_b = relationship("NewsSource", foreign_keys=[source_b_id])
 
 
 class SourceSnapshot(Base):

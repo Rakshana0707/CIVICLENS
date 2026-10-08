@@ -1,118 +1,94 @@
-# Phase 4 — Neutral Framing & Multi-Dimensional Bias Methodology
+# Phase 4.7 — Multi-Dimensional News Bias & Coverage Methodology
 
-This document outlines the theoretical framework, mathematical definitions, multi-dimensional indicators, and neutral language standard for analyzing political news coverage in **CIVICLENS TN Phase 4**.
+## Overview
 
----
+The **CIVICLENS TN News Bias & Political Coverage Analyzer** uses a multi-dimensional statistical framework to analyze political coverage across Tamil and English news publishers.
 
-## 1. Core Principles & Neutral Terminology Standard
-
-### 1.1 Non-Subjective Stance Safeguard
-Political coverage analysis is vulnerable to subjective interpretations and algorithmic bias. To prevent arbitrary claims, **CIVICLENS TN enforces strict non-judgmental principles**:
-
-1. **No Single-Score Bias Ratings:** The system *never* outputs binary ratings (e.g., "Biased" vs "Unbiased") or single scalar bias scores (e.g., "78% Biased").
-2. **Neutral Terminology Enforcement:** Terms such as *"biased"*, *"fake news"*, *"propaganda"*, or *"corrupt"* are prohibited in model output and user-facing dashboards.
-3. **Indicator-Based Reporting:** All comparative measurements are presented as *statistical indicators* quantifying concrete differences in coverage, framing, selection, and language usage across media outlets.
-
-### 1.2 Approved Neutral Terminology Mapping
-
-| Prohibited Subjective Term | Standardized Neutral Terminology |
-| :--- | :--- |
-| "Outlet X is biased towards Party A" | *"Outlet X exhibits higher coverage frequency and entity prominence for Party A."* |
-| "Sensationalized / Negative Reporting" | *"Higher negative sentiment score in headline phrasing relative to body text."* |
-| "News Suppression / Media Censorship" | *"Omission pattern: Topic T was covered by N outlets, but unrepresented in Outlet X during window W."* |
-| "Pro-Government Propaganda" | *"High proportion of official government source quotes relative to independent quotes."* |
-| "Unbalanced Coverage" | *"Framing divergence score across comparative outlet baseline."* |
+> [!IMPORTANT]
+> The engine strictly avoids single scalar "bias scores" (such as equating sentiment to bias) and does NOT claim to prove intentional political bias. All indicators use neutral statistical terminology such as `coverage difference`, `framing variation`, `topic emphasis divergence`, and `entity prominence`.
 
 ---
 
-## 2. Multi-Dimensional Indicator Framework
+## Reproducibility & Version Tracking
 
-Bias cannot be captured by sentiment analysis alone. Phase 4 measures **12 distinct analytical dimensions**:
+All indicator calculations are tagged with explicit version metadata:
+- **`methodology_version`**: `v1.0`
+- **`calculation_version`**: `v1.0`
 
-```mermaid
-flowchart TD
-    subgraph Dimension Categories
-        A[Linguistic & Sentiment Signals]
-        B[Entity & Event Prominence]
-        C[Topic & Selection Dynamics]
-        D[Source Sourcing & Structural Signals]
-    end
-
-    A --> A1[1. Headline Sentiment]
-    A --> A2[2. Article Body Sentiment]
-    A --> A3[4. Framing Polarization]
-    A --> A4[8. Wording & Lexical Divergence]
-
-    B --> B1[3. Entity Prominence Score]
-    B --> B2[6. Event Coverage Frequency]
-    B --> B3[7. Political Entity Frequency]
-
-    C --> C1[5. Topic Emphasis & Allocation]
-    C --> C2[12. Omission / Presence Differential]
-
-    D --> D1[9. Article Depth & Word Count]
-    D --> D2[10. Quote Distribution & Balance]
-    D --> D3[11. Official vs Independent Source Ratio]
-```
+Every calculated metric is fully reproducible given the underlying raw articles, time windows, and linguistic extraction algorithms.
 
 ---
 
-## 3. Mathematical Definitions of the 12 Dimensions
+## Multi-Dimensional Indicators (12 Metrics)
 
-### Dimension 1: Headline Sentiment ($S_{headline}$)
-Measures polarity of headline text using VADER / IndicSentiment models fine-tuned for Tamil and English news headlines.
-$$S_{headline} \in [-1.0, +1.0]$$
+### 1. Sentiment Distribution (`sentiment_distribution`)
+- **What it measures**: Percentage breakdown of articles categorized as positive ($s > 0.1$), neutral ($-0.1 \le s \le 0.1$), and negative ($s < -0.1$) based on body sentiment scores.
+- **What it does NOT measure**: Intentional favoritism or deliberate hostility toward political actors.
+- **Limitations**: Automated sentiment lexicons may misinterpret political irony, satire, or complex Tamil rhetorical constructs.
 
-### Dimension 2: Article Body Sentiment ($S_{body}$)
-Measures polarity across all body paragraphs, capturing context beyond headline hook phrasing.
-$$S_{body} \in [-1.0, +1.0]$$
+### 2. Headline Sentiment (`headline_sentiment`)
+- **What it measures**: Mean and percentage breakdown of sentiment specifically extracted from article headlines.
+- **What it does NOT measure**: Editorial intent or full context of the underlying reporting.
+- **Limitations**: Headlines often prioritize conciseness or clickability over nuance.
 
-### Dimension 3: Entity Prominence Score ($P_{entity}$)
-Quantifies the visibility of a political entity $e$ in article $a$ based on mention frequency ($N_{mentions}$), presence in lead paragraph ($L \in \{0, 1\}$), and title presence ($T \in \{0, 1\}$):
-$$P_{entity}(e, a) = 0.4 \cdot T + 0.3 \cdot L + 0.3 \cdot \min\left(1.0, \frac{N_{mentions}}{5}\right)$$
+### 3. Article Sentiment (`article_sentiment`)
+- **What it measures**: Overall body text sentiment mean and distribution.
+- **What it does NOT measure**: The factual accuracy of quotes or official statements contained within the text.
 
-### Dimension 4: Framing Polarization ($F_{framing}$)
-Measures directional stance framing (positive, neutral, critical) associated with specific political entities within target sentences:
-$$F_{framing}(e, a) = \frac{\sum_{s \in S(e)} \text{Sentiment}(s)}{|S(e)|}$$
-where $S(e)$ represents the set of sentences mentioning entity $e$.
+### 4. Entity Prominence (`entity_prominence`)
+- **What it measures**: Average prominence score ($0.0$ to $1.0$) of mentioned political persons, parties, and government departments across an outlet's coverage.
+- **What it does NOT measure**: Positive or negative stance toward the entity.
 
-### Dimension 5: Topic Emphasis & Allocation ($E_{topic}$)
-Measures the proportion of an outlet’s total published articles ($N_{total}$) allocated to a specific civic topic $t$ during time window $W$:
-$$E_{topic}(t, \text{src}, W) = \frac{N_{articles}(t, \text{src}, W)}{N_{total}(\text{src}, W)}$$
+### 5. Party / Person Mention Frequency (`entity_mention_frequency`)
+- **What it measures**: Raw count and normalized proportion of total mentions for each political entity across articles.
+- **What it does NOT measure**: Quality of reporting or editorial approval.
 
-### Dimension 6: Event Coverage Frequency ($C_{event}$)
-Quantifies how rapidly and frequently a source covers a confirmed political event $E$ relative to rival outlets:
-$$C_{event}(E, \text{src}) = \text{Count of published articles covering event } E$$
+### 6. Topic Emphasis (`topic_emphasis`)
+- **What it measures**: Percentage distribution of an outlet's articles across 14 policy topics (e.g., Budget & Economy, Infrastructure, Governance, Education, Law & Order).
+- **What it does NOT measure**: Editorial suppression; topic distribution reflects editorial focus and beat allocation.
 
-### Dimension 7: Political Entity Frequency ($F_{entity}$)
-Tracks total mention volume of political parties and key leaders across a source's corpus over time:
-$$F_{entity}(p, \text{src}, W) = \sum_{a \in \text{Articles}(\text{src}, W)} N_{mentions}(p, a)$$
+### 7. Event Coverage Frequency (`event_coverage_frequency`)
+- **What it measures**: The ratio of ground-truth legislative/political events covered by an outlet relative to all tracked events.
+- **What it does NOT measure**: Proof of intentional suppression or censorship.
+- **Interpretation Rule**: Reported as `coverage disparity` or `presence/omission differential`.
 
-### Dimension 8: Wording & Lexical Divergence ($D_{lexical}$)
-Measures TF-IDF / embedding divergence in vocabulary choices when two sources describe the same political event:
-$$D_{lexical}(\text{src}_1, \text{src}_2, E) = 1.0 - \text{CosineSimilarity}(V_{\text{src}_1, E}, V_{\text{src}_2, E})$$
+### 8. Positive / Negative Framing Distribution (`framing_distribution`)
+- **What it measures**: Normalized percentage distribution of positive, negative, and balanced framing across an outlet's reporting.
+- **Example**:
+  - Source A: Positive Framing = $40.0\%$, Negative Framing = $20.0\%$, Balanced = $40.0\%$
+  - Source B: Positive Framing = $15.0\%$, Negative Framing = $45.0\%$, Balanced = $40.0\%$
+- **What it does NOT measure**: Proof of intentional partisan agenda.
 
-### Dimension 9: Article Depth & Word Count ($W_{depth}$)
-Calculates mean word count and structural detail of coverage for specific topics across outlets:
-$$W_{depth}(t, \text{src}) = \text{Mean word count of articles in topic } t$$
+### 9. Quote Distribution (`quote_distribution`)
+- **What it measures**: Average number of direct quotes per article and total quote density.
+- **What it does NOT measure**: Accuracy or context of quoted speech.
 
-### Dimension 10: Quote Distribution & Balance ($Q_{balance}$)
-Measures the breakdown of direct/indirect quotes attributed to governing party members versus opposition party members:
-$$Q_{balance}(\text{src}, W) = \frac{\text{Quotes}_{\text{Gov}}(\text{src}, W)}{\text{Quotes}_{\text{Gov}}(\text{src}, W) + \text{Quotes}_{\text{Opp}}(\text{src}, W)}$$
+### 10. Source-Reference Distribution (`sourcing_reference_distribution`)
+- **What it measures**: Ratio of official government press releases and department citations relative to general quotes ($\frac{\text{Official Citations}}{\max(1, \text{Quotes} + \text{Citations})}$).
+- **What it does NOT measure**: Government compliance or anti-establishment bias.
 
-### Dimension 11: Official vs. Independent Source Ratio ($R_{sourcing}$)
-Evaluates reliance on official government press releases vs. independent investigative sources:
-$$R_{sourcing}(a) = \frac{N_{\text{official\_citations}}(a)}{N_{\text{total\_citations}}(a)}$$
+### 11. Cross-Source Wording Similarity (`wording_similarity`)
+- **What it measures**: Pairwise Jaccard text overlap coefficient between two outlets covering shared events.
+- **What it does NOT measure**: Plagiarism or wire-service copying without metadata verification.
 
-### Dimension 12: Omission / Presence Differential ($O_{diff}$)
-Identifies major political events or policy releases covered by $\ge 75\%$ of tracked outlets but completely absent from source $\text{src}_i$:
-$$O_{diff}(E, \text{src}_i) = \begin{cases} 1 & \text{if } E \text{ covered by } \ge 75\% \text{ peers AND absent in } \text{src}_i \\ 0 & \text{otherwise} \end{cases}$$
+### 12. Coverage Differences (`coverage_difference`)
+- **What it measures**: Quantitative index ($0.0$ to $1.0$) measuring the proportion of unshared events and entity prominence divergence between two outlets.
 
 ---
 
-## 4. End-to-End Traceability & Explainability
+## Statistical Confidence & Sample Size Bounds
 
-To ensure full transparency and auditability:
-1. Every calculated `BiasIndicator` record contains references to the exact underlying `ArticleFeature` and `Article` records.
-2. Every `Article` links directly to a `Document` and `Evidence` record in the database.
-3. Users inspecting an indicator on the frontend can click through to inspect the exact articles, paragraph snippets, and source URLs that generated the metric.
+To prevent drawing conclusions from noisy data, statistical confidence is computed as follows:
+
+$$\text{Confidence} = \begin{cases} 0.0 & N = 0 \\ \frac{N}{5.0} & 1 \le N < 5 \\ 1.0 & N \ge 5 \end{cases}$$
+
+- **Minimum Sample Size ($N_{\min}$)**: 5 articles per source per time window.
+- **Uncertainty Flag**: Any metric with $N < 5$ is flagged with low confidence ($<1.0$).
+
+---
+
+## Interpretation Safeguards
+
+1. **Neutral Terminology Standard**: Use words like `coverage variation`, `framing disparity`, `topic emphasis difference`. Never label outlets as "biased", "fake news", or "corrupt".
+2. **Multi-Metric Triangulation**: No single metric should be analyzed in isolation.
+3. **Decoupled Entities & Sentiment**: Mentions of a politician or party do not automatically imply endorsement or criticism.
