@@ -22,13 +22,7 @@ SYNTHETIC_INTEL_BODY = """TEST FIXTURE — NOT REAL NEWS DATA. Chief Minister M.
 Edappadi K. Palaniswami of AIADMK reviewed the report in Madras High Court and Kolathur constituency."""
 
 
-@pytest.fixture(scope="function")
-def db_session():
-    """Temporary in-memory database session fixture."""
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
-    yield session
-    session.close()
+
 
 
 class TestPhase4IntelligenceLayer:

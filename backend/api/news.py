@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from backend.database.session import SessionLocal
 from backend.services.news_service import NewsService
+from backend.services.event_comparison_service import EventCandidateDetector, CrossSourceEventComparer, EventComparisonService
 from backend.models.news import NewsSource, Article, Topic, PoliticalEntity, PoliticalEvent, BiasIndicator
 from backend.api.responses import success_response, error_response
 
@@ -176,6 +177,54 @@ def get_events():
             "official_reference": e.official_reference
         } for e in events]
         return success_response(data=data, message="Political events retrieved successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/events/candidates', methods=['GET'])
+def get_event_candidates():
+    """Detect candidate political event clusters from recent articles."""
+    days_window = int(request.args.get('days_window', 3))
+    db = SessionLocal()
+    try:
+        detector = EventCandidateDetector()
+        candidates = detector.find_candidates(db, days_window=days_window)
+        formatted = [{
+            "cluster_id": c["cluster_id"],
+            "title_sample": c["title_sample"],
+            "article_count": c["article_count"],
+            "article_ids": c["article_ids"]
+        } for c in candidates]
+        return success_response(data=formatted, message="Event candidates detected successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/events/<event_id>/compare', methods=['GET'])
+def compare_event_coverage(event_id):
+    """Compare multi-dimensional coverage across media outlets for a given political event."""
+    db = SessionLocal()
+    try:
+        comparer = CrossSourceEventComparer()
+        comparison = comparer.compare_event_coverage(db, event_id)
+        if "error" in comparison:
+            return error_response(message=comparison["error"], status_code=404)
+        return success_response(data=comparison, message="Event coverage comparison calculated successfully")
+    finally:
+        db.close()
+
+@news_bp.route('/events/disparities', methods=['GET'])
+def get_coverage_disparities():
+    """Retrieve multi-dimensional cross-source coverage disparities across all events."""
+    db = SessionLocal()
+    try:
+        service = EventComparisonService(db)
+        results = service.run_event_analysis_pipeline()
+        disparities = []
+        for res in results:
+            for disp in res.get("coverage_disparities", []):
+                disp["event_id"] = res["event_id"]
+                disp["event_name"] = res["event_name"]
+                disparities.append(disp)
+        return success_response(data=disparities, message="Coverage disparities retrieved successfully")
     finally:
         db.close()
 

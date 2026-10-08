@@ -38,13 +38,7 @@ SYNTHETIC_ENGLISH_ARTICLE = {
 }
 
 
-@pytest.fixture(scope="function")
-def db_session():
-    """Creates temporary in-memory database tables for unit testing."""
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
-    yield session
-    session.close()
+
 
 
 @pytest.fixture
