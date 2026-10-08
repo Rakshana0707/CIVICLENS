@@ -234,32 +234,36 @@ class TestPhase4BiasIndicatorEngine:
         from backend.database.session import SessionLocal
         db = SessionLocal()
         try:
-            # Register a source for API calculation test
-            src = NewsSource(
-                source_id="src_api_calc_test",
-                source_name="API Calc Test Source",
-                domain="api-calc.example.com",
-                language="en",
-                source_type=SourceType.DIGITAL_NATIVE,
-                active_status=ActiveStatus.ACTIVE
-            )
-            db.add(src)
-            db.commit()
+            # Register a source for API calculation test if not already present
+            src = db.query(NewsSource).filter(NewsSource.source_id == "src_api_calc_test").first()
+            if not src:
+                src = NewsSource(
+                    source_id="src_api_calc_test",
+                    source_name="API Calc Test Source",
+                    domain="api-calc.example.com",
+                    language="en",
+                    source_type=SourceType.DIGITAL_NATIVE,
+                    active_status=ActiveStatus.ACTIVE
+                )
+                db.add(src)
+                db.commit()
 
             now = datetime.now(timezone.utc)
             for i in range(2):
                 art_t = f"TEST FIXTURE API Article {i}"
-                art = Article(
-                    article_id=f"art_api_calc_{i}",
-                    source_id="src_api_calc_test",
-                    url=f"https://api-calc.example.com/news-{i}",
-                    title=art_t,
-                    article_text=art_t,
-                    text_hash=hashlib.sha256(art_t.encode('utf-8')).hexdigest(),
-                    publication_date=now,
-                    is_test_fixture=True
-                )
-                db.add(art)
+                existing_art = db.query(Article).filter(Article.article_id == f"art_api_calc_{i}").first()
+                if not existing_art:
+                    art = Article(
+                        article_id=f"art_api_calc_{i}",
+                        source_id="src_api_calc_test",
+                        url=f"https://api-calc.example.com/news-{i}",
+                        title=art_t,
+                        article_text=art_t,
+                        text_hash=hashlib.sha256(art_t.encode('utf-8')).hexdigest(),
+                        publication_date=now,
+                        is_test_fixture=True
+                    )
+                    db.add(art)
             db.commit()
 
             # 1. POST /api/news/indicators/calculate
