@@ -42,7 +42,9 @@ from backend.models.news import (
     ArticleVersion,
     PoliticalParty,
     PoliticalPerson,
+    GovernmentDepartment,
     PoliticalEntity,
+
     PoliticalEvent,
     Topic,
     ArticleEntity,

@@ -134,6 +134,22 @@ class PoliticalPerson(Base):
     party = relationship("PoliticalParty", back_populates="persons")
 
 
+class GovernmentDepartment(Base):
+    """
+    State government department entity in Tamil Nadu administration.
+    """
+    __tablename__ = "government_departments"
+
+    dept_id = Column(String, primary_key=True, index=True)
+    dept_code = Column(String, nullable=False, unique=True, index=True)
+    name_en = Column(String, nullable=False)
+    name_ta = Column(String, nullable=True)
+    minister_in_charge = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+
 class PoliticalEntity(Base):
     """
     Generalized entity registry (departments, constituencies, organizations, leaders).
