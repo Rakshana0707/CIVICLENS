@@ -114,5 +114,797 @@
       "author": "span.author",
       "date": "meta[name='pubdate']"
     }
+  },
+  {
+    "source_id": "SRC-001",
+    "source_name": "Nakkheeran",
+    "domain": "www.nakkheeran.in",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.nakkheeran.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-002",
+    "source_name": "ETV Bharat (Tamil)",
+    "domain": "www.etvbharat.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.etvbharat.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (5 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. Ownership hint on page footer: Ushodaya Enterprises Pvt. Ltd. (per page footer)"
+  },
+  {
+    "source_id": "SRC-003",
+    "source_name": "Bernama (Tamil)",
+    "domain": "bernama.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*bernama.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-004",
+    "source_name": "YourStory (Tamil)",
+    "domain": "yourstory.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*yourstory.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-005",
+    "source_name": "Tamil Spark",
+    "domain": "www.tamilspark.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.tamilspark.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-006",
+    "source_name": "Zee News Tamil",
+    "domain": "zeenews.india.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*zeenews.india.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (3 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-007",
+    "source_name": "Deccan Herald",
+    "domain": "www.deccanherald.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.deccanherald.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (3 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-008",
+    "source_name": "DT Next",
+    "domain": "www.dtnext.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.dtnext.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (5 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. Ownership hint on page footer: not_verified; dailythanthi.com footer lists dtnext.in as a 'Group Site' (a relationship hint, not an ownership document)"
+  },
+  {
+    "source_id": "SRC-009",
+    "source_name": "The South First",
+    "domain": "thesouthfirst.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*thesouthfirst.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-010",
+    "source_name": "Telangana Today",
+    "domain": "telanganatoday.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*telanganatoday.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (3 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-011",
+    "source_name": "All India Radio News (Prasar Bharati)",
+    "domain": "newsonair.gov.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*newsonair.gov.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-012",
+    "source_name": "ETV Bharat (English)",
+    "domain": "www.etvbharat.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.etvbharat.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-013",
+    "source_name": "Onmanorama",
+    "domain": "www.onmanorama.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.onmanorama.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-014",
+    "source_name": "Business Today",
+    "domain": "www.businesstoday.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.businesstoday.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-015",
+    "source_name": "The Star (Malaysia)",
+    "domain": "www.thestar.com.my",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.thestar.com.my/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-016",
+    "source_name": "Kerala Kaumudi",
+    "domain": "keralakaumudi.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*keralakaumudi.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-017",
+    "source_name": "Deccan Chronicle",
+    "domain": "www.deccanchronicle.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.deccanchronicle.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-018",
+    "source_name": "Gulf News",
+    "domain": "gulfnews.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*gulfnews.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-019",
+    "source_name": "The News Minute",
+    "domain": "www.thenewsminute.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.thenewsminute.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-020",
+    "source_name": "The Wire",
+    "domain": "thewire.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*thewire.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-021",
+    "source_name": "The Week",
+    "domain": "www.theweek.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.theweek.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-022",
+    "source_name": "Outlook India",
+    "domain": "www.outlookindia.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.outlookindia.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-023",
+    "source_name": "IANS Live",
+    "domain": "ianslive.in",
+    "language": "en",
+    "article_url_patterns": [
+      "*ianslive.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-024",
+    "source_name": "The Statesman",
+    "domain": "www.thestatesman.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.thestatesman.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-025",
+    "source_name": "UNI (test subdomain)",
+    "domain": "test.uniindia.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*test.uniindia.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-026",
+    "source_name": "TaxTMI",
+    "domain": "www.taxtmi.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.taxtmi.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-027",
+    "source_name": "Ground News",
+    "domain": "ground.news",
+    "language": "en",
+    "article_url_patterns": [
+      "*ground.news/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-028",
+    "source_name": "Dinamalar (Kalvimalar section)",
+    "domain": "www.dinamalar.com",
+    "language": "en",
+    "article_url_patterns": [
+      "*www.dinamalar.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-029",
+    "source_name": "Daily Thanthi",
+    "domain": "www.dailythanthi.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.dailythanthi.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (3 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. Ownership hint on page footer: not_verified (page footer lists dtnext.in as a 'Group Site')"
+  },
+  {
+    "source_id": "SRC-030",
+    "source_name": "Dinamalar (Tamil)",
+    "domain": "www.dinamalar.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.dinamalar.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-031",
+    "source_name": "Vikatan",
+    "domain": "www.vikatan.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.vikatan.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-032",
+    "source_name": "Minnambalam",
+    "domain": "minnambalam.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*minnambalam.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-033",
+    "source_name": "IBC Tamilnadu",
+    "domain": "ibctamilnadu.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*ibctamilnadu.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-034",
+    "source_name": "Kalki Online",
+    "domain": "kalkionline.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*kalkionline.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (2 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-035",
+    "source_name": "Webdunia Tamil",
+    "domain": "tamil.webdunia.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamil.webdunia.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-036",
+    "source_name": "Chennai Online (Tamil)",
+    "domain": "www.chennaionline.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.chennaionline.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-037",
+    "source_name": "Tamil Janam",
+    "domain": "tamiljanam.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamiljanam.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-038",
+    "source_name": "TRT Tamil Oli",
+    "domain": "www.trttamilolli.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.trttamilolli.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-039",
+    "source_name": "ThePrint Tamil",
+    "domain": "tamil.theprint.in",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamil.theprint.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-040",
+    "source_name": "Goodreturns Tamil",
+    "domain": "tamil.goodreturns.in",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamil.goodreturns.in/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-041",
+    "source_name": "E Tamil News",
+    "domain": "www.etamilnews.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.etamilnews.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-042",
+    "source_name": "Dinakaran",
+    "domain": "www.dinakaran.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*www.dinakaran.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-043",
+    "source_name": "Oneindia Tamil",
+    "domain": "tamil.oneindia.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamil.oneindia.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (3 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
+  },
+  {
+    "source_id": "SRC-044",
+    "source_name": "Getlokal (Tamil)",
+    "domain": "tamil.getlokalapp.com",
+    "language": "ta",
+    "article_url_patterns": [
+      "*tamil.getlokalapp.com/*"
+    ],
+    "pagination_rules": {
+      "param_name": "page",
+      "page_step": 1,
+      "max_pages": 5
+    },
+    "parser_type": "generic",
+    "rate_limit": 1.0,
+    "enabled": true,
+    "access_notes": "Batch 1b: domain seen in article URLs (1 record(s)). Editorial policy, ownership and corrections-policy fields NOT yet researched; no bias classification assigned. "
   }
 ]
