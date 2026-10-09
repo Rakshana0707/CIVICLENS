@@ -318,6 +318,134 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # -----------------------------------------------------------------------
+    # TAMIL NEWS ANALYZER API METHODS (PHASE 4)
+    # -----------------------------------------------------------------------
+    def get_news_sources(self, language: str = None, source_type: str = None, active_status: str = None) -> Tuple[bool, Any]:
+        params = {}
+        if language and language != "All": params["language"] = language
+        if source_type and source_type != "All": params["source_type"] = source_type
+        if active_status and active_status != "All": params["active_status"] = active_status
+        try:
+            response = requests.get(f"{self.base_url}/api/news/sources", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_articles(
+        self,
+        source_id: Optional[str] = None,
+        language: Optional[str] = None,
+        date: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        topic_id: Optional[str] = None,
+        party_id: Optional[str] = None,
+        person_id: Optional[str] = None,
+        entity_id: Optional[str] = None,
+        event_id: Optional[str] = None,
+        search: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0
+    ) -> Tuple[bool, Any]:
+        params = {"limit": limit, "offset": offset}
+        if source_id and source_id != "All": params["source_id"] = source_id
+        if language and language != "All": params["language"] = language
+        if date: params["date"] = date
+        if date_from: params["date_from"] = date_from
+        if date_to: params["date_to"] = date_to
+        if topic_id and topic_id != "All": params["topic"] = topic_id
+        if party_id and party_id != "All": params["party"] = party_id
+        if person_id and person_id != "All": params["person"] = person_id
+        if entity_id and entity_id != "All": params["entity_id"] = entity_id
+        if event_id and event_id != "All": params["event"] = event_id
+        if search: params["search"] = search
+
+        try:
+            response = requests.get(f"{self.base_url}/api/news/articles", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_article_detail(self, article_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/news/articles/{article_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_topics(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/news/topics", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_entities(self, entity_type: str = None, search: str = None) -> Tuple[bool, Any]:
+        params = {}
+        if entity_type and entity_type != "All": params["entity_type"] = entity_type
+        if search: params["search"] = search
+        try:
+            response = requests.get(f"{self.base_url}/api/news/entities", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_events(self, date: str = None, search: str = None) -> Tuple[bool, Any]:
+        params = {}
+        if date: params["date"] = date
+        if search: params["search"] = search
+        try:
+            response = requests.get(f"{self.base_url}/api/news/events", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_event_detail(self, event_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/news/events/{event_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_coverage(self, source_id: str = None, time_period: str = None, topic_id: str = None) -> Tuple[bool, Any]:
+        params = {}
+        if source_id and source_id != "All": params["source_id"] = source_id
+        if time_period: params["time_period"] = time_period
+        if topic_id and topic_id != "All": params["topic_id"] = topic_id
+        try:
+            response = requests.get(f"{self.base_url}/api/news/coverage", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_source_comparison(self, source_a: str = None, source_b: str = None, days_window: int = 30) -> Tuple[bool, Any]:
+        params = {"days_window": days_window}
+        if source_a: params["source_a"] = source_a
+        if source_b: params["source_b"] = source_b
+        try:
+            response = requests.get(f"{self.base_url}/api/news/source-comparison", params=params, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_news_bias_indicators(self, source_id: str = None, metric_type: str = None, min_confidence: float = 0.0) -> Tuple[bool, Any]:
+        params = {"min_confidence": min_confidence}
+        if source_id and source_id != "All": params["source_id"] = source_id
+        if metric_type and metric_type != "All": params["metric_type"] = metric_type
+        try:
+            response = requests.get(f"{self.base_url}/api/news/bias-indicators", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def calculate_news_indicators(self, source_id: str, days_window: int = 30) -> Tuple[bool, Any]:
+        try:
+            response = requests.post(f"{self.base_url}/api/news/indicators/calculate", json={"source_id": source_id, "days_window": days_window}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()

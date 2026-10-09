@@ -54,7 +54,7 @@ with col2:
     create_module_card(col2, "Political Funding", "Explore political funding and financial transparency data.")
 
 with col3:
-    create_module_card(col3, "Tamil News", "AI-driven framing analysis and topic modeling on Tamil news media.")
+    create_module_card(col3, "Tamil News", "AI-driven framing analysis and topic modeling on Tamil news media.", is_implemented=True)
     create_module_card(col3, "Claim Verification", "Automated evidence extraction and explainable claim verification.")
 
 st.info("👈 Use the sidebar navigation to explore the different modules as they become available.")
