@@ -1,75 +1,76 @@
-# Real News Dataset Inspection Report
+# Real News Dataset Inspection Report (Multi-Dataset Audit)
 
 **Project**: CIVICLENS TN — Phase 4 Tamil News Bias & Political Coverage Analyzer  
-**Date**: October 9, 2026  
-**Status**: Dataset Verified & Extracted  
+**Date**: October 10, 2026  
+**Status**: Multi-Dataset Verification, Inspection & Extraction Complete  
 
 ---
 
 ## 1. Dataset Provenance & Archive Metadata
 
-The real Phase 4 news dataset was located within the local environment and inspected prior to extraction.
+Three real Phase 4 news datasets were located within `E:\Downloads 🔄`, inspected, and extracted into `data/raw/news/`.
 
-- **Source Location**: `E:\Downloads 🔄\News CivicLens`
-- **Archive Format**: ZIP Archive (PK magic bytes `b'PK\x03\x04'`)
-- **File Size**: 38,678 bytes (37.77 KB)
-- **SHA-256 Checksum**: `12e4fea737d27495423e03da9e26c189d4f585fcb9fd8524ff7006638c58d30b`
-- **Extraction Target Directory**: `data/raw/news/`
+| Dataset Name | File Format | File Size | SHA-256 Checksum | Target Directory |
+| :--- | :--- | :--- | :--- | :--- |
+| **News CivicLens** | ZIP Archive | 38,678 bytes | `12e4fea737d27495423e03da9e26c189d4f585fcb9fd8524ff7006638c58d30b` | `data/raw/news/` |
+| **News CivicLens DS** | ZIP Archive | 151,757 bytes | `0b85b2c353fce22b0bbc230656d422ecebae41086a26a6787748f6258d63bbeb` | `data/raw/news/ds1/` |
+| **News CivicLens DS 2** | ZIP Archive | 222,216 bytes | `3038de5cc125e52d8b653e0bd75595852a9a5994d33a677dae22285f5f0cae3b` | `data/raw/news/ds2/` |
 
-The original ZIP archive remains preserved in its location while all extracted files are safely registered under `data/raw/news/`.
-
----
-
-## 2. Extracted File Inventory
-
-The archive was extracted into `data/raw/news/` containing 9 files:
-
-| File Name | File Size | Description |
-| :--- | :--- | :--- |
-| `README_batch1.md` | 1,614 bytes | Batch overview, dataset scope, and verification methodology |
-| `data_dictionary_batch1.csv` | 3,311 bytes | Definitive data dictionary and field definitions |
-| `dataset_A_news_articles_batch1.csv` | 64,006 bytes | Core news articles dataset (72 records) |
-| `dataset_A_strict_verified_batch1.csv` | 14,635 bytes | Strictly verified article subset (15 records) |
-| `dataset_B_political_events_batch1.csv` | 7,189 bytes | Political events dataset (13 records) |
-| `dataset_D_official_references_batch1.csv` | 1,056 bytes | Official state references / independent analysis (1 record) |
-| `dataset_E_source_metadata_batch1.csv` | 13,886 bytes | News source registry metadata (44 sources) |
-| `duplicate_check_report_batch1.csv` | 2,132 bytes | Cross-publisher near-duplicate headline checks (23 checks) |
-| `source_verification_log_batch1.csv` | 22,298 bytes | Line-by-line article verification audit log (72 logs) |
+All original archives remain preserved while extracted contents are registered under `data/raw/news/`.
 
 ---
 
-## 3. Dataset Schemas & Column Mappings
+## 2. Archive Structure & Inventory
 
-### Dataset A — News Articles (`dataset_A_news_articles_batch1.csv`)
-Contains 29 columns:
-- **Identifiers**: `article_id`, `source_id`, `source_name`, `article_url`
-- **Headlines & Text**: `headline_original`, `headline_english_translation`, `article_text`, `article_summary`
-- **Metadata**: `language`, `author`, `published_date`, `collected_date`, `category`, `subcategory`
-- **Entities & Location**: `political_parties_mentioned`, `political_leaders_mentioned`, `other_entities`, `location_mentioned`, `event_id`
-- **Framing & Sentiment**: `framing_label`, `sentiment_label`, `bias_evidence`, `evidence_quote`
-- **Verification & Provenance**: `fact_check_status`, `text_availability`, `verification_status`, `verification_method`, `verification_notes`, `duplicate_flag`
+### Archive 1: `News CivicLens` (Batch 1 Initial Release)
+- `dataset_A_news_articles_batch1.csv`: 72 articles (37 Tamil, 35 English)
+- `dataset_B_political_events_batch1.csv`: 13 political events
+- `dataset_E_source_metadata_batch1.csv`: 44 news sources
+- `dataset_D_official_references_batch1.csv`: 1 official reference
+- `source_verification_log_batch1.csv`: 72 verification logs (12 verified, 47 partially verified, 7 unverified, 6 rejected)
 
-### Dataset B — Political Events (`dataset_B_political_events_batch1.csv`)
-Columns: `event_id`, `event_title`, `event_date`, `event_type`, `event_description`, `location`, `political_parties_involved`, `political_leaders_involved`, `related_policy_or_issue`, `official_reference_url`, `related_article_ids`, `verification_status`.
+### Archive 2: `News CivicLens DS` (Batch 1 + Batch 2 Iteration)
+- Contains `civiclens_step1_step2partial.zip` with `data/batch1/` and `data/batch2/`
+- `dataset_A_news_articles_batch2.csv`: 72 articles with updated verification logs (15 verified, 44 partially verified, 7 unverified, 6 rejected)
+- `dataset_A_strict_verified_batch2.csv`: 15 strictly verified articles
+- `dataset_B_political_events_batch2.csv`: 13 political events
 
-### Dataset E — News Sources (`dataset_E_source_metadata_batch1.csv`)
-Columns: `source_id`, `source_name`, `website_url`, `language`, `publisher_or_organization`, `source_type`, `geographic_focus`, `editorial_policy_url`, `ownership_reference_url`, `known_corrections_policy_url`, `metadata_reference_url`, `verification_status`, `notes`.
-
----
-
-## 4. Dataset Breakdown & Statistical Summary
-
-- **Total Articles**: 72 articles
-  - **Tamil Language Articles**: 37 (51.4%)
-  - **English Language Articles**: 35 (48.6%)
-- **Unique News Sources**: 44 distinct media outlets (including Nakkheeran, ETV Bharat, DT Next, Deccan Herald, Dinamalar, Minnambalam, Vikatan, Daily Thanthi, Zee News Tamil, Oneindia Tamil, The News Minute, etc.)
-- **Political Events Covered**: 13 major TN political events (e.g. Union Budget 2026-27 reactions, TN Interim Budget 2026-27, party launch rallies, infrastructure policy debates)
-- **Strictly Verified Subset**: 15 fully verified articles (`verification_status = 'verified'`)
+### Archive 3: `News CivicLens DS 2` (Phase 2 Consolidated Release & Dataset C)
+- Contains `civiclens_phase2.zip` with consolidated ground-truth datasets:
+  - `dataset_A_news_articles.csv`: 72 articles (17 verified, 42 partially verified, 7 unverified, 6 rejected)
+  - `dataset_B_political_events.csv`: 13 political events
+  - `dataset_C_political_entities.csv`: **47 ground-truth political entities** (TVK, DMK, AIADMK, BJP, Congress, etc., with Tamil and English names and party codes)
+  - `dataset_C_aliases.csv`: **19 entity alias mappings** (e.g. Vijay, M.K. Stalin, Edappadi K. Palaniswami, K. Annamalai)
+  - `dataset_C_evidence_notes.csv`: **47 evidence notes**
+  - `dataset_D_official_references.csv`: **4 official government references** (PRS TN Budget Analysis, Finance Minister Budget Speech 5 Aug 2026, ECI Madurantakam Bye-Election Notification, TN Home Dept Police Duty G.O.)
+  - `dataset_E_source_metadata.csv`: 44 news sources
 
 ---
 
-## 5. Unicode Integrity & Text Quality
+## 3. Dataset Verification Progression
 
-- **Tamil Script Encoding**: Full UTF-8 compliance verified. Tamil headlines (e.g., `பட்ஜெட் 2026 : கவனம் பெற்ற முக்கிய அறிவிப்புகள்!`) and Tamil author bylines (e.g., `நக்கீரன் செய்திப்பிரிவு`) render cleanly without corruption.
-- **Text Availability**: Articles carry `article_summary` alongside headlines and metadata. `text_availability` tracks `full_text_accessible_not_stored` or `metadata_only_text_not_retrieved` in compliance with copyright guidelines.
-- **Quality Audit**: Zero corrupted characters or unparseable lines encountered during CSV validation.
+Across the dataset iterations, the verification pipeline yielded progressive audit enhancements:
+
+| Dataset Iteration | Total Articles | Verified | Partially Verified | Unverified | Rejected | Strictly Verified Subset |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Batch 1 (`News CivicLens`)** | 72 | 12 | 47 | 7 | 6 | 12 |
+| **Batch 2 (`News CivicLens DS`)** | 72 | 15 | 44 | 7 | 6 | 15 |
+| **Phase 2 (`News CivicLens DS 2`)** | 72 | 17 | 42 | 7 | 6 | 17 |
+
+---
+
+## 4. Ground-Truth Entities & Official References
+
+- **Political Entities (Dataset C)**: 47 entities spanning:
+  - `party`: TVK (Tamilaga Vettri Kazhagam), DMK, AIADMK, BJP, Congress, NTK, VCK, PMK, MDMK, CPI(M), CPI
+  - `person`: M.K. Stalin, Vijay, Edappadi K. Palaniswami, K. Annamalai, Seeman, Thol. Thirumavalavan, Dr. S. Ramadoss, Udhayanidhi Stalin, Kanimozhi, Nirmala Sitharaman, Dr. N. Marie Wilson
+  - `department`: Finance Dept, School Education Dept, Agriculture Dept, Health Dept, Municipal Administration, Police Dept
+  - `location / constituency`: Tamil Nadu, Chennai, Madurantakam (SC), Dharapuram (SC), Vikravandi, Coimbatore
+- **Official References (Dataset D)**: 4 primary government & independent legislative documents.
+
+---
+
+## 5. Unicode Integrity & Character Encoding
+
+- All Tamil text columns across `dataset_A_news_articles.csv`, `dataset_C_political_entities.csv`, and `dataset_C_aliases.csv` are fully UTF-8 encoded.
+- Zero encoding glitches, lost characters, or surrogate pair breakages observed.

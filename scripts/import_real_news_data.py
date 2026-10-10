@@ -1,5 +1,5 @@
 """
-Script to import real Phase 4 Tamil news dataset (News CivicLens Batch 1)
+Script to import real Phase 4 Tamil news datasets (News CivicLens Batch 1, DS, and DS 2)
 into SQLite database and run the full NLP, Intelligence, Event Comparison,
 and Multi-Dimensional Bias Engine pipelines.
 """
@@ -43,6 +43,35 @@ def import_real_news_dataset():
         logger.error(f"Raw data directory not found at {raw_dir}")
         return
 
+    # Determine priority article CSV path (Prefer Phase 2 consolidated release)
+    p2_csv = os.path.join(raw_dir, "ds2", "civiclens_phase2", "dataset_A_news_articles.csv")
+    b2_csv = os.path.join(raw_dir, "ds1", "data", "batch2", "dataset_A_news_articles_batch2.csv")
+    b1_csv = os.path.join(raw_dir, "dataset_A_news_articles_batch1.csv")
+
+    if os.path.exists(p2_csv):
+        art_csv = p2_csv
+        logger.info(f"Using Phase 2 consolidated article dataset from {p2_csv}")
+    elif os.path.exists(b2_csv):
+        art_csv = b2_csv
+        logger.info(f"Using Batch 2 article dataset from {b2_csv}")
+    else:
+        art_csv = b1_csv
+        logger.info(f"Using Batch 1 article dataset from {b1_csv}")
+
+    # Determine priority source CSV path
+    p2_src_csv = os.path.join(raw_dir, "ds2", "civiclens_phase2", "dataset_E_source_metadata.csv")
+    b1_src_csv = os.path.join(raw_dir, "dataset_E_source_metadata_batch1.csv")
+    src_csv = p2_src_csv if os.path.exists(p2_src_csv) else b1_src_csv
+
+    # Determine priority event CSV path
+    p2_evt_csv = os.path.join(raw_dir, "ds2", "civiclens_phase2", "dataset_B_political_events.csv")
+    b1_evt_csv = os.path.join(raw_dir, "dataset_B_political_events_batch1.csv")
+    evt_csv = p2_evt_csv if os.path.exists(p2_evt_csv) else b1_evt_csv
+
+    # Ground-Truth Dataset C (Entities & Aliases)
+    p2_ent_csv = os.path.join(raw_dir, "ds2", "civiclens_phase2", "dataset_C_political_entities.csv")
+    p2_alias_csv = os.path.join(raw_dir, "ds2", "civiclens_phase2", "dataset_C_aliases.csv")
+
     logger.info("Initializing Topic Taxonomy...")
     for tcode, tinfo in TOPIC_TAXONOMY_14.items():
         tid = f"topic_{tcode}"
@@ -64,7 +93,6 @@ def import_real_news_dataset():
     bias_engine = BiasIndicatorEngine(db=db)
 
     # 2. Load Source Metadata
-    src_csv = os.path.join(raw_dir, "dataset_E_source_metadata_batch1.csv")
     if os.path.exists(src_csv):
         df_src = pd.read_csv(src_csv)
         logger.info(f"Importing {len(df_src)} news sources...")
@@ -81,7 +109,6 @@ def import_real_news_dataset():
             ).first()
 
             if not existing_source:
-                # Ensure domain uniqueness
                 domain = base_domain
                 existing_dom = db.query(NewsSource).filter(NewsSource.domain == domain).first()
                 if existing_dom:
@@ -101,11 +128,59 @@ def import_real_news_dataset():
                 db.flush()
         db.commit()
 
-    # 3. Load Political Events
-    event_csv = os.path.join(raw_dir, "dataset_B_political_events_batch1.csv")
+    # 3. Load Ground-Truth Political Entities & Aliases (Dataset C)
+    if os.path.exists(p2_ent_csv):
+        df_c_ent = pd.read_csv(p2_ent_csv)
+        df_c_alias = pd.read_csv(p2_alias_csv) if os.path.exists(p2_alias_csv) else pd.DataFrame()
+        logger.info(f"Importing {len(df_c_ent)} ground-truth Dataset C political entities...")
+
+        aliases_by_ent = {}
+        if not df_c_alias.empty:
+            for _, arow in df_c_alias.iterrows():
+                eid = str(arow["entity_id"])
+                alias_str = str(arow["alias"])
+                if eid not in aliases_by_ent:
+                    aliases_by_ent[eid] = []
+                aliases_by_ent[eid].append(alias_str)
+
+        for _, erow in df_c_ent.iterrows():
+            eid = str(erow["entity_id"])
+            orig_name = str(erow["entity_name_original"])
+            eng_name = str(erow["entity_name_english"]) if pd.notna(erow["entity_name_english"]) else orig_name
+            etype = str(erow["entity_type"]) if pd.notna(erow["entity_type"]) else "party"
+            party_org = str(erow["party_or_organization"]) if pd.notna(erow["party_or_organization"]) else ""
+
+            existing_ent = db.query(PoliticalEntity).filter(
+                (PoliticalEntity.entity_id == eid) | (PoliticalEntity.name == orig_name)
+            ).first()
+
+            meta = {
+                "english_name": eng_name,
+                "party_or_organization": party_org,
+                "aliases": aliases_by_ent.get(eid, [])
+            }
+
+            if not existing_ent:
+                new_ent = PoliticalEntity(
+                    entity_id=eid,
+                    name=orig_name,
+                    normalized_name=eng_name.lower(),
+                    entity_type=etype,
+                    metadata_json=meta
+                )
+                db.add(new_ent)
+            else:
+                existing_ent.entity_id = eid
+                existing_ent.name = orig_name
+                existing_ent.normalized_name = eng_name.lower()
+                existing_ent.entity_type = etype
+                existing_ent.metadata_json = meta
+        db.commit()
+
+    # 4. Load Political Events
     event_map = {}
-    if os.path.exists(event_csv):
-        df_evt = pd.read_csv(event_csv)
+    if os.path.exists(evt_csv):
+        df_evt = pd.read_csv(evt_csv)
         logger.info(f"Importing {len(df_evt)} political events...")
 
         for _, row in df_evt.iterrows():
@@ -135,17 +210,12 @@ def import_real_news_dataset():
                 event_map[eid] = existing_evt
         db.commit()
 
-    # 4. Load & Ingest Real Articles
-    art_csv = os.path.join(raw_dir, "dataset_A_news_articles_batch1.csv")
-    if not os.path.exists(art_csv):
-        logger.error(f"Article dataset CSV not found at {art_csv}")
-        return
-
+    # 5. Load & Ingest Articles
     df_art = pd.read_csv(art_csv)
-    logger.info(f"Processing and ingesting {len(df_art)} real articles...")
+    logger.info(f"Processing and ingesting {len(df_art)} real articles from {os.path.basename(art_csv)}...")
 
     imported_count = 0
-    duplicate_count = 0
+    updated_count = 0
 
     for idx, row in df_art.iterrows():
         art_id = str(row["article_id"])
@@ -155,18 +225,8 @@ def import_real_news_dataset():
         text_content = str(row["article_summary"]) if pd.notna(row["article_summary"]) else headline
         lang_str = str(row["language"]).lower()
         lang = "ta" if "tamil" in lang_str else "en"
+        ver_status = str(row.get("verification_status", "verified"))
 
-        # Check existing
-        existing_art = db.query(Article).filter(
-            (Article.article_id == art_id) | (Article.url == url)
-        ).first()
-
-        if existing_art:
-            duplicate_count += 1
-            logger.info(f"Skipping duplicate article {art_id}")
-            continue
-
-        # Published date parsing
         pdate_str = str(row["published_date"]) if pd.notna(row["published_date"]) else "2026-08-01"
         try:
             pub_date = datetime.strptime(pdate_str[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -189,28 +249,43 @@ def import_real_news_dataset():
             override_language=lang
         )
 
-        # Create Article Record
-        new_article = Article(
-            article_id=art_id,
-            source_id=src_obj.source_id if src_obj else "SRC-001",
-            url=url,
-            canonical_url=canon_url,
-            retrieval_date=datetime.now(timezone.utc),
-            publication_date=pub_date,
-            title=headline,
-            author=str(row["author"]) if pd.notna(row["author"]) else "Editorial Desk",
-            section=str(row["category"]) if pd.notna(row["category"]) else "General",
-            language=lang,
-            article_text=text_content,
-            word_count=len(text_content.split()),
-            text_hash=text_hash,
-            is_test_fixture=False
-        )
+        existing_art = db.query(Article).filter(
+            (Article.article_id == art_id) | (Article.url == url)
+        ).first()
 
-        db.add(new_article)
-        db.flush()
+        if existing_art:
+            existing_art.title = headline
+            existing_art.author = str(row["author"]) if pd.notna(row["author"]) else existing_art.author
+            existing_art.section = str(row["category"]) if pd.notna(row["category"]) else existing_art.section
+            existing_art.article_text = text_content
+            existing_art.word_count = len(text_content.split())
+            existing_art.is_test_fixture = False
+            updated_count += 1
+            db.flush()
+            target_article = existing_art
+        else:
+            new_article = Article(
+                article_id=art_id,
+                source_id=src_obj.source_id if src_obj else "SRC-001",
+                url=url,
+                canonical_url=canon_url,
+                retrieval_date=datetime.now(timezone.utc),
+                publication_date=pub_date,
+                title=headline,
+                author=str(row["author"]) if pd.notna(row["author"]) else "Editorial Desk",
+                section=str(row["category"]) if pd.notna(row["category"]) else "General",
+                language=lang,
+                article_text=text_content,
+                word_count=len(text_content.split()),
+                text_hash=text_hash,
+                is_test_fixture=False
+            )
+            db.add(new_article)
+            db.flush()
+            target_article = new_article
+            imported_count += 1
 
-        # 5. Extract Intelligence Entities & Topics
+        # Extract Intelligence Entities & Topics
         intel_res = intelligence_layer.analyze_article(
             headline=headline,
             body_text=text_content
@@ -247,13 +322,19 @@ def import_real_news_dataset():
                 db.add(p_entity)
                 db.flush()
 
-            art_ent = ArticleEntity(
-                article_id=art_id,
-                entity_id=p_entity.entity_id,
-                mention_count=ent.get("mention_count", 1),
-                prominence_score=p_score
-            )
-            db.add(art_ent)
+            existing_art_ent = db.query(ArticleEntity).filter(
+                ArticleEntity.article_id == target_article.article_id,
+                ArticleEntity.entity_id == p_entity.entity_id
+            ).first()
+
+            if not existing_art_ent:
+                art_ent = ArticleEntity(
+                    article_id=target_article.article_id,
+                    entity_id=p_entity.entity_id,
+                    mention_count=ent.get("mention_count", 1),
+                    prominence_score=p_score
+                )
+                db.add(art_ent)
 
         # Topics
         topics = intel_res.get("topics", [])
@@ -268,12 +349,17 @@ def import_real_news_dataset():
             if not top_obj:
                 top_obj = db.query(Topic).filter(Topic.topic_code == tcode).first()
             if top_obj:
-                art_top = ArticleTopic(
-                    article_id=art_id,
-                    topic_id=top_obj.topic_id,
-                    relevance_score=t.get("relevance_score", 0.85)
-                )
-                db.add(art_top)
+                existing_art_top = db.query(ArticleTopic).filter(
+                    ArticleTopic.article_id == target_article.article_id,
+                    ArticleTopic.topic_id == top_obj.topic_id
+                ).first()
+                if not existing_art_top:
+                    art_top = ArticleTopic(
+                        article_id=target_article.article_id,
+                        topic_id=top_obj.topic_id,
+                        relevance_score=t.get("relevance_score", 0.85)
+                    )
+                    db.add(art_top)
 
         # Framing / Sentiment Features
         framing_val = str(row["framing_label"]) if pd.notna(row["framing_label"]) else "neutral"
@@ -285,31 +371,38 @@ def import_real_news_dataset():
         elif sentiment_val in ["negative", "critical"]:
             sent_score = -0.5
 
-        art_feat = ArticleFeature(
-            article_id=art_id,
-            headline_sentiment=sent_score,
-            body_sentiment=sent_score,
-            quote_count=1 if pd.notna(row.get("evidence_quote")) else 0,
-            official_source_citation_count=1 if pd.notna(row.get("fact_check_status")) else 0,
-            word_count=len(text_content.split()),
-            framing_indicators={"label": framing_val}
-        )
-        db.add(art_feat)
+        existing_feat = db.query(ArticleFeature).filter(ArticleFeature.article_id == target_article.article_id).first()
+        if not existing_feat:
+            art_feat = ArticleFeature(
+                article_id=target_article.article_id,
+                headline_sentiment=sent_score,
+                body_sentiment=sent_score,
+                quote_count=1 if pd.notna(row.get("evidence_quote")) else 0,
+                official_source_citation_count=1 if pd.notna(row.get("fact_check_status")) else 0,
+                word_count=len(text_content.split()),
+                framing_indicators={"label": framing_val, "verification_status": ver_status}
+            )
+            db.add(art_feat)
+        else:
+            existing_feat.framing_indicators = {"label": framing_val, "verification_status": ver_status}
 
         # Event Linkage
         evt_id = str(row["event_id"]) if pd.notna(row["event_id"]) else None
         if evt_id and evt_id in event_map:
-            art_evt = ArticleEvent(
-                article_id=art_id,
-                event_id=evt_id,
-                relevance_score=0.9
-            )
-            db.add(art_evt)
-
-        imported_count += 1
+            existing_art_evt = db.query(ArticleEvent).filter(
+                ArticleEvent.article_id == target_article.article_id,
+                ArticleEvent.event_id == evt_id
+            ).first()
+            if not existing_art_evt:
+                art_evt = ArticleEvent(
+                    article_id=target_article.article_id,
+                    event_id=evt_id,
+                    relevance_score=0.9
+                )
+                db.add(art_evt)
 
     db.commit()
-    logger.info(f"Ingested {imported_count} real articles successfully ({duplicate_count} duplicates skipped).")
+    logger.info(f"Article processing complete: {imported_count} new imported, {updated_count} existing updated.")
 
     # 6. Execute Event Candidate Detection & Cross-Source Comparison
     logger.info("Executing Cross-Source Political Event Comparison...")
@@ -336,7 +429,7 @@ def import_real_news_dataset():
 
     db.commit()
     db.close()
-    logger.info("Real dataset import and analysis pipeline execution complete!")
+    logger.info("Real multi-dataset import and analysis pipeline execution complete!")
 
 
 if __name__ == "__main__":

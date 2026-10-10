@@ -1,6 +1,6 @@
 """
-Unit & Integration Tests for Real Phase 4 News Dataset Integration.
-Verifies real article storage, REST API responses, NLP outputs, and frontend page imports.
+Unit & Integration Tests for Real Phase 4 News Multi-Dataset Integration.
+Verifies real article storage, Dataset C political entities, Dataset D references, REST API responses, and frontend page imports.
 """
 
 import pytest
@@ -31,12 +31,16 @@ class TestPhase4RealNewsIntegration:
         sources = self.db.query(NewsSource).all()
         assert len(sources) >= 40, f"Expected at least 40 registered news sources, found {len(sources)}"
 
+    def test_ground_truth_entities_dataset_c(self):
+        c_entities = self.db.query(PoliticalEntity).filter(PoliticalEntity.entity_id.like("CL-C-%")).all()
+        assert len(c_entities) >= 40, f"Expected at least 40 Dataset C ground-truth entities, found {len(c_entities)}"
+
     def test_political_events_and_indicators(self):
         events = self.db.query(PoliticalEvent).all()
         assert len(events) >= 10, f"Expected at least 10 political events, found {len(events)}"
 
         indicators = self.db.query(BiasIndicator).all()
-        assert len(indicators) >= 50, f"Expected bias indicators in DB, found {len(indicators)}"
+        assert len(indicators) >= 500, f"Expected at least 500 bias indicators in DB, found {len(indicators)}"
 
     def test_api_real_articles_endpoint(self):
         client = self.app.test_client()

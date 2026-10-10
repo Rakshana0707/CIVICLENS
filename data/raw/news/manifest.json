@@ -1,60 +1,34 @@
 {
-  "dataset_name": "News CivicLens Batch 1",
-  "version": "1.0.0",
-  "archive_filename": "News CivicLens",
-  "archive_sha256": "12e4fea737d27495423e03da9e26c189d4f585fcb9fd8524ff7006638c58d30b",
-  "extraction_timestamp": "2026-10-09T15:46:27.803565+00:00",
-  "article_count": 72,
-  "language_breakdown": {
-    "Tamil": 37,
-    "English": 35
-  },
-  "source_count": 44,
-  "files": [
+  "dataset_name": "News CivicLens Suite (Batch 1, Batch 2 & Phase 2 Ground-Truth)",
+  "version": "2.0.0",
+  "last_updated": "2026-10-10T08:33:03.024755+00:00",
+  "archives": [
     {
-      "filename": "README_batch1.md",
-      "size_bytes": 1614,
-      "sha256": "204ef66d101ee0cf2e5711aec1d2e107ef228cb3892d6f88d8de0deae358fef2"
+      "filename": "News CivicLens",
+      "description": "Batch 1 Initial Release",
+      "size_bytes": 38678,
+      "sha256": "12e4fea737d27495423e03da9e26c189d4f585fcb9fd8524ff7006638c58d30b"
     },
     {
-      "filename": "data_dictionary_batch1.csv",
-      "size_bytes": 3311,
-      "sha256": "b0b2094b97d21f2f87bddc36ce7e808662214edad2fdd6b932b5b82ff3412a19"
+      "filename": "News CivicLens DS",
+      "description": "Batch 1 + Batch 2 Iteration",
+      "size_bytes": 151757,
+      "sha256": "0b85b2c353fce22b0bbc230656d422ecebae41086a26a6787748f6258d63bbeb"
     },
     {
-      "filename": "dataset_A_news_articles_batch1.csv",
-      "size_bytes": 64006,
-      "sha256": "b59d639077be5895951df93a9b636c1bf64b00259b96406a35eed0e6d7c4ac25"
-    },
-    {
-      "filename": "dataset_A_strict_verified_batch1.csv",
-      "size_bytes": 14635,
-      "sha256": "564da4e3b6cde6801c61afa653cd0a1436acf1ff02dd8692d046a42ce7f52f77"
-    },
-    {
-      "filename": "dataset_B_political_events_batch1.csv",
-      "size_bytes": 7189,
-      "sha256": "7adaede091df8ef280c97b3ad42dc3b35ac90694443154fad4f59ff7c235acb0"
-    },
-    {
-      "filename": "dataset_D_official_references_batch1.csv",
-      "size_bytes": 1056,
-      "sha256": "a8743e4256c54d259b4d40315445cc91a03e0b96c1d6bee46db323bcd33554ed"
-    },
-    {
-      "filename": "dataset_E_source_metadata_batch1.csv",
-      "size_bytes": 13886,
-      "sha256": "71731f1dec80944d3589b40f6e317ac2a41ae178ee45589d6f9833cdc587806a"
-    },
-    {
-      "filename": "duplicate_check_report_batch1.csv",
-      "size_bytes": 2132,
-      "sha256": "4a5afb4a35cc3c204042b0580f64f6cf8d9cab63701f33fb36af2095513159a2"
-    },
-    {
-      "filename": "source_verification_log_batch1.csv",
-      "size_bytes": 22298,
-      "sha256": "a0f6782618f8c11c9f62215791762c144ea5b96ce4368d250ad9d794388e2ceb"
+      "filename": "News CivicLens DS 2",
+      "description": "Phase 2 Ground-Truth Release",
+      "size_bytes": 222216,
+      "sha256": "3038de5cc125e52d8b653e0bd75595852a9a5994d33a677dae22285f5f0cae3b"
     }
-  ]
+  ],
+  "total_articles": 72,
+  "verified_articles": 17,
+  "partially_verified_articles": 42,
+  "unverified_articles": 7,
+  "rejected_articles": 6,
+  "ground_truth_entities": 47,
+  "ground_truth_aliases": 19,
+  "official_references": 4,
+  "news_sources": 44
 }
