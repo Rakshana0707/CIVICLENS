@@ -9,7 +9,7 @@
 
 ## 1. Import Overview & Execution Metrics
 
-- **Execution Date**: `2026-10-07T11:09:12.114054+00:00`
+- **Execution Date**: `2026-10-10T12:05:28.764256+00:00`
 - **Target Database**: `civiclens.db`
 - **Source Corpus File**: `data/processed/promises/validated_promises.json`
 - **Source Manifest File**: `data/raw/manifestos/manifest.json`
@@ -19,8 +19,8 @@
 | Metric Name | Count | Description |
 | :--- | :---: | :--- |
 | **Total Records Discovered** | **1065** | Extracted & validated promise records in source dataset. |
-| **Total Records Imported** | **0** | Successfully inserted into SQLite `political_promises` table. |
-| **Records Skipped / Updated** | **1124** | Existing records preserved via idempotent upsert logic. |
+| **Total Records Imported** | **1065** | Successfully inserted into SQLite `political_promises` table. |
+| **Records Skipped / Updated** | **0** | Existing records preserved via idempotent upsert logic. |
 | **Records Rejected** | **0** | Invalid records rejected from primary dataset. |
 | **Exact Duplicates** | **8** | Identical normalized text records preserved with `duplicate` status. |
 | **Probable Duplicates** | **55** | High token similarity records preserved with `probable_duplicate` status. |
@@ -49,48 +49,48 @@ Every imported promise maintains 100% foreign key lineage:
 
 | Political Party | Imported Promises | Percentage |
 | :--- | :---: | :---: |
-| AIADMK | 386 | 38600.0% |
-| BJP | 338 | 33800.0% |
-| PMK | 311 | 31100.0% |
-| MNM | 30 | 3000.0% |
+| AIADMK | 386 | 36.2% |
+| BJP | 338 | 31.7% |
+| PMK | 311 | 29.2% |
+| MNM | 30 | 2.8% |
 
 ### Distribution by Election Year
 
 | Election Year | Imported Promises | Percentage |
 | :--- | :---: | :---: |
-| 2026 | 724 | 72400.0% |
-| 2016 | 311 | 31100.0% |
-| 2021 | 30 | 3000.0% |
+| 2026 | 724 | 68.0% |
+| 2016 | 311 | 29.2% |
+| 2021 | 30 | 2.8% |
 
 ### Distribution by Domain Category
 
 | Category Name | Imported Promises | Percentage |
 | :--- | :---: | :---: |
-| Uncategorized | 511 | 51100.0% |
-| Welfare | 76 | 7600.0% |
-| Education | 70 | 7000.0% |
-| Agriculture | 60 | 6000.0% |
-| Healthcare | 54 | 5400.0% |
-| Infrastructure | 53 | 5300.0% |
-| Employment | 46 | 4600.0% |
-| Environment | 31 | 3100.0% |
-| Transport | 29 | 2900.0% |
-| Industry | 25 | 2500.0% |
-| Women | 24 | 2400.0% |
-| Finance | 24 | 2400.0% |
-| Housing | 23 | 2300.0% |
-| Governance | 14 | 1400.0% |
-| Youth | 11 | 1100.0% |
-| Social protection | 10 | 1000.0% |
-| Digital services | 4 | 400.0% |
+| Uncategorized | 511 | 48.0% |
+| Welfare | 76 | 7.1% |
+| Education | 70 | 6.6% |
+| Agriculture | 60 | 5.6% |
+| Healthcare | 54 | 5.1% |
+| Infrastructure | 53 | 5.0% |
+| Employment | 46 | 4.3% |
+| Environment | 31 | 2.9% |
+| Transport | 29 | 2.7% |
+| Industry | 25 | 2.3% |
+| Women | 24 | 2.3% |
+| Finance | 24 | 2.3% |
+| Housing | 23 | 2.2% |
+| Governance | 14 | 1.3% |
+| Youth | 11 | 1.0% |
+| Social protection | 10 | 0.9% |
+| Digital services | 4 | 0.4% |
 
 ### Distribution by Language
 
 | Language | Imported Promises | Percentage |
 | :--- | :---: | :---: |
-| English | 697 | 69700.0% |
-| Tamil | 357 | 35700.0% |
-| Mixed | 11 | 1100.0% |
+| English | 697 | 65.4% |
+| Tamil | 357 | 33.5% |
+| Mixed | 11 | 1.0% |
 
 ---
 
