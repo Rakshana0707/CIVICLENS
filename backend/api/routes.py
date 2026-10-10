@@ -5,6 +5,7 @@ from backend.api.ml import ml_bp
 from backend.api.schemes import schemes_bp
 from backend.api.promises import promises_bp
 from backend.api.news import news_bp
+from backend.api.funding import funding_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -18,10 +19,11 @@ api_bp.register_blueprint(ml_bp)
 api_bp.register_blueprint(schemes_bp)
 api_bp.register_blueprint(promises_bp)
 api_bp.register_blueprint(news_bp)
+api_bp.register_blueprint(funding_bp)
 
 # Register placeholder namespaces for remaining future modules
 namespaces = [
-    'representatives', 'funding', 'claims'
+    'representatives', 'claims'
 ]
 
 

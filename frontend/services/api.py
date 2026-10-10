@@ -446,6 +446,105 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # -----------------------------------------------------------------------
+    # POLITICAL FUNDING TRANSPARENCY API METHODS (PHASE 5)
+    # -----------------------------------------------------------------------
+    def get_funding_parties(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/parties", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_party_profile(self, party_id: str, financial_year: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/parties/{party_id}/profile", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_contribution_summary(self, party_id: Optional[str] = None, financial_year: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/contributions/summary", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_income_expenditure(self, party_id: Optional[str] = None, financial_year: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/metrics/income-expenditure", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_electoral_trusts(self, party_id: Optional[str] = None, financial_year: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/electoral-trusts", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_election_expenditure(self, party_id: Optional[str] = None, election_name: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if election_name and election_name != "All": params["election_name"] = election_name
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/election-expenditure", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_anomalies(self, party_id: Optional[str] = None, financial_year: Optional[str] = None, review_status: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        if review_status and review_status != "All": params["review_status"] = review_status
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/anomalies", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_cross_validation(self, party_id: Optional[str] = None, financial_year: Optional[str] = None, validation_status: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        if validation_status and validation_status != "All": params["validation_status"] = validation_status
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/cross-validation", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_documents(self, party_id: Optional[str] = None, financial_year: Optional[str] = None, filing_type: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if financial_year and financial_year != "All": params["financial_year"] = financial_year
+        if filing_type and filing_type != "All": params["filing_type"] = filing_type
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/documents", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_funding_sources(self) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/funding/sources", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
