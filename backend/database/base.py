@@ -59,5 +59,16 @@ from backend.models.news import (
     NewsIngestionFailure,
     NewsProcessingQueue
 )
+from backend.models.funding import (
+    FinancialDocument,
+    Donor,
+    ElectoralTrust,
+    Contribution,
+    PartyFinancialStatement,
+    ElectionExpenditure,
+    FinancialMetric,
+    ValidationIssue
+)
+
 
 
