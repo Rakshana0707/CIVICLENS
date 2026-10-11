@@ -350,3 +350,46 @@ class ConstituencyGeographicMapping(Base):
 
     # Relationships
     constituency = relationship("Constituency", back_populates="geographic_mappings")
+
+
+class PromiseEvidenceStage(str, enum.Enum):
+    PROMISE_IDENTIFIED = "PROMISE_IDENTIFIED"
+    RELEVANT_SCHEME_IDENTIFIED = "RELEVANT_SCHEME_IDENTIFIED"
+    POLICY_ACTION_DOCUMENTED = "POLICY_ACTION_DOCUMENTED"
+    PROJECT_WORK_RECORDED = "PROJECT_WORK_RECORDED"
+    OUTCOME_INDICATOR_OBSERVED = "OUTCOME_INDICATOR_OBSERVED"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+
+
+class PromisePerformanceLink(Base):
+    """
+    Connects elected representatives and their party manifesto promises (Phase 3)
+    with government schemes (Phase 2), statutory evidence, local constituency works,
+    and socioeconomic development indicators.
+    """
+    __tablename__ = "promise_performance_links"
+
+    link_id = Column(String, primary_key=True, index=True)
+    representative_id = Column(String, ForeignKey("representatives.representative_id", ondelete="CASCADE"), nullable=False, index=True)
+    promise_id = Column(String, ForeignKey("political_promises.promise_id", ondelete="CASCADE"), nullable=False, index=True)
+    party_id = Column(String, ForeignKey("political_parties.party_id", ondelete="SET NULL"), nullable=True, index=True)
+    election_id = Column(String, ForeignKey("elections.election_id", ondelete="SET NULL"), nullable=True, index=True)
+    
+    scheme_id = Column(String, nullable=True, index=True)
+    evidence_id = Column(Integer, ForeignKey("evidence.id", ondelete="SET NULL"), nullable=True, index=True)
+    work_id = Column(String, ForeignKey("constituency_works.work_id", ondelete="SET NULL"), nullable=True, index=True)
+    indicator_id = Column(String, ForeignKey("development_indicators.indicator_id", ondelete="SET NULL"), nullable=True, index=True)
+    
+    evidence_stage = Column(String, nullable=False, index=True, default=PromiseEvidenceStage.PROMISE_IDENTIFIED)
+    matching_method = Column(String, default="PARTY_MANIFESTO_DIRECT")
+    match_confidence = Column(Float, default=1.0)
+    has_conflicting_dates = Column(Boolean, default=False)
+    evidence_summary = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    representative = relationship("Representative", backref="promise_links")
+    promise = relationship("PoliticalPromise", backref="representative_links")
+    evidence = relationship("Evidence", foreign_keys=[evidence_id])
+    constituency_work = relationship("ConstituencyWork", foreign_keys=[work_id])
+    development_indicator = relationship("DevelopmentIndicator", foreign_keys=[indicator_id])

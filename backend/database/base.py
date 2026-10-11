@@ -78,7 +78,8 @@ from backend.models.representative import (
     LegislativeActivity,
     ConstituencyWork,
     DevelopmentIndicator,
-    ConstituencyGeographicMapping
+    ConstituencyGeographicMapping,
+    PromisePerformanceLink
 )
 
 
