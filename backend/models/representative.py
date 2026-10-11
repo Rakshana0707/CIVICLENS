@@ -67,6 +67,7 @@ class Representative(Base):
     election = relationship("Election", foreign_keys=[election_id])
     terms = relationship("RepresentativeTerm", back_populates="representative", cascade="all, delete-orphan")
     legislative_activities = relationship("LegislativeActivity", back_populates="representative", cascade="all, delete-orphan")
+    constituency_works = relationship("ConstituencyWork", back_populates="representative")
 
 
 class Constituency(Base):
@@ -96,6 +97,7 @@ class Constituency(Base):
     representatives = relationship("Representative", foreign_keys="[Representative.constituency_id]", back_populates="constituency")
     terms = relationship("RepresentativeTerm", back_populates="constituency")
     boundary_history = relationship("ConstituencyBoundaryHistory", back_populates="constituency", cascade="all, delete-orphan")
+    constituency_works = relationship("ConstituencyWork", back_populates="constituency", cascade="all, delete-orphan")
 
 
 class Election(Base):
@@ -216,3 +218,58 @@ class LegislativeActivity(Base):
 
     # Relationships
     representative = relationship("Representative", back_populates="legislative_activities")
+
+
+class WorkProjectStatus(str, enum.Enum):
+    PROPOSED = "PROPOSED"
+    SANCTIONED = "SANCTIONED"
+    FUNDS_RELEASED = "FUNDS_RELEASED"
+    WORK_IN_PROGRESS = "WORK_IN_PROGRESS"
+    REPORTED_COMPLETED = "REPORTED_COMPLETED"
+    INDEPENDENTLY_VERIFIED_COMPLETED = "INDEPENDENTLY_VERIFIED_COMPLETED"
+    UNKNOWN = "UNKNOWN"
+
+
+class AttributionType(str, enum.Enum):
+    REPRESENTATIVE_SPONSORED = "REPRESENTATIVE_SPONSORED"  # MPLADS, MLACDS recommended by MP/MLA
+    EXECUTIVE_STATE_PROJECT = "EXECUTIVE_STATE_PROJECT"      # State department general works
+    EXECUTIVE_CENTRAL_PROJECT = "EXECUTIVE_CENTRAL_PROJECT"  # Central sponsored general works
+    UNKNOWN = "UNKNOWN"
+
+
+class ConstituencyWork(Base):
+    """
+    Constituency-level development work, project, or infrastructure scheme.
+    Explicitly tracks allocation vs sanctioned vs released vs reported expenditure,
+    distinguishes representative-sponsored works from general executive projects,
+    and supports independent verification auditing.
+    """
+    __tablename__ = "constituency_works"
+
+    work_id = Column(String, primary_key=True, index=True)
+    representative_id = Column(String, ForeignKey("representatives.representative_id", ondelete="SET NULL"), nullable=True, index=True)
+    constituency_id = Column(String, ForeignKey("constituencies.constituency_id", ondelete="CASCADE"), nullable=False, index=True)
+    scheme_id = Column(String, nullable=False, index=True)  # e.g. "MPLADS", "MLACDS", "STATE_PWD"
+    
+    project_description = Column(Text, nullable=False)
+    sanctioned_amount = Column(Float, nullable=False, default=0.0)
+    released_amount = Column(Float, nullable=False, default=0.0)
+    reported_expenditure = Column(Float, nullable=False, default=0.0)
+    
+    approval_date = Column(String, nullable=True)  # YYYY-MM-DD
+    completion_date = Column(String, nullable=True)  # YYYY-MM-DD
+    project_status = Column(String, nullable=False, index=True, default=WorkProjectStatus.PROPOSED)
+    implementing_agency = Column(String, nullable=True)  # e.g. "DRDA", "PWD", "Municipal Corporation"
+    
+    source_document_id = Column(String, nullable=True, index=True)
+    source_reference = Column(String, nullable=True)
+    attribution_type = Column(String, nullable=False, default=AttributionType.REPRESENTATIVE_SPONSORED)
+    verification_source = Column(String, nullable=True)  # Official implementation audit reference
+    has_conflicting_status = Column(Boolean, default=False)
+    data_quality_issues = Column(JSON, default=list)
+    last_updated = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    representative = relationship("Representative", back_populates="constituency_works")
+    constituency = relationship("Constituency", back_populates="constituency_works")

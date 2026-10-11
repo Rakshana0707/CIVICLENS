@@ -75,7 +75,8 @@ from backend.models.representative import (
     Election,
     RepresentativeTerm,
     ConstituencyBoundaryHistory,
-    LegislativeActivity
+    LegislativeActivity,
+    ConstituencyWork
 )
 
 
