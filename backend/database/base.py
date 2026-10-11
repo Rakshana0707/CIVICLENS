@@ -69,6 +69,13 @@ from backend.models.funding import (
     FinancialMetric,
     ValidationIssue
 )
+from backend.models.representative import (
+    Representative,
+    Constituency,
+    Election,
+    RepresentativeTerm,
+    ConstituencyBoundaryHistory
+)
 
 
 
