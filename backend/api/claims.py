@@ -559,3 +559,68 @@ def retrieve_evidence_for_claim(claim_id: str):
     finally:
         db.close()
 
+
+@claims_bp.route("/<claim_id>/analyze-evidence", methods=["POST"])
+def analyze_claim_evidence_relationships(claim_id: str):
+    """
+    Analyzes the relationship between a claim and retrieved candidate evidence passages.
+    Classifies each into: supports, contradicts, partially_supports, contextualizes,
+    unrelated, or unclear. Records supporting/contradicting text references, alignment checks,
+    and syndication clusters. Keeps contradictory evidence visible.
+    """
+    payload = request.get_json(silent=True) or {}
+    atomic_id = payload.get("atomic_claim_id")
+
+    db = SessionLocal()
+    try:
+        claim = db.query(Claim).filter(Claim.claim_id == claim_id).first()
+        if not claim:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+
+        from backend.services.evidence_relationship_analyzer import EvidenceRelationshipAnalyzer
+        analyzer = EvidenceRelationshipAnalyzer(db=db)
+        relationships = analyzer.analyze_and_persist_relationships(
+            claim_id=claim_id,
+            atomic_claim_id=atomic_id
+        )
+
+        return success_response(
+            data={
+                "claim_id": claim_id,
+                "atomic_claim_id": atomic_id,
+                "relationships_count": len(relationships),
+                "relationships": [r.to_dict() for r in relationships],
+                "epistemic_disclaimer": "Contradictory evidence is retained and displayed alongside supporting findings. Absences of records do not prove falsehood."
+            },
+            message="Claim-evidence relationship analysis completed successfully"
+        )
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<claim_id>/relationships", methods=["GET"])
+def get_claim_evidence_relationships(claim_id: str):
+    """
+    Retrieves all established evidence relationships for a claim.
+    Ensures contradictory evidence remains visible alongside supporting documents.
+    """
+    db = SessionLocal()
+    try:
+        claim = db.query(Claim).filter(Claim.claim_id == claim_id).first()
+        if not claim:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+
+        rels = list(claim.evidence_relationships)
+        return success_response(
+            data={
+                "claim_id": claim_id,
+                "total_relationships": len(rels),
+                "relationships": [r.to_dict() for r in rels],
+                "epistemic_disclaimer": "Retains all supporting, partially supporting, and contradictory evidence without suppression."
+            },
+            message="Retrieved claim-evidence relationships successfully"
+        )
+    finally:
+        db.close()
+
+

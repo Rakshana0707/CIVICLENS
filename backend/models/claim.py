@@ -27,7 +27,7 @@ Adheres strictly to core verification principles:
 
 import enum
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, ForeignKey, Float, Boolean, Enum, JSON, UniqueConstraint
 )
@@ -80,7 +80,23 @@ class EvidenceRelationshipType(str, enum.Enum):
     CONTRADICTS = "CONTRADICTS"
     PARTIALLY_SUPPORTS = "PARTIALLY_SUPPORTS"
     CONTEXTUALIZES = "CONTEXTUALIZES"
+    UNRELATED = "UNRELATED"
+    UNCLEAR = "UNCLEAR"
     NEUTRAL = "NEUTRAL"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "EvidenceRelationshipType":
+        if isinstance(val, cls):
+            return val
+        if not val:
+            return cls.UNCLEAR
+        clean = str(val).strip().upper()
+        if clean in cls.__members__:
+            return cls[clean]
+        for item in cls:
+            if item.value.upper() == clean:
+                return item
+        return cls.UNCLEAR
 
 
 class VerificationVerdict(str, enum.Enum):
@@ -429,15 +445,77 @@ class ClaimEvidenceRelationship(Base):
 
     relationship_id = Column(String, primary_key=True, index=True)
     claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
+    atomic_claim_id = Column(String, ForeignKey("atomic_claims.atomic_claim_id", ondelete="CASCADE"), nullable=True, index=True)
+    evidence_document_id = Column(String, ForeignKey("evidence_documents.document_id", ondelete="CASCADE"), nullable=True, index=True)
     passage_id = Column(String, ForeignKey("evidence_passages.passage_id", ondelete="CASCADE"), nullable=False, index=True)
 
+    # Core Relationship Classification & Stance
     relationship_type = Column(Enum(EvidenceRelationshipType), nullable=False, index=True)
+    supporting_text_reference = Column(Text, nullable=True)
+    contradicting_text_reference = Column(Text, nullable=True)
+    analysis_method = Column(String, default="RULE_AND_NLP_EVIDENCE_ANALYSIS_V1")
+    confidence = Column(Float, default=1.0)
+    model_version = Column(String, default="civiclens-evidence-rel-v1.0")
+    human_review_status = Column(Enum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, index=True)
+
+    # Multi-Dimensional Alignment Checks
+    entity_alignment = Column(String, nullable=True)        # EXACT_MATCH, RELATED_ENTITY, MISMATCH
+    temporal_alignment = Column(String, nullable=True)      # CONTEMPORANEOUS, OUTDATED, FUTURE_PROJECTION
+    geographic_alignment = Column(String, nullable=True)    # EXACT_JURISDICTION, BROADER_NATIONAL, MISMATCH
+    quantitative_alignment = Column(String, nullable=True)  # EXACT_MATCH, VALUE_CONTRADICTION, UNIT_MISMATCH, NOT_QUANTITATIVE
+    proposition_alignment = Column(String, nullable=True)   # IDENTICAL_PROPOSITION, RELATED_CONTEXT, DIFFERENT_PROPOSITION
+    source_stance = Column(String, default="INDEPENDENT_FACT")  # INDEPENDENT_FACT vs REPORTING_CLAIM
+
+    # Epistemic Flags
+    is_outdated = Column(Boolean, default=False, index=True)
+    is_syndicated_copy = Column(Boolean, default=False, index=True)
+    syndication_cluster_id = Column(String, nullable=True, index=True)
+
+    # Backwards compatibility scores & notes
     relevance_score = Column(Float, default=0.0)        # 0.0 to 1.0
     confidence_score = Column(Float, default=0.0)       # 0.0 to 1.0
     contradiction_score = Column(Float, default=0.0)    # 0.0 to 1.0
     matching_method = Column(String, nullable=True)     # e.g. "hybrid_multi_signal"
     reconciliation_notes = Column(Text, nullable=True)
+    reasoning_summary = Column(Text, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    @property
+    def evidence_passage_id(self) -> str:
+        return self.passage_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "relationship_id": self.relationship_id,
+            "claim_id": self.claim_id,
+            "atomic_claim_id": self.atomic_claim_id,
+            "evidence_document_id": self.evidence_document_id,
+            "evidence_passage_id": self.passage_id,
+            "passage_id": self.passage_id,
+            "relationship_type": self.relationship_type.value.lower() if hasattr(self.relationship_type, "value") else str(self.relationship_type).lower(),
+            "supporting_text_reference": self.supporting_text_reference,
+            "contradicting_text_reference": self.contradicting_text_reference,
+            "analysis_method": self.analysis_method,
+            "confidence": self.confidence,
+            "model_version": self.model_version,
+            "human_review_status": self.human_review_status.value if hasattr(self.human_review_status, "value") else str(self.human_review_status),
+            "entity_alignment": self.entity_alignment,
+            "temporal_alignment": self.temporal_alignment,
+            "geographic_alignment": self.geographic_alignment,
+            "quantitative_alignment": self.quantitative_alignment,
+            "proposition_alignment": self.proposition_alignment,
+            "source_stance": self.source_stance,
+            "is_outdated": self.is_outdated,
+            "is_syndicated_copy": self.is_syndicated_copy,
+            "syndication_cluster_id": self.syndication_cluster_id,
+            "relevance_score": self.relevance_score,
+            "confidence_score": self.confidence_score,
+            "contradiction_score": self.contradiction_score,
+            "reconciliation_notes": self.reconciliation_notes,
+            "reasoning_summary": self.reasoning_summary,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
 
     # Relationships
     claim = relationship("Claim", back_populates="evidence_relationships")
