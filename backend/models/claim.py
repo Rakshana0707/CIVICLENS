@@ -254,6 +254,23 @@ class ClaimSource(Base):
     # Relationships
     claims = relationship("Claim", back_populates="source", cascade="all, delete-orphan")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "source_id": self.source_id,
+            "source_type": self.source_type,
+            "organization_or_party": self.organization_or_party,
+            "speaker_name": self.speaker_name,
+            "speaker_party": self.speaker_party,
+            "venue": self.venue,
+            "source_url": self.source_url,
+            "archive_url": self.archive_url,
+            "publication_date": self.publication_date.isoformat() if self.publication_date else None,
+            "collection_date": self.collection_date.isoformat() if self.collection_date else None,
+            "collection_method": self.collection_method,
+            "checksum": self.checksum,
+            "notes": self.notes
+        }
+
 
 # ---------------------------------------------------------------------------
 # 2. Claim Entity
@@ -293,6 +310,14 @@ class Claim(Base):
     candidate_source_type = Column(Enum(CandidateSourceType), default=CandidateSourceType.PUBLIC_SPEECH, index=True)
     content_fingerprint = Column(String, nullable=True, index=True)
 
+    # Cross-Phase Stable Identifiers & Foreign Keys
+    promise_id = Column(String, ForeignKey("political_promises.promise_id", ondelete="SET NULL"), nullable=True, index=True)
+    historical_scheme_id = Column(Integer, ForeignKey("historical_schemes.id", ondelete="SET NULL"), nullable=True, index=True)
+    news_article_id = Column(String, ForeignKey("news_articles.article_id", ondelete="SET NULL"), nullable=True, index=True)
+    financial_document_id = Column(String, ForeignKey("financial_documents.document_id", ondelete="SET NULL"), nullable=True, index=True)
+    representative_id = Column(String, ForeignKey("representatives.representative_id", ondelete="SET NULL"), nullable=True, index=True)
+    constituency_id = Column(String, ForeignKey("constituencies.constituency_id", ondelete="SET NULL"), nullable=True, index=True)
+
     # Status & Audit
     status = Column(Enum(ClaimStatus), default=ClaimStatus.PENDING, index=True)
     review_status = Column(Enum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, index=True)
@@ -313,6 +338,56 @@ class Claim(Base):
     verification_results = relationship("VerificationResult", back_populates="claim", cascade="all, delete-orphan")
     verification_history = relationship("VerificationHistory", back_populates="claim", cascade="all, delete-orphan")
     reviews = relationship("ReviewRecord", back_populates="claim", cascade="all, delete-orphan")
+
+    # Cross-phase module relationships
+    promise = relationship("PoliticalPromise", foreign_keys=[promise_id])
+    historical_scheme = relationship("HistoricalScheme", foreign_keys=[historical_scheme_id])
+    news_article = relationship("Article", foreign_keys=[news_article_id])
+    financial_document = relationship("FinancialDocument", foreign_keys=[financial_document_id])
+    representative = relationship("Representative", foreign_keys=[representative_id])
+    constituency = relationship("Constituency", foreign_keys=[constituency_id])
+    cross_phase_links = relationship("ClaimCrossPhaseLink", back_populates="claim", cascade="all, delete-orphan")
+
+    def to_dict(self) -> Dict[str, Any]:
+        current_res = next((r for r in self.verification_results if r.is_current), None)
+        return {
+            "claim_id": self.claim_id,
+            "source_id": self.source_id,
+            "original_text": self.original_text,
+            "normalized_text": self.normalized_text,
+            "context_text": self.context_text,
+            "language": self.language,
+            "claim_category": self.claim_category.value if hasattr(self.claim_category, "value") else str(self.claim_category),
+            "speaker_name": self.speaker_name,
+            "speaker_role": self.speaker_role,
+            "speaker_party": self.speaker_party or self.party,
+            "party": self.party or self.speaker_party,
+            "claim_date": self.claim_date.isoformat() if self.claim_date else None,
+            "publication_date": self.publication_date.isoformat() if self.publication_date else None,
+            "claim_source_url": self.claim_source_url,
+            "source_document_id": self.source_document_id,
+            "temporal_scope": self.temporal_scope,
+            "geographic_scope": self.geographic_scope,
+            "extraction_method": self.extraction_method,
+            "attribution_type": self.attribution_type.value if hasattr(self.attribution_type, "value") else str(self.attribution_type),
+            "candidate_source_type": self.candidate_source_type.value if hasattr(self.candidate_source_type, "value") else str(self.candidate_source_type),
+            "status": self.status.value if hasattr(self.status, "value") else str(self.status),
+            "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
+            "atomic_claims_count": len(self.atomic_claims) if self.atomic_claims else 0,
+            "evidence_relationships_count": len(self.evidence_relationships) if self.evidence_relationships else 0,
+            "cross_phase_identifiers": {
+                "promise_id": self.promise_id,
+                "historical_scheme_id": self.historical_scheme_id,
+                "news_article_id": self.news_article_id,
+                "financial_document_id": self.financial_document_id,
+                "representative_id": self.representative_id,
+                "constituency_id": self.constituency_id,
+            },
+            "current_verification": current_res.to_dict() if current_res else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "metadata_json": self.metadata_json or {}
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -338,6 +413,19 @@ class ClaimVersion(Base):
     # Relationships
     claim = relationship("Claim", back_populates="versions")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "version_id": self.version_id,
+            "claim_id": self.claim_id,
+            "version_number": self.version_number,
+            "edited_text": self.edited_text,
+            "transliterated_text": self.transliterated_text,
+            "additional_context": self.additional_context,
+            "change_rationale": self.change_rationale,
+            "edited_by": self.edited_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
 
 # ---------------------------------------------------------------------------
 # 4. ClaimSubject Entity
@@ -357,6 +445,16 @@ class ClaimSubject(Base):
 
     # Relationships
     claim = relationship("Claim", back_populates="subjects")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "subject_id": self.subject_id,
+            "claim_id": self.claim_id,
+            "subject_type": self.subject_type.value if hasattr(self.subject_type, "value") else str(self.subject_type),
+            "entity_id": self.entity_id,
+            "canonical_name": self.canonical_name,
+            "confidence": self.confidence
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -406,6 +504,77 @@ class AtomicClaim(Base):
 
     # Relationships
     claim = relationship("Claim", back_populates="atomic_claims")
+    cross_phase_links = relationship("ClaimCrossPhaseLink", back_populates="atomic_claim", cascade="all, delete-orphan")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "atomic_claim_id": self.atomic_claim_id,
+            "claim_id": self.claim_id,
+            "atomic_claim_text": self.atomic_claim_text,
+            "language": self.language,
+            "subject": self.subject,
+            "predicate": self.predicate,
+            "action": self.action,
+            "object": self.object,
+            "time_period": self.time_period,
+            "geographic_scope": self.geographic_scope,
+            "numeric_value": self.numeric_value,
+            "unit": self.unit,
+            "denominator": self.denominator,
+            "comparison_operator": self.comparison_operator,
+            "baseline_value": self.baseline_value,
+            "claim_type": self.claim_type,
+            "verifiability_status": self.verifiability_status,
+            "is_verifiable": self.is_verifiable,
+            "is_negated": self.is_negated,
+            "decomposition_method": self.decomposition_method,
+            "confidence": self.confidence,
+            "translation_text": self.translation_text,
+            "metadata_json": self.metadata_json or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+# ---------------------------------------------------------------------------
+# 4c. ClaimCrossPhaseLink Entity
+# ---------------------------------------------------------------------------
+class ClaimCrossPhaseLink(Base):
+    """
+    Explicit junction linking a Claim or AtomicClaim to entities across
+    CIVICLENS TN modules (Phase 2 Schemes, Phase 3 Promises, Phase 4 News,
+    Phase 5 Funding, Phase 6 Representatives/Constituencies).
+    """
+    __tablename__ = "claim_cross_phase_links"
+
+    link_id = Column(String, primary_key=True, index=True)
+    claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
+    atomic_claim_id = Column(String, ForeignKey("atomic_claims.atomic_claim_id", ondelete="CASCADE"), nullable=True, index=True)
+
+    target_phase = Column(String, nullable=False, index=True)  # PHASE_2_SCHEME, PHASE_3_PROMISE, PHASE_4_NEWS, PHASE_5_FUNDING, PHASE_6_REPRESENTATIVE, PHASE_6_CONSTITUENCY
+    entity_type = Column(String, nullable=False, index=True)  # HISTORICAL_SCHEME, POLITICAL_PROMISE, ARTICLE, FINANCIAL_DOCUMENT, REPRESENTATIVE, CONSTITUENCY
+    entity_id = Column(String, nullable=False, index=True)    # Stable primary key or identifier in target module
+    relationship_nature = Column(String, nullable=True)        # evaluates_promise, grounded_in_scheme, reported_by_news, addresses_funding, made_by_representative
+    relevance_score = Column(Float, default=1.0)
+    metadata_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    claim = relationship("Claim", back_populates="cross_phase_links")
+    atomic_claim = relationship("AtomicClaim", back_populates="cross_phase_links")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "link_id": self.link_id,
+            "claim_id": self.claim_id,
+            "atomic_claim_id": self.atomic_claim_id,
+            "target_phase": self.target_phase,
+            "entity_type": self.entity_type,
+            "entity_id": self.entity_id,
+            "relationship_nature": self.relationship_nature,
+            "relevance_score": self.relevance_score,
+            "metadata_json": self.metadata_json or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -454,6 +623,32 @@ class EvidenceDocument(Base):
     passages = relationship("EvidencePassage", back_populates="document", cascade="all, delete-orphan")
     source_assessments = relationship("SourceAssessment", back_populates="document", cascade="all, delete-orphan")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "document_id": self.document_id,
+            "evidence_document_id": self.document_id,
+            "source_tier": self.source_tier.value if hasattr(self.source_tier, "value") else str(self.source_tier),
+            "source_name": self.source_name,
+            "publisher": self.publisher,
+            "document_type": self.document_type,
+            "source_category": self.source_category,
+            "title": self.title,
+            "source_title": self.title,
+            "publication_date": self.publication_date.isoformat() if self.publication_date else None,
+            "retrieval_date": self.retrieval_date.isoformat() if self.retrieval_date else None,
+            "source_url": self.source_url,
+            "file_path": self.file_path,
+            "file_hash_sha256": self.file_hash_sha256,
+            "file_hash": self.file_hash_sha256,
+            "extraction_method": self.extraction_method,
+            "access_status": self.access_status,
+            "language": self.language,
+            "is_official": self.is_official,
+            "passages_count": len(self.passages) if self.passages else 0,
+            "metadata_json": self.metadata_json or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
 
 # ---------------------------------------------------------------------------
 # 6. EvidencePassage Entity
@@ -477,6 +672,24 @@ class EvidencePassage(Base):
     # Relationships
     document = relationship("EvidenceDocument", back_populates="passages")
     claim_relationships = relationship("ClaimEvidenceRelationship", back_populates="passage", cascade="all, delete-orphan")
+
+    def to_dict(self) -> Dict[str, Any]:
+        doc = self.document
+        return {
+            "passage_id": self.passage_id,
+            "evidence_passage_id": self.passage_id,
+            "document_id": self.document_id,
+            "passage_text": self.passage_text,
+            "page_number": self.page_number,
+            "section_or_table": self.section_or_table,
+            "context_text": self.context_text,
+            "extracted_entities": self.extracted_entities or {},
+            "numerical_values": self.numerical_values or {},
+            "document_title": doc.title if doc else None,
+            "publisher": doc.publisher if doc else None,
+            "source_tier": (doc.source_tier.value if hasattr(doc.source_tier, "value") else str(doc.source_tier)) if doc else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -628,6 +841,18 @@ class VerificationRun(Base):
     claim = relationship("Claim", back_populates="verification_runs")
     result = relationship("VerificationResult", back_populates="run", uselist=False, cascade="all, delete-orphan")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "claim_id": self.claim_id,
+            "engine_version": self.engine_version,
+            "model_names": self.model_names or [],
+            "execution_status": self.execution_status,
+            "configuration_json": self.configuration_json or {},
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+        }
+
 
 # ---------------------------------------------------------------------------
 # 9. VerificationResult Entity
@@ -714,6 +939,7 @@ class VerificationResult(Base):
             "uncertainty_score": self.uncertainty_score or self.uncertainty_indicator,
             "uncertainty_indicator": self.uncertainty_indicator,
             "methodology_version": self.methodology_version,
+            "methodology": f"Methodology {self.methodology_version or 'v1.0'}: Multi-signal hybrid retrieval with explicit contradiction retention and human-in-the-loop audit.",
             "model_version": self.model_version,
             "verification_timestamp": self.verification_timestamp.isoformat() if self.verification_timestamp else None,
             "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
@@ -721,6 +947,9 @@ class VerificationResult(Base):
             "automated_explanation": self.automated_explanation,
             "automated_confidence": self.automated_confidence,
             "human_revision_notes": self.human_revision_notes,
+            "limitations": self.limitations_and_caveats or "Evidence assessment reflects available empirical and statutory records. Absence of proof does not constitute proof of falsehood. Syndicated wire copies are deduplicated and not counted as independent corroboration.",
+            "limitations_and_caveats": self.limitations_and_caveats or "Evidence assessment reflects available empirical and statutory records. Absence of proof does not constitute proof of falsehood. Syndicated wire copies are deduplicated and not counted as independent corroboration.",
+            "epistemic_disclaimer": "These are evidence assessments regarding specific factual claims, not judgments about a person's honesty or intent.",
             "is_current": self.is_current,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

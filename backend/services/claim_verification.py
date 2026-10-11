@@ -654,17 +654,17 @@ class ClaimVerificationService:
                 }
                 for ac in getattr(claim, "atomic_claims", [])
             ],
-            "current_result": {
-                "result_id": current_res.result_id,
-                "verdict": current_res.verdict.value,
-                "confidence_score": current_res.confidence_score,
-                "support_score": current_res.support_score,
-                "contradiction_score": current_res.contradiction_score,
-                "uncertainty_score": current_res.uncertainty_score,
-                "rationale": current_res.rationale,
-                "empirical_findings": current_res.empirical_findings,
-                "limitations_and_caveats": current_res.limitations_and_caveats
-            } if current_res else None,
+            "current_result": current_res.to_dict() if current_res else None,
+            "verification": current_res.to_dict() if current_res else None,
+            "cross_phase_identifiers": {
+                "promise_id": getattr(claim, "promise_id", None),
+                "historical_scheme_id": getattr(claim, "historical_scheme_id", None),
+                "news_article_id": getattr(claim, "news_article_id", None),
+                "financial_document_id": getattr(claim, "financial_document_id", None),
+                "representative_id": getattr(claim, "representative_id", None),
+                "constituency_id": getattr(claim, "constituency_id", None),
+            },
+            "cross_phase_links": [l.to_dict() for l in getattr(claim, "cross_phase_links", [])],
             "evidence": evidence_items,
             "reviews": [
                 {
