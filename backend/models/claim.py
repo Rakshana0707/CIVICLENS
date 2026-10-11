@@ -280,17 +280,34 @@ class EvidenceDocument(Base):
     document_id = Column(String, primary_key=True, index=True)
     source_tier = Column(Enum(SourceTier), default=SourceTier.TIER_1_STATUTORY, index=True)
     source_name = Column(String, nullable=False, index=True)  # e.g., "Finance Department TN"
-    document_type = Column(String, nullable=False, index=True)  # e.g., "GOVERNMENT_ORDER", "BUDGET_DDG"
+    publisher = Column(String, nullable=True, index=True)      # Publisher / issuing authority
+    document_type = Column(String, nullable=False, index=True)  # e.g., "GOVERNMENT_ORDER", "BUDGET_DDG", "PRESS_RELEASE"
+    source_category = Column(String, nullable=True, index=True) # e.g. "OFFICIAL_GOVERNMENT", "LEGISLATIVE_RECORD", "FACT_CHECK"
     title = Column(String, nullable=False)
     publication_date = Column(DateTime, nullable=True, index=True)
+    retrieval_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     source_url = Column(String, nullable=True)
     file_path = Column(String, nullable=True)
     file_hash_sha256 = Column(String, nullable=False, unique=True, index=True)
+    extraction_method = Column(String, default="DIRECT_PARSE")
+    access_status = Column(String, default="ACCESSIBLE_PUBLIC")  # ACCESSIBLE_PUBLIC, RESTRICTED_SNIPPET_ONLY, CACHED_LOCAL, ROBOTS_DENIED
     language = Column(String, default="en")
     is_official = Column(Boolean, default=True)
     is_test_fixture = Column(Boolean, default=False)
     metadata_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    @property
+    def evidence_document_id(self) -> str:
+        return self.document_id
+
+    @property
+    def file_hash(self) -> str:
+        return self.file_hash_sha256
+
+    @property
+    def source_title(self) -> str:
+        return self.title
 
     # Relationships
     passages = relationship("EvidencePassage", back_populates="document", cascade="all, delete-orphan")
