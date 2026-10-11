@@ -113,6 +113,31 @@ class SubjectType(str, enum.Enum):
     INSTITUTION = "INSTITUTION"
 
 
+class AttributionType(str, enum.Enum):
+    """
+    Distinguishes the quotation or attribution modality of the statement.
+    """
+    DIRECT_QUOTE = "DIRECT_QUOTE"
+    PARAPHRASE = "PARAPHRASE"
+    JOURNALIST_DESCRIPTION = "JOURNALIST_DESCRIPTION"
+    USER_SUBMITTED = "USER_SUBMITTED"
+    AUTOMATED_EXTRACTION = "AUTOMATED_EXTRACTION"
+
+
+class CandidateSourceType(str, enum.Enum):
+    """
+    Originating intake channel for the claim candidate.
+    """
+    PUBLIC_SPEECH = "PUBLIC_SPEECH"
+    OFFICIAL_STATEMENT = "OFFICIAL_STATEMENT"
+    PRESS_RELEASE = "PRESS_RELEASE"
+    LEGISLATIVE_RECORD = "LEGISLATIVE_RECORD"
+    MANIFESTO = "MANIFESTO"
+    NEWS_ARTICLE = "NEWS_ARTICLE"
+    FACT_CHECK_ARTICLE = "FACT_CHECK_ARTICLE"
+    MANUAL_SUBMISSION = "MANUAL_SUBMISSION"
+
+
 # ---------------------------------------------------------------------------
 # 1. ClaimSource Entity
 # ---------------------------------------------------------------------------
@@ -162,13 +187,25 @@ class Claim(Base):
     # Categorization & Scope
     claim_category = Column(Enum(ClaimCategory), nullable=False, index=True)
     speaker_name = Column(String, nullable=True, index=True)
+    speaker_role = Column(String, nullable=True)  # where supported (e.g. Chief Minister, MLA, MP)
     speaker_party = Column(String, nullable=True, index=True)
+    party = Column(String, nullable=True, index=True)  # canonical alias for party where supported
     claim_date = Column(DateTime, nullable=True, index=True)
+    publication_date = Column(DateTime, nullable=True, index=True)  # where applicable
+    claim_source_url = Column(String, nullable=True)
+    source_document_id = Column(String, nullable=True, index=True)
     temporal_scope = Column(String, nullable=True)  # e.g. "2021-2022", "Last 3 years"
-    geographic_scope = Column(String, nullable=True)  # e.g. "Tamil Nadu", "Chennai"
+    geographic_scope = Column(String, nullable=True, default="Tamil Nadu")  # e.g. "Tamil Nadu", "Chennai"
+    extraction_method = Column(String, default="MANUAL")
+
+    # Ingestion Attribution & Source Channel
+    attribution_type = Column(Enum(AttributionType), default=AttributionType.DIRECT_QUOTE, index=True)
+    candidate_source_type = Column(Enum(CandidateSourceType), default=CandidateSourceType.PUBLIC_SPEECH, index=True)
+    content_fingerprint = Column(String, nullable=True, index=True)
 
     # Status & Audit
     status = Column(Enum(ClaimStatus), default=ClaimStatus.PENDING, index=True)
+    review_status = Column(Enum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, index=True)
     is_test_fixture = Column(Boolean, default=False)
     metadata_json = Column(JSON, nullable=True)
 
@@ -201,6 +238,7 @@ class ClaimVersion(Base):
     version_number = Column(Integer, default=1)
     edited_text = Column(Text, nullable=False)
     transliterated_text = Column(Text, nullable=True)
+    additional_context = Column(Text, nullable=True)
     change_rationale = Column(Text, nullable=False)
     edited_by = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

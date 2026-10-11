@@ -69,6 +69,9 @@ def db_session():
 def api_client(db_session):
     """Flask test client configured with database tables."""
     from backend.database.session import engine as app_engine
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name.startswith(("political_claims", "claim_", "verification_", "evidence_", "review_")):
+            table.drop(bind=app_engine, checkfirst=True)
     Base.metadata.create_all(bind=app_engine)
     app = create_app()
     app.config["TESTING"] = True

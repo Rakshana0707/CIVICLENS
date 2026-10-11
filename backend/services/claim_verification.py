@@ -37,7 +37,9 @@ from backend.models.claim import (
     EvidenceRelationshipType,
     VerificationVerdict,
     ReviewStatus,
-    SubjectType
+    SubjectType,
+    AttributionType,
+    CandidateSourceType
 )
 from backend.core.logger import setup_logger
 
@@ -62,18 +64,29 @@ class ClaimVerificationService:
         original_text: str,
         claim_category: ClaimCategory,
         speaker_name: Optional[str] = None,
+        speaker_role: Optional[str] = None,
         speaker_party: Optional[str] = None,
+        party: Optional[str] = None,
         claim_date: Optional[datetime] = None,
+        publication_date: Optional[datetime] = None,
+        claim_source_url: Optional[str] = None,
+        source_document_id: Optional[str] = None,
         temporal_scope: Optional[str] = None,
         geographic_scope: Optional[str] = "Tamil Nadu",
         context_text: Optional[str] = None,
         language: str = "ta",
         source_id: Optional[str] = None,
+        extraction_method: str = "MANUAL",
+        review_status: ReviewStatus = ReviewStatus.PENDING_REVIEW,
+        attribution_type: AttributionType = AttributionType.DIRECT_QUOTE,
+        candidate_source_type: CandidateSourceType = CandidateSourceType.PUBLIC_SPEECH,
+        content_fingerprint: Optional[str] = None,
         is_test_fixture: bool = False,
         metadata_json: Optional[Dict[str, Any]] = None
     ) -> Claim:
         """
         Registers a new claim, strictly preserving verbatim original text.
+        Never infers speaker, date, party, or context when unverified.
         Initializes ClaimVersion 1.
         """
         existing = self.db.query(Claim).filter(Claim.claim_id == claim_id).first()
@@ -81,6 +94,7 @@ class ClaimVerificationService:
             raise ValueError(f"Claim with ID '{claim_id}' already exists.")
 
         normalized_text = self._normalize_text(original_text)
+        canonical_party = party or speaker_party
 
         claim = Claim(
             claim_id=claim_id,
@@ -91,11 +105,21 @@ class ClaimVerificationService:
             language=language,
             claim_category=claim_category,
             speaker_name=speaker_name,
-            speaker_party=speaker_party,
-            claim_date=claim_date or datetime.now(timezone.utc),
+            speaker_role=speaker_role,
+            speaker_party=canonical_party,
+            party=canonical_party,
+            claim_date=claim_date,  # Preserves exact date; does NOT infer when None
+            publication_date=publication_date,
+            claim_source_url=claim_source_url,
+            source_document_id=source_document_id,
             temporal_scope=temporal_scope,
             geographic_scope=geographic_scope,
+            extraction_method=extraction_method,
+            attribution_type=attribution_type,
+            candidate_source_type=candidate_source_type,
+            content_fingerprint=content_fingerprint,
             status=ClaimStatus.PENDING,
+            review_status=review_status,
             is_test_fixture=is_test_fixture,
             metadata_json=metadata_json or {}
         )
@@ -127,10 +151,11 @@ class ClaimVerificationService:
         edited_text: str,
         change_rationale: str,
         transliterated_text: Optional[str] = None,
+        additional_context: Optional[str] = None,
         edited_by: Optional[str] = "expert_reviewer"
     ) -> ClaimVersion:
         """
-        Adds a revised transcription or translation without overwriting original_text.
+        Adds a revised transcription, translation, or additional context without overwriting original_text.
         """
         claim = self.db.query(Claim).filter(Claim.claim_id == claim_id).first()
         if not claim:
@@ -145,6 +170,7 @@ class ClaimVerificationService:
             version_number=next_ver,
             edited_text=edited_text.strip(),
             transliterated_text=transliterated_text.strip() if transliterated_text else None,
+            additional_context=additional_context.strip() if additional_context else None,
             change_rationale=change_rationale.strip(),
             edited_by=edited_by,
             created_at=datetime.now(timezone.utc)
@@ -566,12 +592,22 @@ class ClaimVerificationService:
             "language": claim.language,
             "claim_category": claim.claim_category.value,
             "speaker_name": claim.speaker_name,
+            "speaker_role": claim.speaker_role,
             "speaker_party": claim.speaker_party,
+            "party": claim.party,
             "claim_date": claim.claim_date.isoformat() if claim.claim_date else None,
+            "publication_date": claim.publication_date.isoformat() if claim.publication_date else None,
+            "claim_source_url": claim.claim_source_url,
+            "source_document_id": claim.source_document_id,
             "temporal_scope": claim.temporal_scope,
             "geographic_scope": claim.geographic_scope,
+            "extraction_method": claim.extraction_method,
+            "attribution_type": claim.attribution_type.value if claim.attribution_type else None,
+            "candidate_source_type": claim.candidate_source_type.value if claim.candidate_source_type else None,
             "status": claim.status.value,
+            "review_status": claim.review_status.value if claim.review_status else None,
             "is_test_fixture": claim.is_test_fixture,
+            "created_at": claim.created_at.isoformat() if claim.created_at else None,
             "versions": [
                 {
                     "version_number": v.version_number,

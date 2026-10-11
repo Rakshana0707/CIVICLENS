@@ -28,9 +28,12 @@ from backend.models.claim import (
     EvidenceRelationshipType,
     ReviewStatus,
     SubjectType,
+    AttributionType,
+    CandidateSourceType,
     VerificationResult
 )
 from backend.services.claim_verification import ClaimVerificationService
+from backend.services.claim_ingestion import ClaimIngestionService
 
 claims_bp = Blueprint("claims", __name__, url_prefix="/claims")
 
@@ -159,6 +162,142 @@ def register_claim():
         )
     except ValueError as e:
         return error_response(str(e), status_code=400)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/ingest", methods=["POST"])
+def ingest_claim():
+    """
+    Ingest a candidate claim through the multi-channel ingestion pipeline.
+    Applies deduplication, attribution classification, and non-inference checks.
+    """
+    payload = request.get_json(silent=True) or {}
+    claim_id = payload.get("claim_id")
+    original_text = payload.get("original_text")
+    category_str = payload.get("claim_category")
+    source_type_str = payload.get("candidate_source_type", "PUBLIC_SPEECH")
+    attr_type_str = payload.get("attribution_type", "DIRECT_QUOTE")
+
+    if not claim_id or not original_text or not category_str:
+        return error_response("claim_id, original_text, and claim_category are required", status_code=400)
+
+    try:
+        category_enum = ClaimCategory(category_str)
+        source_type_enum = CandidateSourceType(source_type_str)
+        attr_type_enum = AttributionType(attr_type_str)
+    except ValueError as e:
+        return error_response(f"Invalid enum parameter: {str(e)}", status_code=400)
+
+    # Parse optional dates
+    claim_date = None
+    if payload.get("claim_date"):
+        try:
+            claim_date = datetime.fromisoformat(payload["claim_date"])
+        except ValueError:
+            return error_response("Invalid ISO format for claim_date", status_code=400)
+
+    publication_date = None
+    if payload.get("publication_date"):
+        try:
+            publication_date = datetime.fromisoformat(payload["publication_date"])
+        except ValueError:
+            return error_response("Invalid ISO format for publication_date", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimIngestionService(db=db)
+        result = service.ingest_claim(
+            claim_id=claim_id,
+            original_text=original_text,
+            claim_category=category_enum,
+            candidate_source_type=source_type_enum,
+            attribution_type=attr_type_enum,
+            language=payload.get("language", "ta"),
+            speaker_name=payload.get("speaker_name"),
+            speaker_role=payload.get("speaker_role"),
+            party=payload.get("party"),
+            claim_date=claim_date,
+            publication_date=publication_date,
+            claim_source_url=payload.get("claim_source_url"),
+            source_document_id=payload.get("source_document_id"),
+            geographic_scope=payload.get("geographic_scope", "Tamil Nadu"),
+            extraction_method=payload.get("extraction_method", "MANUAL"),
+            context_text=payload.get("context_text"),
+            temporal_scope=payload.get("temporal_scope"),
+            is_correction_for_claim_id=payload.get("is_correction_for_claim_id"),
+            correction_rationale=payload.get("correction_rationale"),
+            transliteration=payload.get("transliteration"),
+            is_test_fixture=payload.get("is_test_fixture", False),
+            metadata_json=payload.get("metadata_json")
+        )
+        return success_response(data=result, message=f"Ingestion completed with status: {result.get('status')}")
+    except ValueError as e:
+        return error_response(str(e), status_code=400)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/check-duplicate", methods=["POST"])
+def check_duplicate():
+    """
+    Pre-check whether a claim candidate matches existing records.
+    """
+    payload = request.get_json(silent=True) or {}
+    text = payload.get("original_text")
+    if not text:
+        return error_response("original_text is required", status_code=400)
+
+    claim_date = None
+    if payload.get("claim_date"):
+        try:
+            claim_date = datetime.fromisoformat(payload["claim_date"])
+        except ValueError:
+            return error_response("Invalid ISO format for claim_date", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimIngestionService(db=db)
+        dup_info = service.check_duplicate(
+            original_text=text,
+            speaker_name=payload.get("speaker_name"),
+            claim_date=claim_date,
+            language=payload.get("language", "ta")
+        )
+        return success_response(data=dup_info, message="Duplicate check completed")
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>/version", methods=["POST"])
+def add_claim_version(claim_id: str):
+    """
+    Store a new claim version for corrections or additional context without overwriting original wording.
+    """
+    payload = request.get_json(silent=True) or {}
+    edited_text = payload.get("edited_text")
+    rationale = payload.get("change_rationale")
+
+    if not edited_text or not rationale:
+        return error_response("edited_text and change_rationale are required", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        version = service.add_claim_version(
+            claim_id=claim_id,
+            edited_text=edited_text,
+            change_rationale=rationale,
+            transliterated_text=payload.get("transliterated_text"),
+            additional_context=payload.get("additional_context"),
+            edited_by=payload.get("edited_by", "expert_reviewer")
+        )
+        return success_response(
+            data={"claim_id": claim_id, "version_number": version.version_number},
+            message=f"Added version {version.version_number}"
+        )
+    except ValueError as e:
+        return error_response(str(e), status_code=404)
     finally:
         db.close()
 
