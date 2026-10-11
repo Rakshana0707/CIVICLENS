@@ -384,32 +384,19 @@ def decompose_claim(claim_id: str):
 @claims_bp.route("/<string:claim_id>/verify", methods=["POST"])
 def verify_claim(claim_id: str):
     """
-    Run automated verification pass against linked evidence.
+    Run automated verification pass against linked evidence using ClaimVerificationEngine.
+    Synthesizes outcome, multi-part proposition explanation, source diversity, and confidence.
     """
     payload = request.get_json(silent=True) or {}
     engine_ver = payload.get("engine_version", "v1.0-deterministic")
-    manual_rationale = payload.get("rationale")
-    limitations = payload.get("limitations_and_caveats")
 
     db = SessionLocal()
     try:
-        service = ClaimVerificationService(db=db)
-        res = service.verify_claim(
-            claim_id=claim_id,
-            engine_version=engine_ver,
-            manual_rationale=manual_rationale,
-            limitations_and_caveats=limitations
-        )
+        from backend.services.claim_verification_engine import ClaimVerificationEngine
+        engine = ClaimVerificationEngine(db=db)
+        res = engine.verify_claim(claim_id=claim_id, engine_version=engine_ver)
         return success_response(
-            data={
-                "result_id": res.result_id,
-                "verdict": res.verdict.value,
-                "confidence_score": res.confidence_score,
-                "support_score": res.support_score,
-                "contradiction_score": res.contradiction_score,
-                "uncertainty_score": res.uncertainty_score,
-                "rationale": res.rationale
-            },
+            data=res.to_dict(),
             message="Verification executed successfully"
         )
     except ValueError as e:
@@ -421,41 +408,130 @@ def verify_claim(claim_id: str):
 @claims_bp.route("/<string:claim_id>/review", methods=["POST"])
 def review_claim(claim_id: str):
     """
-    Submit human review decision or override.
+    Submit human review decision or workflow action:
+    - accept_assessment
+    - correct_claim_decomposition
+    - add_evidence
+    - mark_evidence_irrelevant
+    - revise_outcome
+    Preserves automated baseline and audit history.
     """
     payload = request.get_json(silent=True) or {}
     reviewer_id = payload.get("reviewer_id")
-    reviewed_verdict_str = payload.get("reviewed_verdict")
-    review_notes = payload.get("review_notes")
-    review_status_str = payload.get("review_status", "ACCEPTED")
-    override_applied = payload.get("override_applied", False)
+    action = payload.get("action")
+    review_notes = payload.get("review_notes", "")
+    reviewed_outcome_str = payload.get("reviewed_outcome") or payload.get("reviewed_verdict")
 
-    if not reviewer_id or not reviewed_verdict_str or not review_notes:
-        return error_response("reviewer_id, reviewed_verdict, and review_notes are required", status_code=400)
-
-    try:
-        verdict_enum = VerificationVerdict(reviewed_verdict_str)
-        status_enum = ReviewStatus(review_status_str)
-    except ValueError as e:
-        return error_response(f"Invalid enum value: {str(e)}", status_code=400)
+    if not reviewer_id:
+        return error_response("reviewer_id is required", status_code=400)
 
     db = SessionLocal()
     try:
-        service = ClaimVerificationService(db=db)
-        review = service.submit_human_review(
-            claim_id=claim_id,
-            reviewer_id=reviewer_id,
-            review_status=status_enum,
-            reviewed_verdict=verdict_enum,
-            review_notes=review_notes,
-            override_applied=override_applied
-        )
-        return success_response(
-            data={"review_id": review.review_id, "status": review.review_status.value},
-            message="Human review submitted successfully"
-        )
+        from backend.services.claim_verification_engine import ClaimVerificationEngine
+        engine = ClaimVerificationEngine(db=db)
+
+        if action == "accept_assessment":
+            res = engine.accept_assessment(
+                claim_id=claim_id,
+                reviewer_id=reviewer_id,
+                review_notes=review_notes or "Assessment validated by human reviewer."
+            )
+            return success_response(
+                data=res.to_dict(),
+                message="Assessment accepted successfully"
+            )
+
+        elif action == "correct_claim_decomposition":
+            corrected = payload.get("corrected_atomics", [])
+            res = engine.correct_claim_decomposition(
+                claim_id=claim_id,
+                reviewer_id=reviewer_id,
+                corrected_atomics=corrected,
+                review_notes=review_notes
+            )
+            return success_response(
+                data=res.to_dict(),
+                message="Claim decomposition corrected successfully"
+            )
+
+        elif action == "add_evidence":
+            res = engine.add_evidence(
+                claim_id=claim_id,
+                reviewer_id=reviewer_id,
+                document_data=payload.get("document_data", {}),
+                passage_data=payload.get("passage_data", {}),
+                relationship_type=payload.get("relationship_type", "supports"),
+                review_notes=review_notes
+            )
+            return success_response(
+                data=res.to_dict(),
+                message="Evidence added successfully"
+            )
+
+        elif action == "mark_evidence_irrelevant":
+            rel_id = payload.get("relationship_id")
+            reason = payload.get("reason", review_notes)
+            res = engine.mark_evidence_irrelevant(
+                claim_id=claim_id,
+                reviewer_id=reviewer_id,
+                relationship_id=rel_id,
+                reason=reason
+            )
+            return success_response(
+                data=res.to_dict(),
+                message="Evidence marked irrelevant successfully"
+            )
+
+        elif action == "revise_outcome" or reviewed_outcome_str:
+            if not reviewed_outcome_str or not review_notes:
+                return error_response("reviewed_outcome and review_notes are required for outcome revision", status_code=400)
+            res = engine.revise_outcome(
+                claim_id=claim_id,
+                reviewer_id=reviewer_id,
+                new_outcome=reviewed_outcome_str,
+                explanation=payload.get("explanation", review_notes),
+                review_notes=review_notes
+            )
+            return success_response(
+                data=res.to_dict(),
+                message="Outcome revised successfully"
+            )
+
+        else:
+            return error_response(f"Unrecognized review action: '{action}'", status_code=400)
+
     except ValueError as e:
         return error_response(str(e), status_code=404)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>/verification", methods=["GET"])
+def get_claim_verification(claim_id: str):
+    """
+    Get full current verification outcome, proposition breakdown, evidence references,
+    source diversity metrics, and complete human review history.
+    """
+    db = SessionLocal()
+    try:
+        claim = db.query(Claim).filter(Claim.claim_id == claim_id).first()
+        if not claim:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+
+        current_res = next((r for r in claim.verification_results if r.is_current), None)
+        reviews = [r.to_dict() for r in claim.reviews]
+        history = [h.to_dict() for h in claim.verification_history]
+
+        return success_response(
+            data={
+                "claim_id": claim_id,
+                "verification": current_res.to_dict() if current_res else None,
+                "review_records": reviews,
+                "verification_history": history,
+                "epistemic_disclaimer": "Outcomes represent evidence assessments based on indexed public records, not personal intent."
+            },
+            message="Verification profile retrieved successfully"
+        )
     finally:
         db.close()
 

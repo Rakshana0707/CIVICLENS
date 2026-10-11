@@ -111,6 +111,52 @@ class VerificationVerdict(str, enum.Enum):
     DISPUTED_METHODOLOGY = "DISPUTED_METHODOLOGY"
 
 
+class VerificationOutcome(str, enum.Enum):
+    """
+    Standardized evidence outcome labels for Phase 7.7.
+    These are evidence assessments, not judgments about a person's honesty or intent.
+    """
+    SUPPORTED_BY_AVAILABLE_EVIDENCE = "supported_by_available_evidence"
+    CONTRADICTED_BY_AVAILABLE_EVIDENCE = "contradicted_by_available_evidence"
+    PARTIALLY_SUPPORTED = "partially_supported"
+    MISSING_IMPORTANT_CONTEXT = "missing_important_context"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    DISPUTED_EVIDENCE = "disputed_evidence"
+    UNVERIFIABLE = "unverifiable"
+    PENDING_REVIEW = "pending_review"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "VerificationOutcome":
+        if isinstance(val, cls):
+            return val
+        if not val:
+            return cls.PENDING_REVIEW
+        clean = str(val).strip().lower()
+        for item in cls:
+            if item.value == clean or item.name.lower() == clean:
+                return item
+        verdict_map = {
+            "supported": cls.SUPPORTED_BY_AVAILABLE_EVIDENCE,
+            "contradicted": cls.CONTRADICTED_BY_AVAILABLE_EVIDENCE,
+            "partially_supported": cls.PARTIALLY_SUPPORTED,
+            "misleading_context": cls.MISSING_IMPORTANT_CONTEXT,
+            "unverifiable_insufficient_evidence": cls.INSUFFICIENT_EVIDENCE,
+            "disputed_methodology": cls.DISPUTED_EVIDENCE,
+        }
+        return verdict_map.get(clean, cls.PENDING_REVIEW)
+
+
+class ReviewAction(str, enum.Enum):
+    """
+    Human-in-the-loop audit actions.
+    """
+    ACCEPT_ASSESSMENT = "accept_assessment"
+    CORRECT_CLAIM_DECOMPOSITION = "correct_claim_decomposition"
+    ADD_EVIDENCE = "add_evidence"
+    MARK_EVIDENCE_IRRELEVANT = "mark_evidence_irrelevant"
+    REVISE_OUTCOME = "revise_outcome"
+
+
 class ReviewStatus(str, enum.Enum):
     PENDING_REVIEW = "PENDING_REVIEW"
     IN_REVIEW = "IN_REVIEW"
@@ -588,7 +634,9 @@ class VerificationRun(Base):
 # ---------------------------------------------------------------------------
 class VerificationResult(Base):
     """
-    Synthesized verdict containing confidence, empirical findings, and caveats.
+    Synthesized evidence assessment containing confidence, source diversity,
+    and multi-part atomic proposition explanations.
+    These are evidence assessments, not judgments about a person's honesty or intent.
     """
     __tablename__ = "verification_results"
 
@@ -596,21 +644,91 @@ class VerificationResult(Base):
     claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
     run_id = Column(String, ForeignKey("verification_runs.run_id", ondelete="SET NULL"), nullable=True, index=True)
 
-    verdict = Column(Enum(VerificationVerdict), nullable=False, index=True)
+    # Core Phase 7.7 Outcome and Explanations
+    outcome = Column(Enum(VerificationOutcome), nullable=True, default=VerificationOutcome.PENDING_REVIEW, index=True)
+    explanation = Column(Text, nullable=True)
+
+    def __init__(self, **kwargs):
+        if "explanation" not in kwargs and "rationale" in kwargs:
+            kwargs["explanation"] = kwargs["rationale"]
+        if "outcome" not in kwargs and "verdict" in kwargs:
+            kwargs["outcome"] = VerificationOutcome.from_string(kwargs["verdict"])
+        super().__init__(**kwargs)
+    atomic_claim_ids = Column(JSON, nullable=True)  # List[str]
+    supporting_evidence_ids = Column(JSON, nullable=True)  # List[str]
+    contradicting_evidence_ids = Column(JSON, nullable=True)  # List[str]
+    context_evidence_ids = Column(JSON, nullable=True)  # List[str]
+    source_diversity = Column(JSON, nullable=True)  # Dict with source counts, tiers, publishers
+
+    # Confidence and Uncertainty Indicators
+    confidence = Column(Float, default=0.0)
+    uncertainty_indicator = Column(Float, default=0.0)
+
+    # Provenance and Versioning
+    methodology_version = Column(String, default="METHODOLOGY_V1")
+    model_version = Column(String, default="civiclens-verifier-v1.0")
+    verification_timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    review_status = Column(Enum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, index=True)
+
+    # Preservation of Automated Baseline before Human Revisions
+    automated_outcome = Column(Enum(VerificationOutcome), nullable=True)
+    automated_explanation = Column(Text, nullable=True)
+    automated_confidence = Column(Float, nullable=True)
+    human_revision_notes = Column(Text, nullable=True)
+
+    # Legacy attributes for backwards compatibility with Phase 7.1
+    verdict = Column(Enum(VerificationVerdict), nullable=True, index=True)
     confidence_score = Column(Float, default=0.0)
     support_score = Column(Float, default=0.0)
     contradiction_score = Column(Float, default=0.0)
     uncertainty_score = Column(Float, default=0.0)
-
-    rationale = Column(Text, nullable=False)
-    empirical_findings = Column(JSON, nullable=True)  # {"official_value": 6200.0, "claimed_value": 10000.0, "variance_pct": -38.0}
+    rationale = Column(Text, nullable=True)
+    empirical_findings = Column(JSON, nullable=True)
     limitations_and_caveats = Column(Text, nullable=True)
     is_current = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    @property
+    def verification_id(self) -> str:
+        return self.result_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "verification_id": self.result_id,
+            "result_id": self.result_id,
+            "claim_id": self.claim_id,
+            "run_id": self.run_id,
+            "atomic_claim_ids": self.atomic_claim_ids or [],
+            "outcome": self.outcome.value if hasattr(self.outcome, "value") else str(self.outcome),
+            "verdict": self.verdict.value if self.verdict else (self.outcome.value if self.outcome else "SUPPORTED"),
+            "explanation": self.explanation or self.rationale,
+            "rationale": self.explanation or self.rationale,
+            "supporting_evidence_ids": self.supporting_evidence_ids or [],
+            "contradicting_evidence_ids": self.contradicting_evidence_ids or [],
+            "context_evidence_ids": self.context_evidence_ids or [],
+            "source_diversity": self.source_diversity or {},
+            "confidence": self.confidence,
+            "confidence_score": self.confidence_score or self.confidence,
+            "support_score": self.support_score,
+            "contradiction_score": self.contradiction_score,
+            "uncertainty_score": self.uncertainty_score or self.uncertainty_indicator,
+            "uncertainty_indicator": self.uncertainty_indicator,
+            "methodology_version": self.methodology_version,
+            "model_version": self.model_version,
+            "verification_timestamp": self.verification_timestamp.isoformat() if self.verification_timestamp else None,
+            "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
+            "automated_outcome": self.automated_outcome.value if hasattr(self.automated_outcome, "value") else (str(self.automated_outcome) if self.automated_outcome else None),
+            "automated_explanation": self.automated_explanation,
+            "automated_confidence": self.automated_confidence,
+            "human_revision_notes": self.human_revision_notes,
+            "is_current": self.is_current,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
     # Relationships
     claim = relationship("Claim", back_populates="verification_results")
     run = relationship("VerificationRun", back_populates="result")
+    reviews = relationship("ReviewRecord", back_populates="verification", cascade="all, delete-orphan")
 
 
 # ---------------------------------------------------------------------------
@@ -618,7 +736,7 @@ class VerificationResult(Base):
 # ---------------------------------------------------------------------------
 class VerificationHistory(Base):
     """
-    Audit log tracking verdict transitions, rationale updates, or human overrides.
+    Audit log tracking verdict/outcome transitions, rationale updates, or human overrides.
     """
     __tablename__ = "verification_history"
 
@@ -628,9 +746,23 @@ class VerificationHistory(Base):
 
     previous_verdict = Column(String, nullable=True)
     new_verdict = Column(String, nullable=False)
+    previous_outcome = Column(String, nullable=True)
+    new_outcome = Column(String, nullable=True)
     change_reason = Column(Text, nullable=True)
     triggered_by = Column(String, default="AUTOMATED_PIPELINE")  # AUTOMATED_PIPELINE, HUMAN_REVIEWER, NEW_EVIDENCE
     changed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "history_id": self.history_id,
+            "claim_id": self.claim_id,
+            "result_id": self.result_id,
+            "previous_outcome": self.previous_outcome or self.previous_verdict,
+            "new_outcome": self.new_outcome or self.new_verdict,
+            "change_reason": self.change_reason,
+            "triggered_by": self.triggered_by,
+            "changed_at": self.changed_at.isoformat() if self.changed_at else None
+        }
 
     # Relationships
     claim = relationship("Claim", back_populates="verification_history")
@@ -672,15 +804,38 @@ class ReviewRecord(Base):
 
     review_id = Column(String, primary_key=True, index=True)
     claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
+    verification_id = Column(String, ForeignKey("verification_results.result_id", ondelete="SET NULL"), nullable=True, index=True)
     reviewer_id = Column(String, nullable=False, index=True)
     reviewer_role = Column(String, default="DOMAIN_EXPERT")
     review_status = Column(Enum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, index=True)
 
+    action = Column(String, default="accept_assessment")
     original_verdict = Column(String, nullable=True)
     reviewed_verdict = Column(String, nullable=False)
+    original_outcome = Column(String, nullable=True)
+    reviewed_outcome = Column(String, nullable=True)
     review_notes = Column(Text, nullable=False)
+    explanation = Column(Text, nullable=True)
     override_applied = Column(Boolean, default=False)
     reviewed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "review_id": self.review_id,
+            "claim_id": self.claim_id,
+            "verification_id": self.verification_id,
+            "reviewer_id": self.reviewer_id,
+            "reviewer_role": self.reviewer_role,
+            "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
+            "action": self.action,
+            "original_outcome": self.original_outcome or self.original_verdict,
+            "reviewed_outcome": self.reviewed_outcome or self.reviewed_verdict,
+            "review_notes": self.review_notes,
+            "explanation": self.explanation,
+            "override_applied": self.override_applied,
+            "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None
+        }
+
     # Relationships
     claim = relationship("Claim", back_populates="reviews")
+    verification = relationship("VerificationResult", back_populates="reviews")

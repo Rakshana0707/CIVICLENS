@@ -1,127 +1,163 @@
 # Phase 7 — Political Claim Verification Methodology & Analytical Standards
 
-## 1. Core Principles of Verification
+## 1. Executive Summary & Epistemic Principles
 
-The verification engine in **CIVICLENS TN** adheres to strict scientific and ethical protocols designed to eliminate partisan bias, maintain transparency, and expose uncertainty.
+The verification engine in **CIVICLENS TN** adheres to strict scientific, transparent, and ethical protocols designed to eliminate partisan bias, maintain transparency, and expose uncertainty.
 
-### 1.1 Non-Negotiable Directives
-1. **Preserve Original Utterance:** Original statements must be stored unaltered, preserving Tamil script, regional phrasing, colloquial terms, and contextual preamble.
-2. **Atomic Decomposition:** A complex political speech often combines multiple distinct claims. Each proposition must be isolated and evaluated independently.
-3. **Distinguish Evidence from Interpretation:** Evidence consists of verified empirical data points (e.g. Budget Book FY23 line item ₹7,000 Cr; ECI Form 21E certificate). Interpretation is the argumentative spin placed upon those numbers. CIVICLENS reports empirical facts and contrasts them against the claim.
-4. **Active Disconfirmation Search:** The pipeline never conducts one-sided searches for confirmatory proof. It issues explicit disconfirmation queries to locate refuting records.
-5. **Transparent Uncertainty Disclosures:** If data is missing (e.g. pending census, delayed CAG audit), the system issues `UNVERIFIABLE_INSUFFICIENT_EVIDENCE` with detailed limitation notes rather than speculating.
-6. **No Politician or Party Leaderboards:** The platform explicitly forbids generating aggregate "truth scores", "lie meters", or ranking parties by honesty.
+### 1.1 Fundamental Directives
+1. **Evidence Assessments, Not Moral Judgments**: Outcomes are evidence assessments based on indexed public records, **never judgments about a person's honesty, character, or political intent**.
+2. **Preserve Original Utterance Verbatim**: Original statements are stored unaltered, preserving Tamil script, regional phrasing, colloquial expressions, and context.
+3. **Atomic Claim Decomposition**: Complex political assertions mixing past achievements, statistical numbers, and policy promises are isolated into verifiable atomic propositions and evaluated independently.
+4. **Identify Supported, Contradicted, and Unresolved Propositions**: Every verification explanation must explicitly state which parts of a compound claim are supported, which are contradicted, and which remain unresolved.
+5. **No Outcome Based Solely on Semantic Similarity**: Semantic embeddings guide evidence discovery; final verification outcomes are never assigned based on semantic similarity alone, requiring strict empirical entity, numerical, temporal, and proposition validation.
+6. **No Binary Fallacies on Missing Data**: The system **never** marks a claim as contradicted simply because a document cannot be found. If critical evidence is missing, the claim is classified as `insufficient_evidence` or `unverifiable`.
+7. **Anti-Echo-Chamber Syndication Safeguards**: Multiple news outlets reprinting identical PTI, ANI, or government press release wire copies are clustered and treated as a single source of evidence.
+8. **Permanent Visibility of Contradictions**: Disconfirming and counter-evidence is permanently retained and displayed alongside supporting documents.
+9. **Strictly No Politician or Party Honesty Rankings**: The platform explicitly forbids generating aggregate "truth scores", "lie meters", leaderboards, or scorecards ranking politicians or parties.
 
 ---
 
-## 2. Claim Decomposition Architecture
+## 2. Standardized Outcome Taxonomy
 
-Political claims are rarely simple atomic assertions; they frequently contain compound assertions mixing past achievements, statistical metrics, and future aspirations.
+CIVICLENS TN uses an eight-label outcome taxonomy reflecting empirical evidence states:
+
+| Outcome Label | Definition | Verification Criteria |
+| :--- | :--- | :--- |
+| **`supported_by_available_evidence`** | The core proposition is affirmed by official statutory notifications, budget line records, gazettes, or authoritative empirical datasets. | Independent primary statutory records corroborate entity, timeframe, jurisdiction, and metrics without credible contradiction. |
+| **`contradicted_by_available_evidence`** | Available official audits (e.g. CAG), legislative answers, or verified datasets directly refute the assertion or reveal substantial failure. | Authoritative primary records establish non-fulfillment, official denial, cancellation, or severe shortfall ($> 20\%$ variance). |
+| **`partially_supported`** | Elements of the claim are substantiated, but other metrics, dates, or scopes remain unverified or qualified. | Multi-part claim where one proposition is confirmed but another is unverified, or where delivery is confirmed only in pilot phase. |
+| **`missing_important_context`** | The literal assertion may be technically accurate in isolation, but omits vital historical, fiscal, or policy context that alters its meaning. | Cherry-picked baseline years, temporary lockdown effects attributed to policy, or claiming state credit for 100% centrally sponsored funds. |
+| **`insufficient_evidence`** | Public records, gazettes, or statistical databases do not contain enough documented information to establish truth or falsehood. | Absence of indexed statutory records. **Absence of evidence is never treated as proof of falsehood.** |
+| **`disputed_evidence`** | Highly credible, authoritative sources directly contradict each other regarding the proposition. | Statutory department press release asserts 100% completion while an official CAG audit report reports severe uncompleted delivery. |
+| **`unverifiable`** | The statement is a non-factual slogan, rhetorical question, value judgment, or future political promise incapable of empirical testing. | Subjective rhetoric (e.g., *"We are the greatest government in history"*), slogans, or ambiguous undefined commitments. |
+| **`pending_review`** | Automated signals are inconclusive or flagged for mandatory expert human-in-the-loop review. | Initial intake phase or low automated confidence threshold ($< 0.50$). |
+
+---
+
+## 3. Verification Synthesis Engine
 
 ```mermaid
 flowchart TD
-    RAW[Raw Speech Claim<br/>'In 2021 we allocated ₹5,000 Cr and built 100 bridges across Cauvery delta']
-    --> DECOMP[Decomposition Engine]
-    DECOMP --> P1[Proposition 1: Temporal & Fiscal Scope<br/>Year: 2021 | Metric: ₹5,000 Cr Allocation]
-    DECOMP --> P2[Proposition 2: Physical Asset Scope<br/>Asset: 100 Bridges | Geography: Cauvery Delta]
-    P1 --> V1[Check against Phase 1 Budget Records]
-    P2 --> V2[Check against Phase 6 Works & PWD Gazettes]
+    AC[Atomic Claim Propositions] --> SYN[Verification Synthesis Engine]
+    REL[Phase 7.6 Claim-Evidence Relationships] --> SYN
+    
+    SYN --> C1{Are non-factual slogans or rhetoric?}
+    C1 -->|Yes| OUT_UNV[unverifiable]
+    C1 -->|No| C2{Are relevant records found?}
+    
+    C2 -->|No records| OUT_INS[insufficient_evidence]
+    C2 -->|Yes| C3{Conflicting Tier 1 Statutory Evidence?}
+    
+    C3 -->|Both strong support & contradiction| OUT_DIS[disputed_evidence]
+    C3 -->|No conflict| C4{Verified Contradictions Present?}
+    
+    C4 -->|Direct refutation only| OUT_CON[contradicted_by_available_evidence]
+    C4 -->|No refutation| C5{Omitted baseline or outdated context?}
+    
+    C5 -->|Critical omissions| OUT_CTX[missing_important_context]
+    C5 -->|No omission| C6{Are all propositions fully met?}
+    
+    C6 -->|Partial fulfillment| OUT_PAR[partially_supported]
+    C6 -->|Complete empirical corroboration| OUT_SUP[supported_by_available_evidence]
 ```
 
-### Decomposition Dimensions
-For every registered claim, the decomposition layer identifies:
-1. **Target Entity / Subject:** The government, party, politician, or department being discussed (`ClaimSubject`).
-2. **Temporal Scope:** The exact historical time window (e.g. `2021-2022`, `Last 3 years`, `Since 2011`).
-3. **Quantitative / Numerical Metric:** Explicit numbers, currency figures, percentages, or rank claims (e.g., `₹1,000/month`, `90% turnout`, `Rank #1 in NITI Aayog index`).
-4. **Geographic Extent:** State-wide, specific district, assembly constituency, or region (e.g., `Tamil Nadu`, `Madurai`, `Cauvery Delta`).
-5. **Target Beneficiary / Policy Scope:** Specific citizen demographic or scheme (e.g., `Women heads of households`, `College students`).
+### 3.1 Explanation Generation Protocol
+The engine generates a structured explanation that identifies the evidentiary status of each constituent proposition:
+```text
+[Overall Synthesis Summary]
+
+Proposition Breakdown:
+- Part 1 ['Kalaignar Magalir Urimai Thittam provides ₹1,000 per month']: SUPPORTED by G.O. (Ms) No. 49.
+- Part 2 ['Disbursed to all 1.15 crore applicants without delay']: CONTRADICTED by CAG Audit Report (35 lakh rejections noted).
+- Part 3 ['Expanded to private college students']: UNRESOLVED. No statutory order issued for college stipend expansion.
+```
+
+### 3.2 Source Diversity Metric
+To prevent manufactured consensus from syndicated news echo chambers:
+$$\text{Source Diversity} = f(\text{Non-Syndicated Clusters}, \text{Distinct Publishers}, \text{Source Tiers})$$
+- Evaluates distinct publishing authorities (e.g. Finance Dept, CAG, ECI).
+- Clustered wire stories (PTI, ANI, UNI) count as **1 independent corroboration**, regardless of how many websites republished the text.
 
 ---
 
-## 3. Multi-Signal Evidence Matching
+## 4. Human Review Workflow
 
-Matching a decomposed claim proposition to documentary evidence relies on five complementary analytical signals:
+CIVICLENS TN provides an auditable human-in-the-loop governance mechanism. Automated assessments are never silently overwritten; both the automated baseline and all human revisions are preserved.
 
 ```mermaid
 flowchart LR
-    CLAIM[Claim Proposition] --> S1[Signal 1: Entity Binding]
-    CLAIM --> S2[Signal 2: Numerical Reconciliation]
-    CLAIM --> S3[Signal 3: Temporal Alignment]
-    CLAIM --> S4[Signal 4: Geographic Scoping]
-    CLAIM --> S5[Signal 5: Semantic Embedding]
+    AUTO[Automated Verification<br/>Outcome + Explanation] --> REV[Human Reviewer Queue]
     
-    S1 & S2 & S3 & S4 & S5 --> AGG[Multi-Signal Aggregator]
-    AGG --> REL[ClaimEvidenceRelationship<br/>Score & Type]
+    REV --> ACT1[1. Accept Assessment]
+    REV --> ACT2[2. Correct Decomposition]
+    REV --> ACT3[3. Add Evidence]
+    REV --> ACT4[4. Mark Evidence Irrelevant]
+    REV --> ACT5[5. Revise Outcome]
+    
+    ACT1 & ACT2 & ACT3 & ACT4 & ACT5 --> LOG[ReviewRecord & VerificationHistory<br/>Immutable Audit Trail]
 ```
 
-### 3.1 Signal Definitions & Formulas
-
-1. **Entity Binding Score ($S_{\text{ent}}$):** Matches politicians, departments, and scheme names using Phase 2 alias resolution and Phase 6 representative registry:
-   $$S_{\text{ent}} = \frac{|\text{Entities}_{\text{claim}} \cap \text{Entities}_{\text{evidence}}|}{|\text{Entities}_{\text{claim}}|}$$
-
-2. **Numerical Reconciliation Score ($S_{\text{num}}$):** Measures percentage variance between the claimed figure ($V_{\text{claim}}$) and official recorded figure ($V_{\text{evid}}$):
-   $$\Delta_{\text{num}} = \frac{|V_{\text{claim}} - V_{\text{evid}}|}{\max(|V_{\text{claim}}|, |V_{\text{evid}}|)}$$
-   - If $\Delta_{\text{num}} \le 0.05$ (within 5% margin, e.g. rounding), $S_{\text{num}} = 1.0$ (Strong Match).
-   - If $0.05 < \Delta_{\text{num}} \le 0.20$, $S_{\text{num}} = 0.70$ (Approximate / Partial).
-   - If $\Delta_{\text{num}} > 0.20$, $S_{\text{num}} = 0.0$ and triggers contradiction flagging.
-
-3. **Temporal Alignment Score ($S_{\text{time}}$):** Checks whether the evidence document covers the exact financial year, legislative session, or election period cited in the claim.
-
-4. **Geographic Scoping Score ($S_{\text{geo}}$):** Verifies constituency-to-district or district-to-state geographical hierarchies (e.g., verifying a claim about Kolathur against Chennai district or State data).
-
-5. **Semantic Embedding Similarity ($S_{\text{sem}}$):** Multilingual cosine similarity computed using Phase 2 bilingual embeddings:
-   $$S_{\text{sem}} = \cos(\mathbf{e}_{\text{claim}}, \mathbf{e}_{\text{passage}}) = \frac{\mathbf{e}_{\text{claim}} \cdot \mathbf{e}_{\text{passage}}}{\|\mathbf{e}_{\text{claim}}\| \|\mathbf{e}_{\text{passage}}\|}$$
+### Review Actions Supported:
+1. **`accept_assessment`**: Reviewer approves automated outcome. `review_status = ACCEPTED`.
+2. **`correct_claim_decomposition`**: Reviewer adjusts, splits, or refines atomic propositions. The system re-synthesizes the outcome under `review_status = IN_REVIEW`.
+3. **`add_evidence`**: Reviewer manually submits primary documents or gazette orders. The engine re-evaluates the evidence graph.
+4. **`mark_evidence_irrelevant`**: Reviewer excludes misidentified passages from downstream synthesis.
+5. **`revise_outcome`**: Reviewer overrides the final outcome label with mandatory rationale. The original `automated_outcome` is permanently preserved.
 
 ---
 
-## 4. Contradiction Analysis Framework
+## 5. Database Schema & REST API Contract
 
-When candidate evidence is retrieved, the contradiction analyzer evaluates whether the evidence confirms, refutes, or qualifies the assertion:
-
-| Contradiction Type | Definition | Example Scenario |
-|---|---|---|
-| **Direct Numerical Refutation** | Official statutory records state a number substantially different from the claim. | Claim: "We allocated ₹10,000 Cr for agriculture in 2022." <br/> Evidence: Budget Demand 5 recorded ₹6,200 Cr. |
-| **Temporal Discrepancy** | Claim attributes an outcome to a specific tenure or year when records show it occurred under a different period. | Claim: "Scheme was launched in 2021." <br/> Evidence: G.O. shows original launch in 2017. |
-| **Scope / Beneficiary Misrepresentation** | Claim implies universal coverage, but statutory rules restrict eligibility to a narrow subset. | Claim: "Every family in TN receives ₹1,000/month." <br/> Evidence: Scheme guidelines mandate means-tested criteria covering ~1.15 Cr ration card holders. |
-| **Contextual Omission** | Claim is technically accurate in isolation but omits critical surrounding facts that alter its meaning. | Claim: "Crime dropped by 40%." <br/> Evidence: Reporting period coincides with COVID lockdown. |
-| **Absence of Official Record** | Claim asserts a formal government order, resolution, or assent exists, but official gazettes have no record. | Claim: "NEET was permanently abolished by state decree." <br/> Evidence: Central statutory approval not granted. |
-
----
-
-## 5. Verdict Taxonomy & Decision Matrix
-
-CIVICLENS TN uses a six-tier standardized verdict taxonomy:
-
-```mermaid
-flowchart TD
-    EVAL[Evaluate Claim Against Tiered Evidence]
-    EVAL -->|Strong Tier 1/2 Support & Minimal Contradiction| V1[SUPPORTED]
-    EVAL -->|Empirical Statutory Proof Refutes Core Proposition| V2[CONTRADICTED]
-    EVAL -->|Partial Numbers Match or Rounded Estimates| V3[PARTIALLY_SUPPORTED]
-    EVAL -->|Technically True Numbers but Omitted Crucial Context| V4[MISLEADING_CONTEXT]
-    EVAL -->|Statutory Data Delayed, Census Missing, or No Record| V5[UNVERIFIABLE_INSUFFICIENT_EVIDENCE]
-    EVAL -->|Contending Official Methodologies Produce Divergent Results| V6[DISPUTED_METHODOLOGY]
+### Verification Result Entity
+```sql
+CREATE TABLE verification_results (
+    result_id VARCHAR PRIMARY KEY,
+    claim_id VARCHAR NOT NULL REFERENCES political_claims(claim_id) ON DELETE CASCADE,
+    run_id VARCHAR REFERENCES verification_runs(run_id),
+    
+    outcome VARCHAR NOT NULL, -- supported_by_available_evidence, contradicted_by_available_evidence, etc.
+    explanation TEXT NOT NULL,
+    atomic_claim_ids JSON,
+    supporting_evidence_ids JSON,
+    contradicting_evidence_ids JSON,
+    context_evidence_ids JSON,
+    source_diversity JSON,
+    
+    confidence FLOAT DEFAULT 0.0,
+    uncertainty_indicator FLOAT DEFAULT 0.0,
+    methodology_version VARCHAR DEFAULT 'CIVICLENS_VERIFICATION_METHODOLOGY_V1',
+    model_version VARCHAR DEFAULT 'civiclens-verifier-v1.0',
+    verification_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    review_status VARCHAR DEFAULT 'PENDING_REVIEW',
+    
+    automated_outcome VARCHAR,
+    automated_explanation TEXT,
+    automated_confidence FLOAT,
+    human_revision_notes TEXT,
+    is_current BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-### Verdict Definitions:
-1. **`SUPPORTED`:** All core propositions are corroborated by Tier 1 or Tier 2 official statutory evidence with no material discrepancy.
-2. **`CONTRADICTED`:** The central factual assertion is directly refuted by official records, audit reports, or gazetted data.
-3. **`PARTIALLY_SUPPORTED`:** Portions of the statement are accurate (e.g. scheme was introduced), but quantitative figures or timelines are inaccurate.
-4. **`MISLEADING_CONTEXT`:** The figures quoted are formally accurate, but crucial background facts or baseline changes are omitted, conveying an inaccurate impression.
-5. **`UNVERIFIABLE_INSUFFICIENT_EVIDENCE`:** Credible primary records do not exist, official releases are delayed, or data has not been systematically gathered by government bodies.
-6. **`DISPUTED_METHODOLOGY`:** Multiple authoritative government bodies (e.g. State Planning Commission vs. Central Ministry) employ conflicting sampling or accounting standards.
+### REST API Endpoints
 
----
+#### 1. Run Automated Verification Pass
+- **Route**: `POST /api/claims/<claim_id>/verify`
+- **Response**: Returns full result including `outcome`, `explanation`, `atomic_claim_ids`, `source_diversity`, and `confidence`.
 
-## 6. Human Review & Editorial Governance
+#### 2. Submit Human Review Decision
+- **Route**: `POST /api/claims/<claim_id>/review`
+- **Payload**:
+  ```json
+  {
+    "reviewer_id": "EXPERT-TN-04",
+    "action": "revise_outcome",
+    "reviewed_outcome": "partially_supported",
+    "review_notes": "Statutory audit confirms allocation but notes pilot phase rollout.",
+    "explanation": "Revised after auditing G.O. (Ms) No. 49 and CAG progress reports."
+  }
+  ```
 
-The system enforces human-in-the-loop oversight to ensure accountable AI:
-
-1. **Automated Run as Recommendation:** Every pipeline execution generates a `VerificationRun` and a proposed `VerificationResult`.
-2. **Review Record Auditing:** Human reviewers (civic researchers, journalists, subject-matter experts) review candidate evidence passages, assess edge-case nuances, and create a `ReviewRecord`.
-3. **Review Actions:**
-   - `CONFIRMED`: Reviewer agrees with automated verdict and rationale.
-   - `OVERRIDDEN`: Reviewer modifies the verdict with mandatory documented rationale.
-   - `ANNOTATED`: Reviewer appends contextual caveats or local knowledge.
-   - `ESCALATED`: Reviewer flags claim for multi-expert panel consultation.
-4. **Permanent Audit Trail:** The automated finding, human review decisions, previous statuses, and timestamps are preserved in `VerificationHistory`.
+#### 3. Retrieve Verification Profile & Audit History
+- **Route**: `GET /api/claims/<claim_id>/verification`
+- **Response**: Returns current verification result, all associated `ReviewRecord`s, and `VerificationHistory` audit trails.
