@@ -545,6 +545,129 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # ---------------------------------------------------------------------------
+    # PHASE 6: REPRESENTATIVES & CONSTITUENCY PERFORMANCE
+    # ---------------------------------------------------------------------------
+    def search_representatives(
+        self,
+        q: Optional[str] = None,
+        rep_type: Optional[str] = None,
+        party_id: Optional[str] = None,
+        constituency_id: Optional[str] = None,
+        active_only: bool = False
+    ) -> Tuple[bool, Any]:
+        params = {}
+        if q: params["q"] = q
+        if rep_type and rep_type != "All": params["type"] = rep_type
+        if party_id and party_id != "All": params["party_id"] = party_id
+        if constituency_id and constituency_id != "All": params["constituency_id"] = constituency_id
+        if active_only: params["active_only"] = "true"
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/search", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_representative_profile(self, representative_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/{representative_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def list_constituencies(self, district: Optional[str] = None, c_type: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if district and district != "All": params["district"] = district
+        if c_type and c_type != "All": params["type"] = c_type
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/constituencies", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_constituency_profile(self, constituency_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/constituencies/{constituency_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_representative_legislative_activity(self, representative_id: str, period: str = "2021-2026") -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/{representative_id}/legislative", params={"period": period}, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_constituency_works(
+        self,
+        constituency_id: Optional[str] = None,
+        representative_id: Optional[str] = None,
+        scheme_id: Optional[str] = None,
+        status: Optional[str] = None,
+        attribution: Optional[str] = None
+    ) -> Tuple[bool, Any]:
+        params = {}
+        if constituency_id and constituency_id != "All": params["constituency_id"] = constituency_id
+        if representative_id and representative_id != "All": params["representative_id"] = representative_id
+        if scheme_id and scheme_id != "All": params["scheme_id"] = scheme_id
+        if status and status != "All": params["status"] = status
+        if attribution and attribution != "All": params["attribution"] = attribution
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/works", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_development_indicators(
+        self,
+        unit_id: Optional[str] = None,
+        indicator_name: Optional[str] = None,
+        baseline: str = "2011",
+        current: str = "2021"
+    ) -> Tuple[bool, Any]:
+        params = {"baseline": baseline, "current": current}
+        if unit_id and unit_id != "All": params["unit_id"] = unit_id
+        if indicator_name and indicator_name != "All": params["indicator_name"] = indicator_name
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/indicators", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_representative_promises(self, representative_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/{representative_id}/promises", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def compare_representatives(self, representatives: List[str], cohort_type: str = "TN_ASSEMBLY_MLA", reporting_period: str = "2021-2024") -> Tuple[bool, Any]:
+        payload = {
+            "representatives": representatives,
+            "cohort_type": cohort_type,
+            "reporting_period": reporting_period
+        }
+        try:
+            response = requests.post(f"{self.base_url}/api/representatives/compare", json=payload, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_transparent_composite(self, representative_id: str, period: str = "2021-2024") -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/{representative_id}/composite", params={"period": period}, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_data_completeness(self, representative_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/{representative_id}/completeness", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
