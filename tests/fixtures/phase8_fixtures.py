@@ -442,3 +442,85 @@ MOCK_PUBLIC_WORKS: List[Dict[str, Any]] = [
         "is_test_fixture": True
     }
 ]
+
+# ---------------------------------------------------------------------------
+# 10. Acquisition Test Fixtures (HTML, CSV, JSON, Mock Content)
+# ---------------------------------------------------------------------------
+MOCK_HTML_PAGE_WITH_TABLE: str = """<!DOCTYPE html>
+<html>
+<head><title>Tamil Nadu Municipal Grievance Report 2024</title></head>
+<body>
+  <h1>Monthly Redressal Bulletin - March 2024</h1>
+  <p>Official report published by Directorate of Municipal Administration.</p>
+  <div class="links">
+    <a href="/reports/march_2024.pdf">Download March PDF Report</a>
+    <a href="/data/grievances_2024.csv">Download CSV Dataset</a>
+    <a href="/admin/dashboard">Restricted Admin Panel</a>
+    <a href="https://external-unauthorized.com/leak">External Link</a>
+  </div>
+  <table id="grievance_summary">
+    <thead>
+      <tr>
+        <th>District</th>
+        <th>Category</th>
+        <th>Total Received</th>
+        <th>Disposed</th>
+        <th>Officer Contact</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Chennai</td>
+        <td>roads</td>
+        <td>1420</td>
+        <td>1280</td>
+        <td>Thiru S. Raman, Ph: 9840112233</td>
+      </tr>
+      <tr>
+        <td>Madurai</td>
+        <td>water_supply</td>
+        <td>850</td>
+        <td>790</td>
+        <td>Tmt K. Valli, Email: valli.k@tn.gov.in</td>
+      </tr>
+      <tr>
+        <td>Coimbatore</td>
+        <td>waste_management</td>
+        <td>960</td>
+        <td>940</td>
+        <td>Office D.No. 4, Town Hall</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>"""
+
+MOCK_CSV_DATA: str = """district,category,received_count,disposed_count,sla_compliance_pct,officer_notes
+Chennai,roads,1420,1280,90.1,Contact Thiru Ramesh at 9876543210
+Madurai,water_supply,850,790,92.9,Supervised by Tmt Geetha
+Coimbatore,electricity,640,610,95.3,Main transformer restored on time
+Tiruchirappalli,drainage,530,480,90.5,Stormwater desilting completed
+Salem,streetlights,410,400,97.5,LED replacement drive completed
+"""
+
+MOCK_JSON_DATA: str = """[
+  {
+    "portal": "CM_HELPLINE_1100",
+    "department": "Municipal Administration",
+    "total_receipts": 15420,
+    "total_disposed": 14100,
+    "pending_over_30_days": 180,
+    "officer_in_charge": "Thiru K. Balasubramanian",
+    "contact_phone": "9444012345"
+  },
+  {
+    "portal": "GCC_1913",
+    "department": "Greater Chennai Corporation",
+    "total_receipts": 8900,
+    "total_disposed": 8450,
+    "pending_over_30_days": 95,
+    "officer_in_charge": "Tmt Priya",
+    "contact_email": "priya.gcc@gmail.com"
+  }
+]"""
+
