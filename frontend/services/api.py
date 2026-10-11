@@ -720,6 +720,133 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # -------------------------------------------------------------------------
+    # PHASE 7 — CLAIM VERIFICATION API CLIENT METHODS
+    # -------------------------------------------------------------------------
+    def search_claims(self, q: Optional[str] = None, category: Optional[str] = None,
+                      status: Optional[str] = None, outcome: Optional[str] = None,
+                      party: Optional[str] = None, speaker: Optional[str] = None,
+                      language: Optional[str] = None, rep_id: Optional[str] = None,
+                      promise_id: Optional[str] = None, scheme_id: Optional[int] = None,
+                      news_id: Optional[str] = None, funding_id: Optional[str] = None,
+                      skip: int = 0, limit: int = 50) -> Tuple[bool, Any]:
+        """Search and filter claims from Phase 7 claim registry."""
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
+        if q: params["q"] = q
+        if category and category != "All": params["category"] = category
+        if status and status != "All": params["status"] = status
+        if outcome and outcome != "All": params["outcome"] = outcome
+        if party and party != "All": params["party"] = party
+        if speaker: params["speaker"] = speaker
+        if language and language != "All": params["language"] = language
+        if rep_id: params["representative_id"] = rep_id
+        if promise_id: params["promise_id"] = promise_id
+        if scheme_id: params["scheme_id"] = scheme_id
+        if news_id: params["news_article_id"] = news_id
+        if funding_id: params["financial_document_id"] = funding_id
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/search", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_detail(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get full details of a registered claim including cross-phase resolutions."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_atomic_claim_detail(self, claim_id: str, atomic_claim_id: str) -> Tuple[bool, Any]:
+        """Get granular decomposed atomic claim profile."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/atomic/{atomic_claim_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def search_evidence(self, q: Optional[str] = None, doc_type: Optional[str] = None,
+                        source_category: Optional[str] = None, publisher: Optional[str] = None,
+                        skip: int = 0, limit: int = 50) -> Tuple[bool, Any]:
+        """Search through verified evidence documents and passages."""
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
+        if q: params["q"] = q
+        if doc_type and doc_type != "All": params["document_type"] = doc_type
+        if source_category and source_category != "All": params["source_category"] = source_category
+        if publisher: params["publisher"] = publisher
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/evidence/search", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_evidence_document(self, document_id: str) -> Tuple[bool, Any]:
+        """Get evidence document details and passages."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/evidence/documents/{document_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_relationships(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get claim-to-evidence relationships for all atomic propositions."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/relationships", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_verification(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get latest verification outcome, explanation, and evidence references."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/verification", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_history(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get chronological audit history of automated runs and human reviews."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/history", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def submit_claim_review(self, claim_id: str, payload: Dict[str, Any], reviewer_role: str = "SENIOR_FACT_CHECKER") -> Tuple[bool, Any]:
+        """Submit a peer-reviewed human verdict revision or confirmation."""
+        headers = {"X-Reviewer-Role": reviewer_role}
+        try:
+            response = requests.post(f"{self.base_url}/api/claims/{claim_id}/review", json=payload, headers=headers, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_source(self, source_id: str) -> Tuple[bool, Any]:
+        """Get source registry information for a claim."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/sources/{source_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_provenance(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get full provenance record of a claim and its origin document."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/provenance", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_claim_cross_phase(self, claim_id: str) -> Tuple[bool, Any]:
+        """Get cross-phase associations linked to a claim."""
+        try:
+            response = requests.get(f"{self.base_url}/api/claims/{claim_id}/cross-phase", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
+
