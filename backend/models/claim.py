@@ -245,6 +245,7 @@ class Claim(Base):
     versions = relationship("ClaimVersion", back_populates="claim", cascade="all, delete-orphan")
     subjects = relationship("ClaimSubject", back_populates="claim", cascade="all, delete-orphan")
     atomic_claims = relationship("AtomicClaim", back_populates="claim", cascade="all, delete-orphan")
+    retrieval_candidates = relationship("ClaimRetrievalCandidate", back_populates="claim", cascade="all, delete-orphan")
     evidence_relationships = relationship("ClaimEvidenceRelationship", back_populates="claim", cascade="all, delete-orphan")
     verification_runs = relationship("VerificationRun", back_populates="claim", cascade="all, delete-orphan")
     verification_results = relationship("VerificationResult", back_populates="claim", cascade="all, delete-orphan")
@@ -441,6 +442,44 @@ class ClaimEvidenceRelationship(Base):
     # Relationships
     claim = relationship("Claim", back_populates="evidence_relationships")
     passage = relationship("EvidencePassage", back_populates="claim_relationships")
+
+
+# ---------------------------------------------------------------------------
+# 7b. ClaimRetrievalCandidate Entity
+# ---------------------------------------------------------------------------
+class ClaimRetrievalCandidate(Base):
+    """
+    Stores evidence retrieval search results with multi-signal matching scores,
+    semantic similarity, exact keyword match, entity and date overlap.
+    """
+    __tablename__ = "claim_retrieval_candidates"
+
+    candidate_id = Column(String, primary_key=True, index=True)
+    claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
+    atomic_claim_id = Column(String, nullable=True, index=True)
+    evidence_document_id = Column(String, ForeignKey("evidence_documents.document_id", ondelete="CASCADE"), nullable=False, index=True)
+    evidence_passage_id = Column(String, ForeignKey("evidence_passages.passage_id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Multi-Signal Retrieval Scores
+    retrieval_score = Column(Float, nullable=False, index=True)  # Composite relevance score (0.0 - 1.0)
+    semantic_similarity = Column(Float, default=0.0)
+    keyword_match = Column(Float, default=0.0)
+    entity_match = Column(Float, default=0.0)
+    date_match = Column(Float, default=0.0)
+
+    # Retrieval Metadata & Flags
+    retrieval_method = Column(String, default="HYBRID_MULTI_SIGNAL_V1")
+    model_version = Column(String, default="paraphrase-multilingual-MiniLM-L12-v2")
+    retrieval_timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    is_potentially_contradictory = Column(Boolean, default=False, index=True)
+    rank = Column(Integer, default=1)
+    metadata_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    claim = relationship("Claim", back_populates="retrieval_candidates")
+    document = relationship("EvidenceDocument")
+    passage = relationship("EvidencePassage")
 
 
 # ---------------------------------------------------------------------------

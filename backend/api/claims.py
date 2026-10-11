@@ -493,3 +493,69 @@ def get_claim_stats():
         )
     finally:
         db.close()
+
+
+@claims_bp.route("/<string:claim_id>/retrieve-evidence", methods=["POST"])
+def retrieve_evidence_for_claim(claim_id: str):
+    """
+    Search for documents and passages relevant to a claim using hybrid multi-signal retrieval:
+    Keywords, exact phrases, entities, dates, statutory source authority, and semantic similarity.
+    """
+    payload = request.get_json(silent=True) or {}
+    top_k = payload.get("top_k", 10)
+    min_score = payload.get("min_score_threshold", 0.25)
+    atomic_id = payload.get("atomic_claim_id")
+    source_cats = payload.get("source_categories")
+
+    db = SessionLocal()
+    try:
+        claim = db.query(Claim).filter(Claim.claim_id == claim_id).first()
+        if not claim:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+
+        from backend.services.evidence_retrieval import EvidenceRetrievalEngine
+        retriever = EvidenceRetrievalEngine(db=db)
+
+        # If atomic_claim_id provided, look up specific atomic proposition
+        query_text = claim.original_text
+        subject = claim.speaker_name
+        time_period = claim.temporal_scope
+        aux_trans = None
+        is_neg = False
+
+        if atomic_id and claim.atomic_claims:
+            matched_atomic = next((ac for ac in claim.atomic_claims if ac.atomic_claim_id == atomic_id), None)
+            if matched_atomic:
+                query_text = matched_atomic.atomic_claim_text
+                subject = matched_atomic.subject
+                time_period = matched_atomic.time_period
+                aux_trans = matched_atomic.translation_text
+                is_neg = matched_atomic.is_negated
+
+        candidates = retriever.retrieve_candidate_evidence(
+            claim_id=claim_id,
+            query_text=query_text,
+            atomic_claim_id=atomic_id,
+            subject=subject,
+            time_period=time_period,
+            language=claim.language,
+            auxiliary_translation=aux_trans,
+            is_negated=is_neg,
+            top_k=top_k,
+            min_score_threshold=min_score,
+            source_categories=source_cats,
+            persist_candidates=True
+        )
+
+        return success_response(
+            data={
+                "claim_id": claim_id,
+                "atomic_claim_id": atomic_id,
+                "candidates_count": len(candidates),
+                "candidates": candidates
+            },
+            message="Evidence retrieval completed successfully"
+        )
+    finally:
+        db.close()
+
