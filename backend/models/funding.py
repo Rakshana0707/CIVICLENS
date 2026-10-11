@@ -19,6 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from backend.database.base_class import Base
+from backend.models.news import PoliticalParty
 
 
 class FinancialDocument(Base):

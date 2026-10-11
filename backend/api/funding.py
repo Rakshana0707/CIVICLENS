@@ -203,14 +203,16 @@ def get_party_profile(party_id: str):
 def get_contribution_summary():
     """Retrieves contribution metrics, size distribution, top donors, and category share."""
     party_id = request.args.get("party_id", "PARTY_TN_DMK")
-    financial_year = request.args.get("financial_year", "FY2021-22")
+    financial_year = request.args.get("financial_year")
 
     db = _get_db()
     try:
-        contribs_orm = db.query(Contribution).filter(
-            Contribution.party_id == party_id,
-            Contribution.financial_year == financial_year
-        ).all()
+        query = db.query(Contribution)
+        if party_id and party_id != "All":
+            query = query.filter(Contribution.party_id == party_id)
+        if financial_year and financial_year != "All":
+            query = query.filter(Contribution.financial_year == financial_year)
+        contribs_orm = query.all()
 
         if contribs_orm:
             contrib_schemas = [

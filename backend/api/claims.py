@@ -1,0 +1,314 @@
+"""
+Phase 7 — Political Claim Verification REST API Router.
+
+Endpoints:
+- GET  /api/claims/                     List and search claims with category/verdict/party filters
+- GET  /api/claims/<claim_id>           Full claim profile, decomposed subjects, evidence, results
+- POST /api/claims/                     Register a new claim (immutable original text preserved)
+- POST /api/claims/<claim_id>/version   Add edited transcription or transliteration version
+- POST /api/claims/<claim_id>/decompose Decompose claim into atomic subjects/entities
+- POST /api/claims/<claim_id>/evidence  Link evidence passage with support/contradiction score
+- POST /api/claims/<claim_id>/verify    Execute automated verification run and generate verdict
+- POST /api/claims/<claim_id>/review    Submit human expert review decision or override
+- GET  /api/claims/<claim_id>/audit-trail Provenance, history, and verification audit log
+- GET  /api/claims/stats                Aggregate statistics across categories and verdicts
+"""
+
+from datetime import datetime, timezone
+from flask import Blueprint, request
+from sqlalchemy import desc
+
+from backend.api.responses import success_response, error_response
+from backend.database.session import SessionLocal
+from backend.models.claim import (
+    Claim,
+    ClaimCategory,
+    ClaimStatus,
+    VerificationVerdict,
+    EvidenceRelationshipType,
+    ReviewStatus,
+    SubjectType,
+    VerificationResult
+)
+from backend.services.claim_verification import ClaimVerificationService
+
+claims_bp = Blueprint("claims", __name__, url_prefix="/claims")
+
+
+@claims_bp.route("/", methods=["GET"])
+def list_claims():
+    """
+    List registered claims with optional filtering by category, verdict, party, or keyword search.
+    """
+    category_param = request.args.get("category")
+    status_param = request.args.get("status")
+    party_param = request.args.get("party")
+    speaker_param = request.args.get("speaker")
+    search_query = request.args.get("q")
+    skip = request.args.get("skip", default=0, type=int)
+    limit = request.args.get("limit", default=50, type=int)
+
+    db = SessionLocal()
+    try:
+        query = db.query(Claim)
+        if category_param:
+            try:
+                cat_enum = ClaimCategory(category_param)
+                query = query.filter(Claim.claim_category == cat_enum)
+            except ValueError:
+                return error_response(f"Invalid category: {category_param}", status_code=400)
+
+        if status_param:
+            try:
+                st_enum = ClaimStatus(status_param)
+                query = query.filter(Claim.status == st_enum)
+            except ValueError:
+                return error_response(f"Invalid status: {status_param}", status_code=400)
+
+        if party_param:
+            query = query.filter(Claim.speaker_party == party_param)
+
+        if speaker_param:
+            query = query.filter(Claim.speaker_name.ilike(f"%{speaker_param}%"))
+
+        if search_query:
+            query = query.filter(Claim.original_text.ilike(f"%{search_query}%"))
+
+        total = query.count()
+        claims = query.order_by(desc(Claim.created_at)).offset(skip).limit(limit).all()
+
+        results = []
+        for c in claims:
+            current_res = next((r for r in c.verification_results if r.is_current), None)
+            results.append({
+                "claim_id": c.claim_id,
+                "original_text": c.original_text,
+                "language": c.language,
+                "claim_category": c.claim_category.value,
+                "speaker_name": c.speaker_name,
+                "speaker_party": c.speaker_party,
+                "claim_date": c.claim_date.isoformat() if c.claim_date else None,
+                "status": c.status.value,
+                "verdict": current_res.verdict.value if current_res else None,
+                "confidence_score": current_res.confidence_score if current_res else None
+            })
+
+        return success_response(
+            data={"total": total, "claims": results, "skip": skip, "limit": limit},
+            message="Claims retrieved successfully"
+        )
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>", methods=["GET"])
+def get_claim(claim_id: str):
+    """
+    Get full profile for a specific claim including versions, evidence, results, and reviews.
+    """
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        profile = service.get_claim_profile(claim_id)
+        if not profile:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+        return success_response(data=profile, message="Claim profile retrieved")
+    finally:
+        db.close()
+
+
+@claims_bp.route("/", methods=["POST"])
+def register_claim():
+    """
+    Register a new political claim with immutable original text preservation.
+    """
+    payload = request.get_json(silent=True) or {}
+    claim_id = payload.get("claim_id")
+    original_text = payload.get("original_text")
+    category_str = payload.get("claim_category")
+
+    if not claim_id or not original_text or not category_str:
+        return error_response("claim_id, original_text, and claim_category are required", status_code=400)
+
+    try:
+        category_enum = ClaimCategory(category_str)
+    except ValueError:
+        return error_response(f"Invalid claim_category: {category_str}", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        claim = service.register_claim(
+            claim_id=claim_id,
+            original_text=original_text,
+            claim_category=category_enum,
+            speaker_name=payload.get("speaker_name"),
+            speaker_party=payload.get("speaker_party"),
+            context_text=payload.get("context_text"),
+            language=payload.get("language", "ta"),
+            temporal_scope=payload.get("temporal_scope"),
+            geographic_scope=payload.get("geographic_scope", "Tamil Nadu"),
+            source_id=payload.get("source_id"),
+            is_test_fixture=payload.get("is_test_fixture", False),
+            metadata_json=payload.get("metadata_json")
+        )
+        return success_response(
+            data={"claim_id": claim.claim_id, "status": claim.status.value},
+            message="Claim registered successfully",
+            status_code=201
+        )
+    except ValueError as e:
+        return error_response(str(e), status_code=400)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>/decompose", methods=["POST"])
+def decompose_claim(claim_id: str):
+    """
+    Decompose claim into atomic subjects/entities.
+    """
+    payload = request.get_json(silent=True) or {}
+    subjects_data = payload.get("subjects")
+    if not isinstance(subjects_data, list):
+        return error_response("'subjects' array is required", status_code=400)
+
+    parsed_subjects = []
+    for s in subjects_data:
+        try:
+            stype = SubjectType(s.get("subject_type"))
+            parsed_subjects.append({
+                "subject_type": stype,
+                "canonical_name": s.get("canonical_name"),
+                "entity_id": s.get("entity_id"),
+                "confidence": s.get("confidence", 1.0)
+            })
+        except ValueError:
+            return error_response(f"Invalid subject_type: {s.get('subject_type')}", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        created = service.decompose_claim(claim_id, parsed_subjects)
+        return success_response(
+            data={"claim_id": claim_id, "subjects_count": len(created)},
+            message="Claim decomposed successfully"
+        )
+    except ValueError as e:
+        return error_response(str(e), status_code=404)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>/verify", methods=["POST"])
+def verify_claim(claim_id: str):
+    """
+    Run automated verification pass against linked evidence.
+    """
+    payload = request.get_json(silent=True) or {}
+    engine_ver = payload.get("engine_version", "v1.0-deterministic")
+    manual_rationale = payload.get("rationale")
+    limitations = payload.get("limitations_and_caveats")
+
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        res = service.verify_claim(
+            claim_id=claim_id,
+            engine_version=engine_ver,
+            manual_rationale=manual_rationale,
+            limitations_and_caveats=limitations
+        )
+        return success_response(
+            data={
+                "result_id": res.result_id,
+                "verdict": res.verdict.value,
+                "confidence_score": res.confidence_score,
+                "support_score": res.support_score,
+                "contradiction_score": res.contradiction_score,
+                "uncertainty_score": res.uncertainty_score,
+                "rationale": res.rationale
+            },
+            message="Verification executed successfully"
+        )
+    except ValueError as e:
+        return error_response(str(e), status_code=404)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/<string:claim_id>/review", methods=["POST"])
+def review_claim(claim_id: str):
+    """
+    Submit human review decision or override.
+    """
+    payload = request.get_json(silent=True) or {}
+    reviewer_id = payload.get("reviewer_id")
+    reviewed_verdict_str = payload.get("reviewed_verdict")
+    review_notes = payload.get("review_notes")
+    review_status_str = payload.get("review_status", "ACCEPTED")
+    override_applied = payload.get("override_applied", False)
+
+    if not reviewer_id or not reviewed_verdict_str or not review_notes:
+        return error_response("reviewer_id, reviewed_verdict, and review_notes are required", status_code=400)
+
+    try:
+        verdict_enum = VerificationVerdict(reviewed_verdict_str)
+        status_enum = ReviewStatus(review_status_str)
+    except ValueError as e:
+        return error_response(f"Invalid enum value: {str(e)}", status_code=400)
+
+    db = SessionLocal()
+    try:
+        service = ClaimVerificationService(db=db)
+        review = service.submit_human_review(
+            claim_id=claim_id,
+            reviewer_id=reviewer_id,
+            review_status=status_enum,
+            reviewed_verdict=verdict_enum,
+            review_notes=review_notes,
+            override_applied=override_applied
+        )
+        return success_response(
+            data={"review_id": review.review_id, "status": review.review_status.value},
+            message="Human review submitted successfully"
+        )
+    except ValueError as e:
+        return error_response(str(e), status_code=404)
+    finally:
+        db.close()
+
+
+@claims_bp.route("/stats", methods=["GET"])
+def get_claim_stats():
+    """
+    Get aggregate summary statistics across categories, verdict distribution, and review statuses.
+    Strictly forbids politician or party honesty rankings.
+    """
+    db = SessionLocal()
+    try:
+        total_claims = db.query(Claim).count()
+        by_category = {}
+        for cat in ClaimCategory:
+            count = db.query(Claim).filter(Claim.claim_category == cat).count()
+            by_category[cat.value] = count
+
+        by_verdict = {}
+        for v in VerificationVerdict:
+            count = db.query(VerificationResult).filter(
+                VerificationResult.verdict == v,
+                VerificationResult.is_current == True
+            ).count()
+            by_verdict[v.value] = count
+
+        return success_response(
+            data={
+                "total_claims": total_claims,
+                "claims_by_category": by_category,
+                "verdicts_distribution": by_verdict,
+                "ranking_policy": "Automated politician or party truthfulness rankings are strictly prohibited."
+            },
+            message="Claim statistics retrieved successfully"
+        )
+    finally:
+        db.close()
