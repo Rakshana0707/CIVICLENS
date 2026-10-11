@@ -40,7 +40,7 @@ with st.expander("ℹ️ Methodological & Anti-Defamation Notice", expanded=Fals
     - **Multi-Causality:** Constituency development trends reflect macroeconomic and departmental policies and cannot be attributed solely to the sitting legislator.
     """)
 
-# Navigation Tabs across the 9 required views
+# Navigation Tabs across views
 tabs = st.tabs([
     "🔍 1. Explorer",
     "👤 2. Profile",
@@ -50,7 +50,8 @@ tabs = st.tabs([
     "📈 6. Development Trends",
     "🎯 7. Promises & Evidence",
     "⚖️ 8. Comparative Analysis",
-    "🛡️ 9. Data Completeness"
+    "🛡️ 9. Data Completeness",
+    "🔎 10. Evidence & Audit Trail"
 ])
 
 # -----------------------------------------------------------------------------
@@ -345,3 +346,106 @@ with tabs[8]:
             st.info(f"📜 **Statutory Mandate:** {audit_res.get('statutory_rule')}")
         else:
             st.warning("Could not retrieve completeness index.")
+
+# -----------------------------------------------------------------------------
+# TAB 10: EVIDENCE TRACEABILITY & AUDIT TRAIL (PHASE 6.11)
+# -----------------------------------------------------------------------------
+with tabs[9]:
+    st.subheader("🔎 End-to-End Evidence Traceability & Audit Trail")
+    st.markdown("""
+    Every fact, metric, project status, and indicator is traceable to its verified source document,
+    specific page/table, or mathematical calculation formula.
+    """)
+
+    sub_t1, sub_t2, sub_t3, sub_t4 = st.tabs([
+        "📄 Source Documents",
+        "🔗 Fact Evidence Citations",
+        "🧮 Metric Lineage Drill-down",
+        "⚖️ Conflicting Evidence & Audit"
+    ])
+
+    with sub_t1:
+        st.markdown("#### Canonical Source Document Registry")
+        pub_filter = st.selectbox("Filter by Publisher", ["All", "ECI", "Sansad", "PRS India", "Census India", "DES TN", "CAG"])
+        success, docs_data = api_client.get_source_documents(publisher=pub_filter if pub_filter != "All" else None)
+        if success and docs_data.get("documents"):
+            df_docs = pd.DataFrame(docs_data["documents"])
+            st.dataframe(df_docs, use_container_width=True)
+        else:
+            st.info("No source documents found.")
+
+    with sub_t2:
+        st.markdown("#### Granular Fact-to-Evidence Citations")
+        ec1, ec2 = st.columns(2)
+        with ec1:
+            e_type = st.selectbox("Entity Type", ["REPRESENTATIVE", "LEGISLATIVE_ACTIVITY", "CONSTITUENCY_WORK", "DEVELOPMENT_INDICATOR"])
+        with ec2:
+            e_id = st.text_input("Entity / Record ID", value="REP-MP-17-PERAMBALUR", key="trace_e_id")
+
+        if e_id:
+            success, ev_data = api_client.get_entity_evidence(entity_type=e_type, entity_id=e_id.strip())
+            if success and ev_data.get("evidence_links"):
+                st.success(f"Found {len(ev_data['evidence_links'])} verified source citations.")
+                for ev in ev_data["evidence_links"]:
+                    with st.expander(f"📌 Citation: {ev.get('fact_description')} (Doc: {ev.get('document_id')})", expanded=True):
+                        st.write(f"**Document Title:** {ev.get('document_title')}")
+                        st.write(f"**Publisher:** {ev.get('publisher')}")
+                        if ev.get("source_url"):
+                            st.write(f"**Official Source URL:** [{ev.get('source_url')}]({ev.get('source_url')})")
+                        else:
+                            st.caption("Official URL: Local gazette or offline physical archive")
+                        st.write(f"**Page / Section / Table:** Page {ev.get('page_number', 'N/A')} | {ev.get('section_or_table', 'N/A')}")
+                        st.info(f"**Supporting Excerpt / Citation:** \"{ev.get('supporting_excerpt', 'No excerpt provided')}\"")
+                        st.caption(f"Verification: {ev.get('verification_status')} | Extraction: {ev.get('extraction_method')}")
+            else:
+                st.info("No explicit source links found for this entity.")
+
+    with sub_t3:
+        st.markdown("#### Mathematical Metric Lineage & Voucher Drill-Down")
+        metric_input = st.text_input("Performance Metric ID", value="MET-EXPENDITURE-PC-TN-04", key="trace_metric_id")
+        if metric_input:
+            success, lin_data = api_client.get_metric_lineage(metric_input.strip())
+            if success:
+                st.success(f"Lineage loaded for metric: {lin_data.get('metric_name')}")
+                st.metric("Reported / Calculated Value", f"{lin_data.get('metric_value')}")
+                st.write(f"**Calculation Method:** `{lin_data.get('calculation_method')}`")
+                st.code(f"Formula: {lin_data.get('formula_expression')}", language="text")
+                st.write(f"**Reporting Period:** {lin_data.get('reporting_period')} | **Geographic Level:** {lin_data.get('geographic_level')}")
+
+                constituents = lin_data.get("constituent_input_records", [])
+                if constituents:
+                    st.write("---")
+                    st.markdown("##### Underlying Input Records (Vouchers)")
+                    st.dataframe(pd.DataFrame(constituents), use_container_width=True)
+                else:
+                    st.caption("No individual vouchers linked.")
+            else:
+                st.info(f"No metric lineage persisted for '{metric_input}'.")
+
+    with sub_t4:
+        st.markdown("#### Conflicting Evidence & Audit Trail Ledger")
+        st.write("**Preserved Discrepant Reports (No Silent Overwrites):**")
+        success, conf_data = api_client.get_conflicting_evidence()
+        if success and conf_data.get("conflicts"):
+            for cf in conf_data["conflicts"]:
+                with st.expander(f"⚠️ Discrepancy: {cf.get('conflict_topic')} ({cf.get('entity_id')})", expanded=True):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.markdown("**Source A:**")
+                        st.json(cf.get("source_a", {}))
+                    with c2:
+                        st.markdown("**Source B:**")
+                        st.json(cf.get("source_b", {}))
+                    st.warning(f"**Discrepancy:** {cf.get('discrepancy_magnitude')}")
+                    st.info(f"**Resolution Basis:** {cf.get('resolution_basis')}")
+        else:
+            st.info("No conflicting evidence currently logged.")
+
+        st.write("---")
+        st.markdown("##### Immutable Audit Trail Ledger")
+        success, aud_data = api_client.get_audit_trail(limit=10)
+        if success and aud_data.get("audit_events"):
+            st.dataframe(pd.DataFrame(aud_data["audit_events"]), use_container_width=True)
+        else:
+            st.caption("Audit trail log empty.")
+

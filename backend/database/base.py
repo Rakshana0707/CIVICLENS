@@ -81,7 +81,12 @@ from backend.models.representative import (
     ConstituencyGeographicMapping,
     PromisePerformanceLink,
     PerformanceMetric,
-    PerformanceDimension
+    PerformanceDimension,
+    SourceDocumentRegistry,
+    FactEvidenceLink,
+    MetricLineage,
+    ConflictingEvidenceRecord,
+    AuditTrailEvent
 )
 
 

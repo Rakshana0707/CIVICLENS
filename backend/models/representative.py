@@ -442,3 +442,146 @@ class PerformanceMetric(Base):
     representative = relationship("Representative", backref="performance_metrics")
     constituency = relationship("Constituency", backref="performance_metrics")
 
+
+class SourceDocumentRegistry(Base):
+    """
+    Step 2: Canonical Source Document Registry for Phase 6.
+    Stores statutory and empirical documents with publisher, version, SHA-256 hash, and provenance.
+    """
+    __tablename__ = "phase6_source_documents"
+
+    document_id = Column(String, primary_key=True, index=True)  # e.g., "D4-001", "D8-001", "D11-001"
+    source_name = Column(String, nullable=False, index=True)
+    source_type = Column(String, nullable=False, index=True)    # STATUTORY_PORTAL, GAZETTE, RESEARCH_REPORT, CENSUS, PARLIAMENT_QUESTION
+    official_source_url = Column(String, nullable=True)
+    original_filename = Column(String, nullable=True)
+    document_title = Column(String, nullable=False)
+    publisher = Column(String, nullable=False)                  # ECI, Sansad, TN Legislative Assembly, PRS India, MoSPI, DES TN
+    publication_date = Column(String, nullable=True)
+    retrieval_date = Column(String, nullable=True)
+    document_version = Column(String, default="1.0")
+    sha256_checksum = Column(String, nullable=True)
+    file_format = Column(String, nullable=False, default="PDF") # PDF, HTML, CSV, XLSX, JSON
+    reporting_period = Column(String, nullable=True, index=True)
+    geographic_coverage = Column(String, nullable=False, default="TAMIL_NADU")
+    verification_status = Column(String, nullable=False, default="VERIFIED") # VERIFIED, PROVISIONAL, LOCATED_ONLY, UNVERIFIED
+    storage_path = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class FactEvidenceLink(Base):
+    """
+    Step 3: Granular Fact Evidence Relationship.
+    Links any canonical fact or record directly to its supporting source document,
+    specific page, table/section identifier, exact excerpt, and extraction confidence.
+    """
+    __tablename__ = "phase6_fact_evidence_links"
+
+    link_id = Column(String, primary_key=True, index=True)
+    entity_type = Column(String, nullable=False, index=True)    # REPRESENTATIVE, LEGISLATIVE_ACTIVITY, CONSTITUENCY_WORK, DEVELOPMENT_INDICATOR, PERFORMANCE_METRIC
+    entity_id = Column(String, nullable=False, index=True)      # ID of the fact/record
+    fact_description = Column(String, nullable=False)           # Brief label of what fact this supports
+    
+    document_id = Column(String, ForeignKey("phase6_source_documents.document_id", ondelete="CASCADE"), nullable=False, index=True)
+    page_number = Column(Integer, nullable=True)
+    section_or_table = Column(String, nullable=True)            # e.g. "Table 4.2", "Paragraph 18", "Q.No 1683 Annexure"
+    source_row_id = Column(String, nullable=True)
+    supporting_excerpt = Column(Text, nullable=True)            # Exact excerpt or citation
+    extraction_method = Column(String, default="MANUAL_VERIFIED") # OCR_EXTRACT, PDF_TABLE_PARSE, API_IMPORT, MANUAL_VERIFIED
+    verification_status = Column(String, default="VERIFIED")    # VERIFIED, UNVERIFIED, PROVISIONAL
+    confidence_score = Column(Float, default=1.0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    source_document = relationship("SourceDocumentRegistry", backref="evidence_links")
+
+
+class MetricLineage(Base):
+    """
+    Step 4: Reproducible Metric Lineage.
+    Stores the exact formula, mathematical transformation, and input record IDs
+    that produced any derived or aggregate performance metric.
+    """
+    __tablename__ = "phase6_metric_lineages"
+
+    lineage_id = Column(String, primary_key=True, index=True)
+    metric_id = Column(String, ForeignKey("performance_metrics.metric_id", ondelete="CASCADE"), nullable=False, index=True)
+    metric_name = Column(String, nullable=False)
+    metric_value = Column(Float, nullable=False)
+    
+    calculation_method = Column(String, nullable=False)         # SITTING_ADJUSTED_RATE, COMPLETION_RATIO, EXPENDITURE_UTILIZATION, MIN_MAX_SCALED
+    formula_expression = Column(String, nullable=False)         # e.g., "sum(questions) / annual_sittings"
+    input_record_ids = Column(JSON, default=list)               # List of constituent record IDs (e.g. ['ACT-001', 'ACT-002'])
+    source_document_ids = Column(JSON, default=list)
+    
+    reporting_period = Column(String, nullable=False)
+    geographic_level = Column(String, nullable=False)
+    calculation_version = Column(String, default="1.0")
+    data_quality_status = Column(String, default="VERIFIED")
+    calculated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    metric = relationship("PerformanceMetric", backref="lineages")
+
+
+class ConflictResolutionStatus(str, enum.Enum):
+    CONSISTENT = "CONSISTENT"
+    CONFLICTING = "CONFLICTING"
+    REQUIRES_REVIEW = "REQUIRES_REVIEW"
+    NOT_COMPARABLE = "NOT_COMPARABLE"
+    UNRESOLVED = "UNRESOLVED"
+    RESOLVED = "RESOLVED"
+
+
+class ConflictingEvidenceRecord(Base):
+    """
+    Step 5: Conflicting Evidence Registry.
+    Preserves divergent reports across official or secondary sources without arbitrary suppression.
+    """
+    __tablename__ = "phase6_conflicting_evidence"
+
+    conflict_id = Column(String, primary_key=True, index=True)
+    entity_type = Column(String, nullable=False, index=True)    # CONSTITUENCY_WORK, LEGISLATIVE_ACTIVITY, DEVELOPMENT_INDICATOR
+    entity_id = Column(String, nullable=False, index=True)
+    conflict_topic = Column(String, nullable=False)             # e.g., "COMPLETION_STATUS_DISCREPANCY", "EXPENDITURE_DISCREPANCY"
+    
+    source_a_document_id = Column(String, ForeignKey("phase6_source_documents.document_id", ondelete="SET NULL"), nullable=True)
+    source_a_value = Column(String, nullable=False)             # e.g., "REPORTED_COMPLETED" or "1825000000"
+    source_a_period = Column(String, nullable=True)
+    
+    source_b_document_id = Column(String, ForeignKey("phase6_source_documents.document_id", ondelete="SET NULL"), nullable=True)
+    source_b_value = Column(String, nullable=False)             # e.g., "WORK_IN_PROGRESS" or "1621000000"
+    source_b_period = Column(String, nullable=True)
+    
+    discrepancy_magnitude = Column(String, nullable=True)       # e.g., "Status mismatch: PWD says complete, CAG audit says in-progress"
+    review_status = Column(String, nullable=False, default=ConflictResolutionStatus.CONFLICTING)
+    resolution_basis = Column(Text, nullable=True)              # Explanation of resolution if resolved; reason why unresolved otherwise
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    source_a = relationship("SourceDocumentRegistry", foreign_keys=[source_a_document_id])
+    source_b = relationship("SourceDocumentRegistry", foreign_keys=[source_b_document_id])
+
+
+class AuditTrailEvent(Base):
+    """
+    Step 8: Immutable Audit Trail Ledger.
+    Tracks critical lifecycle processing events: ingestion, extraction, normalization,
+    corrections, and verification updates.
+    """
+    __tablename__ = "phase6_audit_trail_events"
+
+    event_id = Column(String, primary_key=True, index=True)
+    event_type = Column(String, nullable=False, index=True)     # DOCUMENT_INGESTION, DATA_EXTRACTION, NORMALIZATION, MANUAL_CORRECTION, VERIFICATION_UPDATE, METRIC_RECALCULATION, CONFLICT_RESOLUTION
+    entity_type = Column(String, nullable=False, index=True)    # REPRESENTATIVE, WORK, INDICATOR, METRIC, EVIDENCE
+    record_id = Column(String, nullable=False, index=True)
+    
+    previous_value = Column(JSON, nullable=True)
+    new_value = Column(JSON, nullable=True)
+    reason = Column(Text, nullable=True)
+    source_reference = Column(String, nullable=True)
+    actor_or_process = Column(String, nullable=False, default="SYSTEM_PIPELINE")
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+

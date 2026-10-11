@@ -668,6 +668,58 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # ---------------------------------------------------------------------------
+    # PHASE 6.11: EVIDENCE TRACEABILITY & AUDIT TRAIL
+    # ---------------------------------------------------------------------------
+    def get_source_documents(self, publisher: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if publisher and publisher != "All": params["publisher"] = publisher
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/sources", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_source_document_detail(self, document_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/sources/{document_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_entity_evidence(self, entity_type: str, entity_id: str) -> Tuple[bool, Any]:
+        params = {"entity_type": entity_type, "entity_id": entity_id}
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/evidence", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_metric_lineage(self, metric_id: str) -> Tuple[bool, Any]:
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/metrics/{metric_id}/lineage", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_conflicting_evidence(self, entity_type: Optional[str] = None) -> Tuple[bool, Any]:
+        params = {}
+        if entity_type and entity_type != "All": params["entity_type"] = entity_type
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/conflicts", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_audit_trail(self, record_id: Optional[str] = None, limit: int = 50) -> Tuple[bool, Any]:
+        params = {"limit": limit}
+        if record_id: params["record_id"] = record_id
+        try:
+            response = requests.get(f"{self.base_url}/api/representatives/audit-trail", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()

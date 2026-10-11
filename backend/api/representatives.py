@@ -624,6 +624,162 @@ def get_data_completeness(representative_id: str):
         return success_response(data=completeness)
     except Exception as e:
         logger.error(f"Error in get_data_completeness: {e}")
-        return error_response(f"Internal server error: {str(e)}", 500)
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
     finally:
         db.close()
+
+
+# ---------------------------------------------------------------------------
+# 10. EVIDENCE TRACEABILITY & AUDIT TRAIL ENDPOINTS (PHASE 6.11)
+# ---------------------------------------------------------------------------
+@representatives_bp.route("/sources", methods=["GET"])
+def list_source_documents():
+    """List canonical source documents with metadata and SHA-256 checksums."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        publisher = request.args.get("publisher", "").strip()
+        docs = service.list_source_documents(publisher=publisher if publisher else None)
+
+        results = [
+            {
+                "document_id": d.document_id,
+                "source_name": d.source_name,
+                "source_type": d.source_type,
+                "document_title": d.document_title,
+                "publisher": d.publisher,
+                "official_source_url": d.official_source_url,
+                "publication_date": d.publication_date,
+                "retrieval_date": d.retrieval_date,
+                "file_format": d.file_format,
+                "sha256_checksum": d.sha256_checksum,
+                "reporting_period": d.reporting_period,
+                "geographic_coverage": d.geographic_coverage,
+                "verification_status": d.verification_status,
+                "notes": d.notes
+            }
+            for d in docs
+        ]
+        return success_response(data={"documents": results, "total_count": len(results)})
+    except Exception as e:
+        logger.error(f"Error in list_source_documents: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
+
+@representatives_bp.route("/sources/<document_id>", methods=["GET"])
+def get_source_document_detail(document_id: str):
+    """Get detailed metadata for a single source document."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        d = service.get_source_document(document_id)
+        if not d:
+            return error_response(f"Source document '{document_id}' not found.", status_code=404)
+
+        return success_response(data={
+            "document_id": d.document_id,
+            "source_name": d.source_name,
+            "source_type": d.source_type,
+            "document_title": d.document_title,
+            "publisher": d.publisher,
+            "official_source_url": d.official_source_url,
+            "publication_date": d.publication_date,
+            "retrieval_date": d.retrieval_date,
+            "file_format": d.file_format,
+            "sha256_checksum": d.sha256_checksum,
+            "reporting_period": d.reporting_period,
+            "geographic_coverage": d.geographic_coverage,
+            "verification_status": d.verification_status,
+            "notes": d.notes
+        })
+    except Exception as e:
+        logger.error(f"Error in get_source_document_detail: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
+
+@representatives_bp.route("/evidence", methods=["GET"])
+def get_evidence_for_entity():
+    """Retrieve supporting evidence, citations, and excerpts for a given fact/entity."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        entity_type = request.args.get("entity_type", "").strip()
+        entity_id = request.args.get("entity_id", "").strip()
+
+        if not entity_type or not entity_id:
+            return error_response("Both 'entity_type' and 'entity_id' are required parameters.", status_code=400)
+
+        evidences = service.get_evidence_for_entity(entity_type=entity_type, entity_id=entity_id)
+        return success_response(data={
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "evidence_links": evidences,
+            "total_links_count": len(evidences)
+        })
+    except Exception as e:
+        logger.error(f"Error in get_evidence_for_entity: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
+
+@representatives_bp.route("/metrics/<metric_id>/lineage", methods=["GET"])
+def get_metric_lineage_drilldown(metric_id: str):
+    """Retrieve exact mathematical formula, input record IDs, and voucher drill-down for a derived metric."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        drilldown = service.get_metric_drilldown(metric_id=metric_id)
+        if not drilldown:
+            return error_response(f"Lineage for metric '{metric_id}' not found.", status_code=404)
+
+        return success_response(data=drilldown)
+    except Exception as e:
+        logger.error(f"Error in get_metric_lineage_drilldown: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
+
+@representatives_bp.route("/conflicts", methods=["GET"])
+def list_conflicting_evidence():
+    """Retrieve preserved divergent or conflicting evidence records."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        entity_type = request.args.get("entity_type", "").strip()
+        conflicts = service.list_conflicts(entity_type=entity_type if entity_type else None)
+        return success_response(data={"conflicts": conflicts, "total_count": len(conflicts)})
+    except Exception as e:
+        logger.error(f"Error in list_conflicting_evidence: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
+
+@representatives_bp.route("/audit-trail", methods=["GET"])
+def list_audit_trail_events():
+    """Retrieve immutable audit ledger events for verification and tracking."""
+    db: Session = _get_db()
+    try:
+        from backend.services.traceability_service import TraceabilityService
+        service = TraceabilityService(db=db)
+        record_id = request.args.get("record_id", "").strip()
+        limit = int(request.args.get("limit", 50))
+        events = service.list_audit_trail(record_id=record_id if record_id else None, limit=limit)
+        return success_response(data={"audit_events": events, "total_count": len(events)})
+    except Exception as e:
+        logger.error(f"Error in list_audit_trail_events: {e}")
+        return error_response(f"Internal server error: {str(e)}", status_code=500)
+    finally:
+        db.close()
+
