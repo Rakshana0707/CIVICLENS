@@ -393,3 +393,52 @@ class PromisePerformanceLink(Base):
     evidence = relationship("Evidence", foreign_keys=[evidence_id])
     constituency_work = relationship("ConstituencyWork", foreign_keys=[work_id])
     development_indicator = relationship("DevelopmentIndicator", foreign_keys=[indicator_id])
+
+
+class PerformanceDimension(str, enum.Enum):
+    LEGISLATIVE_ACTIVITY = "LEGISLATIVE_ACTIVITY"
+    CONSTITUENCY_WORKS = "CONSTITUENCY_WORKS"
+    FINANCIAL_EXECUTION = "FINANCIAL_EXECUTION"
+    DEVELOPMENT_TRENDS = "DEVELOPMENT_TRENDS"
+    PROMISE_EVIDENCE = "PROMISE_EVIDENCE"
+    DATA_COMPLETENESS = "DATA_COMPLETENESS"
+
+
+class PerformanceMetric(Base):
+    """
+    Transparent, auditable performance metric record for representatives and constituencies.
+    Preserves raw indicators, normalized indicators (0-100), explicit weighting,
+    data completeness indices, and methodological caveats.
+    """
+    __tablename__ = "performance_metrics"
+
+    metric_id = Column(String, primary_key=True, index=True)
+    representative_id = Column(String, ForeignKey("representatives.representative_id", ondelete="CASCADE"), nullable=True, index=True)
+    constituency_id = Column(String, ForeignKey("constituencies.constituency_id", ondelete="CASCADE"), nullable=True, index=True)
+    election_term_id = Column(String, nullable=True, index=True)  # e.g., "16th-TNLA-2021-2026", "17th-LS-2019-2024"
+    reporting_period = Column(String, nullable=False, index=True)  # e.g., "2021-2024", "2023-24"
+    
+    dimension = Column(String, nullable=False, index=True)        # From PerformanceDimension
+    metric_code = Column(String, nullable=False, index=True)      # e.g., "QUESTIONS_PER_SITTING", "EXPENDITURE_RATIO"
+    
+    raw_value = Column(Float, nullable=True)                      # Raw measured unit value
+    raw_unit = Column(String, nullable=True)                      # COUNT, PERCENT, RATIO, INR_LAKHS
+    normalized_score = Column(Float, nullable=True)               # Normalized score 0.0 to 100.0 (if validly normalizable)
+    percentile_rank = Column(Float, nullable=True)                # Rank within comparable cohort (0.0 to 100.0)
+    
+    data_completeness_ratio = Column(Float, default=1.0)          # 0.0 to 1.0 (available records / expected records)
+    is_sufficient_data = Column(Boolean, default=True)            # False if completeness below threshold
+    
+    normalization_method = Column(String, nullable=True)          # MIN_MAX_WITHIN_COHORT, SITTING_ADJUSTED_RATE, DIRECT_PERCENTAGE
+    cohort_definition = Column(String, nullable=True)             # e.g. "TN_ASSEMBLY_16TH_ALL_MLAS", "LOK_SABHA_17TH_TAMILNADU"
+    
+    component_breakdown = Column(JSON, default=dict)              # Underlying variables and weights
+    sensitivity_analysis = Column(JSON, default=dict)             # Impact of ±20% weight variations or missing-data penalties
+    methodological_caveats = Column(JSON, default=list)           # Mandatory statutory & fairness disclaimers
+    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    representative = relationship("Representative", backref="performance_metrics")
+    constituency = relationship("Constituency", backref="performance_metrics")
+

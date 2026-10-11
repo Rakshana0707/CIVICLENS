@@ -79,7 +79,9 @@ from backend.models.representative import (
     ConstituencyWork,
     DevelopmentIndicator,
     ConstituencyGeographicMapping,
-    PromisePerformanceLink
+    PromisePerformanceLink,
+    PerformanceMetric,
+    PerformanceDimension
 )
 
 
