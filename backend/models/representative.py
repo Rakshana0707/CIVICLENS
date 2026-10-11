@@ -66,6 +66,7 @@ class Representative(Base):
     constituency = relationship("Constituency", foreign_keys=[constituency_id], back_populates="representatives")
     election = relationship("Election", foreign_keys=[election_id])
     terms = relationship("RepresentativeTerm", back_populates="representative", cascade="all, delete-orphan")
+    legislative_activities = relationship("LegislativeActivity", back_populates="representative", cascade="all, delete-orphan")
 
 
 class Constituency(Base):
@@ -167,3 +168,51 @@ class ConstituencyBoundaryHistory(Base):
 
     # Relationships
     constituency = relationship("Constituency", back_populates="boundary_history")
+
+
+class LegislativeActivityType(str, enum.Enum):
+    QUESTION_STARRED = "QUESTION_STARRED"
+    QUESTION_UNSTARRED = "QUESTION_UNSTARRED"
+    DEBATE = "DEBATE"
+    ATTENDANCE = "ATTENDANCE"
+    COMMITTEE = "COMMITTEE"
+    BILL = "BILL"
+    CALL_ATTENTION = "CALL_ATTENTION"
+    ZERO_HOUR = "ZERO_HOUR"
+
+
+class DataQualityStatus(str, enum.Enum):
+    VERIFIED = "VERIFIED"
+    PARTIAL = "PARTIAL"
+    UNAVAILABLE = "UNAVAILABLE"
+    NOT_RECORDED = "NOT_RECORDED"
+
+
+class LegislativeActivity(Base):
+    """
+    Granular record of representative parliamentary or assembly activity.
+    Stores questions submitted, debates participated, attendance percentage,
+    bills introduced, and committee participation with full source provenance.
+    """
+    __tablename__ = "legislative_activities"
+
+    activity_id = Column(String, primary_key=True, index=True)
+    representative_id = Column(String, ForeignKey("representatives.representative_id", ondelete="CASCADE"), nullable=False, index=True)
+    legislative_body = Column(String, nullable=False, index=True)  # LOK_SABHA, RAJYA_SABHA, TN_ASSEMBLY
+    session = Column(String, nullable=False, index=True)  # e.g. "17th Lok Sabha - Session 11", "16th Assembly - Session 4"
+    activity_type = Column(String, nullable=False, index=True)  # QUESTION_STARRED, QUESTION_UNSTARRED, DEBATE, ATTENDANCE, etc.
+    activity_date = Column(String, nullable=True, index=True)
+    
+    count = Column(Integer, default=1)
+    value = Column(Float, nullable=True)  # e.g., attendance percentage 85.5
+    title_subject = Column(String, nullable=True)
+    ministry_or_department = Column(String, nullable=True)
+    
+    source_document_id = Column(String, nullable=True, index=True)
+    source_reference = Column(String, nullable=True)  # e.g. "Q.No 1420", "TNLA Debate Vol 14, p. 52"
+    data_quality_status = Column(String, nullable=False, default="VERIFIED")  # VERIFIED, PARTIAL, UNAVAILABLE, NOT_RECORDED
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    representative = relationship("Representative", back_populates="legislative_activities")
