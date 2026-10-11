@@ -98,6 +98,8 @@ class Constituency(Base):
     terms = relationship("RepresentativeTerm", back_populates="constituency")
     boundary_history = relationship("ConstituencyBoundaryHistory", back_populates="constituency", cascade="all, delete-orphan")
     constituency_works = relationship("ConstituencyWork", back_populates="constituency", cascade="all, delete-orphan")
+    development_indicators = relationship("DevelopmentIndicator", back_populates="constituency")
+    geographic_mappings = relationship("ConstituencyGeographicMapping", back_populates="constituency", cascade="all, delete-orphan")
 
 
 class Election(Base):
@@ -273,3 +275,78 @@ class ConstituencyWork(Base):
     # Relationships
     representative = relationship("Representative", back_populates="constituency_works")
     constituency = relationship("Constituency", back_populates="constituency_works")
+
+
+class GeographicLevel(str, enum.Enum):
+    CONSTITUENCY = "CONSTITUENCY"
+    DISTRICT = "DISTRICT"
+    STATE = "STATE"
+    BLOCK_TALUK = "BLOCK_TALUK"
+
+
+class CalculationMethod(str, enum.Enum):
+    DIRECT_OBSERVATION = "DIRECT_OBSERVATION"
+    AREA_WEIGHTED_INTERPOLATION = "AREA_WEIGHTED_INTERPOLATION"
+    POPULATION_WEIGHTED_AGGREGATION = "POPULATION_WEIGHTED_AGGREGATION"
+    OFFICIAL_PUBLICATION = "OFFICIAL_PUBLICATION"
+
+
+class IndicatorQualityStatus(str, enum.Enum):
+    VERIFIED = "VERIFIED"
+    INTERPOLATED = "INTERPOLATED"
+    PROVISIONAL = "PROVISIONAL"
+    ESTIMATED = "ESTIMATED"
+    INCONSISTENT_UNIT = "INCONSISTENT_UNIT"
+    MISSING = "MISSING"
+
+
+class DevelopmentIndicator(Base):
+    """
+    Socioeconomic, demographic, or departmental development indicator.
+    Stores observations at constituency, district, or state levels with explicit
+    calculation methodology and data quality tracking.
+    """
+    __tablename__ = "development_indicators"
+
+    indicator_id = Column(String, primary_key=True, index=True)
+    constituency_id = Column(String, ForeignKey("constituencies.constituency_id", ondelete="SET NULL"), nullable=True, index=True)
+    geographic_unit_id = Column(String, nullable=False, index=True)  # e.g. "AC-013" or "DISTRICT-CHENNAI"
+    indicator_name = Column(String, nullable=False, index=True)      # e.g. "LITERACY_RATE", "INFANT_MORTALITY_RATE"
+    
+    value = Column(Float, nullable=False)
+    unit = Column(String, nullable=False)                            # PERCENT, PER_1000, COUNT, RATIO, KM
+    reference_period = Column(String, nullable=False, index=True)    # 2011, 2021, 2023-24
+    geographic_level = Column(String, nullable=False, index=True)    # CONSTITUENCY, DISTRICT, STATE, BLOCK_TALUK
+    
+    source_document_id = Column(String, nullable=True, index=True)
+    source_reference = Column(String, nullable=True)                 # e.g. "Census 2011 PCA Table A-1"
+    calculation_method = Column(String, nullable=False, default=CalculationMethod.OFFICIAL_PUBLICATION)
+    data_quality_status = Column(String, nullable=False, default=IndicatorQualityStatus.VERIFIED)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    constituency = relationship("Constituency", back_populates="development_indicators")
+
+
+class ConstituencyGeographicMapping(Base):
+    """
+    Spatial and administrative intersection mapping between an electoral constituency
+    and standard administrative boundaries (districts, taluks).
+    Provides defensible population and area weights for geographic interpolation.
+    """
+    __tablename__ = "constituency_geographic_mappings"
+
+    mapping_id = Column(String, primary_key=True, index=True)
+    constituency_id = Column(String, ForeignKey("constituencies.constituency_id", ondelete="CASCADE"), nullable=False, index=True)
+    district_name = Column(String, nullable=False, index=True)
+    taluk_names = Column(JSON, default=list)
+    
+    area_share_in_district = Column(Float, default=1.0)       # Fraction of district area (0.0 to 1.0)
+    population_share_in_district = Column(Float, default=1.0) # Fraction of district population (0.0 to 1.0)
+    delimitation_year = Column(Integer, default=2008)
+    mapping_methodology = Column(String, default="ECI_DELIMITATION_ORDER_2008")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    constituency = relationship("Constituency", back_populates="geographic_mappings")
