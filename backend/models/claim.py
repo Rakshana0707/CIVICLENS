@@ -138,6 +138,34 @@ class CandidateSourceType(str, enum.Enum):
     MANUAL_SUBMISSION = "MANUAL_SUBMISSION"
 
 
+class VerifiabilityStatus(str, enum.Enum):
+    """
+    Distinguishes verifiable factual claims from subjective or non-factual statements.
+    """
+    VERIFIABLE_FACTUAL = "VERIFIABLE_FACTUAL"
+    OPINION = "OPINION"
+    PREDICTION = "PREDICTION"
+    VALUE_JUDGMENT = "VALUE_JUDGMENT"
+    RHETORICAL_QUESTION = "RHETORICAL_QUESTION"
+    SLOGAN = "SLOGAN"
+    AMBIGUOUS_UNVERIFIABLE = "AMBIGUOUS_UNVERIFIABLE"
+
+
+class AtomicClaimType(str, enum.Enum):
+    """
+    Taxonomy of verifiable and non-verifiable proposition types.
+    """
+    NUMERICAL_STATISTIC = "NUMERICAL_STATISTIC"
+    SCHEME_BENEFIT = "SCHEME_BENEFIT"
+    BUDGET_ALLOCATION = "BUDGET_ALLOCATION"
+    POLICY_DECISION = "POLICY_DECISION"
+    ELECTION_OUTCOME = "ELECTION_OUTCOME"
+    HISTORICAL_RECORD = "HISTORICAL_RECORD"
+    INFRASTRUCTURE_DELIVERY = "INFRASTRUCTURE_DELIVERY"
+    EMPLOYMENT_METRIC = "EMPLOYMENT_METRIC"
+    NON_FACTUAL = "NON_FACTUAL"
+
+
 # ---------------------------------------------------------------------------
 # 1. ClaimSource Entity
 # ---------------------------------------------------------------------------
@@ -216,6 +244,7 @@ class Claim(Base):
     source = relationship("ClaimSource", back_populates="claims")
     versions = relationship("ClaimVersion", back_populates="claim", cascade="all, delete-orphan")
     subjects = relationship("ClaimSubject", back_populates="claim", cascade="all, delete-orphan")
+    atomic_claims = relationship("AtomicClaim", back_populates="claim", cascade="all, delete-orphan")
     evidence_relationships = relationship("ClaimEvidenceRelationship", back_populates="claim", cascade="all, delete-orphan")
     verification_runs = relationship("VerificationRun", back_populates="claim", cascade="all, delete-orphan")
     verification_results = relationship("VerificationResult", back_populates="claim", cascade="all, delete-orphan")
@@ -265,6 +294,55 @@ class ClaimSubject(Base):
 
     # Relationships
     claim = relationship("Claim", back_populates="subjects")
+
+
+# ---------------------------------------------------------------------------
+# 4b. AtomicClaim Entity
+# ---------------------------------------------------------------------------
+class AtomicClaim(Base):
+    """
+    Decomposed atomic verifiable proposition extracted from a compound political claim.
+    Preserves exact sub-proposition text, linguistic context, and structured SPO fields.
+    """
+    __tablename__ = "atomic_claims"
+
+    atomic_claim_id = Column(String, primary_key=True, index=True)
+    claim_id = Column(String, ForeignKey("political_claims.claim_id", ondelete="CASCADE"), nullable=False, index=True)
+    atomic_claim_text = Column(Text, nullable=False)
+    language = Column(String, default="en", index=True)
+
+    # Structured Semantic Frame (SPO)
+    subject = Column(String, nullable=True, index=True)
+    predicate = Column(String, nullable=True)
+    action = Column(String, nullable=True)
+    object = Column(String, nullable=True)
+
+    # Temporal & Spatial Scope
+    time_period = Column(String, nullable=True)
+    geographic_scope = Column(String, nullable=True, default="Tamil Nadu")
+
+    # Quantitative Attributes
+    numeric_value = Column(Float, nullable=True)
+    unit = Column(String, nullable=True)
+    denominator = Column(String, nullable=True)
+    comparison_operator = Column(String, nullable=True)
+    baseline_value = Column(Float, nullable=True)
+
+    # Taxonomy & Verifiability
+    claim_type = Column(String, nullable=False, default="NUMERICAL_STATISTIC", index=True)
+    verifiability_status = Column(String, nullable=False, default="VERIFIABLE_FACTUAL", index=True)
+    is_verifiable = Column(Boolean, default=True, index=True)
+    is_negated = Column(Boolean, default=False)
+
+    # Processing Provenance
+    decomposition_method = Column(String, default="MULTILINGUAL_NLP_V1")
+    confidence = Column(Float, default=1.0)
+    translation_text = Column(Text, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    claim = relationship("Claim", back_populates="atomic_claims")
 
 
 # ---------------------------------------------------------------------------

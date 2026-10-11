@@ -628,6 +628,32 @@ class ClaimVerificationService:
                 }
                 for s in claim.subjects
             ],
+            "atomic_claims": [
+                {
+                    "atomic_claim_id": ac.atomic_claim_id,
+                    "atomic_claim_text": ac.atomic_claim_text,
+                    "language": ac.language,
+                    "subject": ac.subject,
+                    "predicate": ac.predicate,
+                    "action": ac.action,
+                    "object": ac.object,
+                    "time_period": ac.time_period,
+                    "geographic_scope": ac.geographic_scope,
+                    "numeric_value": ac.numeric_value,
+                    "unit": ac.unit,
+                    "denominator": ac.denominator,
+                    "comparison_operator": ac.comparison_operator,
+                    "baseline_value": ac.baseline_value,
+                    "claim_type": ac.claim_type,
+                    "verifiability_status": ac.verifiability_status,
+                    "is_verifiable": ac.is_verifiable,
+                    "is_negated": ac.is_negated,
+                    "decomposition_method": ac.decomposition_method,
+                    "confidence": ac.confidence,
+                    "translation_text": ac.translation_text
+                }
+                for ac in getattr(claim, "atomic_claims", [])
+            ],
             "current_result": {
                 "result_id": current_res.result_id,
                 "verdict": current_res.verdict.value,

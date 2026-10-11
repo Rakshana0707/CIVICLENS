@@ -302,39 +302,81 @@ def add_claim_version(claim_id: str):
         db.close()
 
 
+@claims_bp.route("/nlp-process", methods=["POST"])
+def nlp_process_text():
+    """
+    Direct multilingual claim processing pipeline:
+    Language detection, normalization, verifiability classification, entity extraction,
+    quantitative extraction, and atomic proposition decomposition.
+    """
+    payload = request.get_json(silent=True) or {}
+    text = payload.get("text")
+    if not text or not text.strip():
+        return error_response("'text' is required", status_code=400)
+
+    from backend.nlp.claim_decomposition import MultilingualClaimPipeline
+    pipeline = MultilingualClaimPipeline()
+    result = pipeline.process_claim(
+        claim_id=payload.get("claim_id", "TEMP-CLAIM"),
+        original_text=text,
+        geographic_scope=payload.get("geographic_scope", "Tamil Nadu"),
+        persist_to_db=False
+    )
+    return success_response(data=result, message="Claim processed via Multilingual NLP Pipeline")
+
+
 @claims_bp.route("/<string:claim_id>/decompose", methods=["POST"])
 def decompose_claim(claim_id: str):
     """
-    Decompose claim into atomic subjects/entities.
+    Decompose claim into atomic verifiable propositions or subjects/entities.
+    Supports both automated multilingual NLP decomposition and manual subject submission.
     """
     payload = request.get_json(silent=True) or {}
     subjects_data = payload.get("subjects")
-    if not isinstance(subjects_data, list):
-        return error_response("'subjects' array is required", status_code=400)
-
-    parsed_subjects = []
-    for s in subjects_data:
-        try:
-            stype = SubjectType(s.get("subject_type"))
-            parsed_subjects.append({
-                "subject_type": stype,
-                "canonical_name": s.get("canonical_name"),
-                "entity_id": s.get("entity_id"),
-                "confidence": s.get("confidence", 1.0)
-            })
-        except ValueError:
-            return error_response(f"Invalid subject_type: {s.get('subject_type')}", status_code=400)
 
     db = SessionLocal()
     try:
-        service = ClaimVerificationService(db=db)
-        created = service.decompose_claim(claim_id, parsed_subjects)
-        return success_response(
-            data={"claim_id": claim_id, "subjects_count": len(created)},
-            message="Claim decomposed successfully"
-        )
-    except ValueError as e:
-        return error_response(str(e), status_code=404)
+        claim = db.query(Claim).filter(Claim.claim_id == claim_id).first()
+        if not claim:
+            return error_response(f"Claim '{claim_id}' not found", status_code=404)
+
+        if isinstance(subjects_data, list):
+            # Manual / Explicit Subject decomposition
+            parsed_subjects = []
+            for s in subjects_data:
+                try:
+                    stype = SubjectType(s.get("subject_type"))
+                    parsed_subjects.append({
+                        "subject_type": stype,
+                        "canonical_name": s.get("canonical_name"),
+                        "entity_id": s.get("entity_id"),
+                        "confidence": s.get("confidence", 1.0)
+                    })
+                except ValueError:
+                    return error_response(f"Invalid subject_type: {s.get('subject_type')}", status_code=400)
+
+            service = ClaimVerificationService(db=db)
+            created = service.decompose_claim(claim_id, parsed_subjects)
+            return success_response(
+                data={"claim_id": claim_id, "subjects_count": len(created)},
+                message="Claim decomposed into subjects successfully"
+            )
+        else:
+            # Automated Multilingual NLP Decomposition
+            from backend.nlp.claim_decomposition import MultilingualClaimPipeline
+            pipeline = MultilingualClaimPipeline(db=db)
+            result = pipeline.process_claim(
+                claim_id=claim_id,
+                original_text=claim.original_text,
+                geographic_scope=claim.geographic_scope,
+                persist_to_db=True
+            )
+            claim.status = ClaimStatus.DECOMPOSED
+            db.commit()
+            return success_response(
+                data=result,
+                message="Claim decomposed into atomic verifiable propositions via Multilingual NLP"
+            )
     finally:
         db.close()
 
