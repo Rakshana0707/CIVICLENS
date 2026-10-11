@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Acquisition Metrics
 
-- **Execution Timestamp**: `2026-10-07T11:09:10.784317+00:00`
+- **Execution Timestamp**: `2026-10-10T13:11:19.244715+00:00`
 - **Total Valid Promises Evaluated**: `1065`
 - **Official Government Evidence Items**: `12`
 - **Promises Linked to Candidate Evidence**: `10` (0.9%)
@@ -38,18 +38,18 @@ Summary of registered official Tamil Nadu government evidence items:
 
 | Ev ID | Source Title & Reference | Source Type | Publisher | Tier |
 | :---: | :--- | :--- | :--- | :---: |
-| `1` | **G.O.(Ms) No. 104 — Implementation of Free Laptop Distribution Scheme for High School Students**<br>`G.O.(Ms) No. 104, School Education (SE4(2)) Dept, dated 15.09.2021` | Government Order | School Education Department, Government of Tamil Nadu | Tier 1 |
-| `2` | **G.O.(Ms) No. 116 — Moovalur Ramamirtham Ammaiyar Higher Education Assurance Scheme (Pudhumai Penn)**<br>`G.O.(Ms) No. 116, Social Welfare & Women Empowerment Dept, dated 05.09.2022` | Government Order | Social Welfare & Women Empowerment Department, Government of Tamil Nadu | Tier 1 |
-| `3` | **G.O.(Ms) No. 58 — Kalaignar Magalir Urimai Thogai Scheme Guidelines & Monthly Grant Disbursement**<br>`G.O.(Ms) No. 58, Special Programme Implementation Dept, dated 12.08.2023` | Government Order | Special Programme Implementation Department, Government of Tamil Nadu | Tier 1 |
-| `4` | **G.O.(Ms) No. 280 — Chief Minister Comprehensive Health Insurance Scheme (CMCHIS) Renewal & Medical Coverage Expansion**<br>`G.O.(Ms) No. 280, Health and Family Welfare (P1) Dept, dated 20.12.2021` | Government Order | Health & Family Welfare Department, Government of Tamil Nadu | Tier 1 |
-| `5` | **TN Agriculture Budget Speech 2023-2024 — Free Electricity & Farmer Relief Sanctions**<br>`Demand Book 2023-24, Agriculture & Farmers Welfare Dept` | Budget Document | Finance Department, Government of Tamil Nadu | Tier 2 |
-| `6` | **G.O.(Ms) No. 240 — Athikadavu-Avinashi Groundwater Recharge & Irrigation Project Administrative Sanction**<br>`G.O.(Ms) No. 240, Water Resources (ISW2) Dept, dated 18.07.2022` | Government Order | Water Resources Department, Government of Tamil Nadu | Tier 1 |
-| `7` | **G.O.(Ms) No. 42 — Free Bus Fare Travel Scheme for Women in Town Buses**<br>`G.O.(Ms) No. 42, Transport (C1) Dept, dated 08.05.2021` | Government Order | Transport Department, Government of Tamil Nadu | Tier 1 |
-| `8` | **DIPR Official Press Release — Statewide Expansion of Primary School Breakfast Scheme**<br>`DIPR Press Release No. 1420 dated 25.08.2023` | Official Press Release | Department of Information and Public Relations (DIPR), Tamil Nadu | Tier 3 |
-| `9` | **Naan Mudhalvan Youth Skill Enhancement & Career Guidance Policy Guidelines**<br>`Policy Note 2022-23, Skill Development Dept` | Policy Note | Skill Development & Employment Department, Tamil Nadu | Tier 2 |
-| `10` | **G.O.(Ms) No. 312 — Makkalai Thedi Maruthuvam (Healthcare at Doorstep) Launch**<br>`G.O.(Ms) No. 312, Health & Family Welfare Dept, dated 05.08.2021` | Government Order | Health & Family Welfare Department, Government of Tamil Nadu | Tier 1 |
-| `11` | **Tamil Nadu Legislative Assembly Act — Cauvery Delta Special Agricultural Protection Zone Act 2020**<br>`Tamil Nadu Act No. 11 of 2020, Legislative Assembly` | Legislative Document | Tamil Nadu Legislative Assembly | Tier 1 |
-| `12` | **TN State Budget 2023-2024 — Sanction for Coimbatore & Madurai Metro Rail Phase 1**<br>`Budget Speech 2023-24, Transport & Urban Infrastructure` | Budget Document | Finance Department, Government of Tamil Nadu | Tier 2 |
+| `2` | **G.O.(Ms) No. 104 — Implementation of Free Laptop Distribution Scheme for High School Students**<br>`G.O.(Ms) No. 104, School Education (SE4(2)) Dept, dated 15.09.2021` | Government Order | School Education Department, Government of Tamil Nadu | Tier 1 |
+| `3` | **G.O.(Ms) No. 116 — Moovalur Ramamirtham Ammaiyar Higher Education Assurance Scheme (Pudhumai Penn)**<br>`G.O.(Ms) No. 116, Social Welfare & Women Empowerment Dept, dated 05.09.2022` | Government Order | Social Welfare & Women Empowerment Department, Government of Tamil Nadu | Tier 1 |
+| `4` | **G.O.(Ms) No. 58 — Kalaignar Magalir Urimai Thogai Scheme Guidelines & Monthly Grant Disbursement**<br>`G.O.(Ms) No. 58, Special Programme Implementation Dept, dated 12.08.2023` | Government Order | Special Programme Implementation Department, Government of Tamil Nadu | Tier 1 |
+| `5` | **G.O.(Ms) No. 280 — Chief Minister Comprehensive Health Insurance Scheme (CMCHIS) Renewal & Medical Coverage Expansion**<br>`G.O.(Ms) No. 280, Health and Family Welfare (P1) Dept, dated 20.12.2021` | Government Order | Health & Family Welfare Department, Government of Tamil Nadu | Tier 1 |
+| `6` | **TN Agriculture Budget Speech 2023-2024 — Free Electricity & Farmer Relief Sanctions**<br>`Demand Book 2023-24, Agriculture & Farmers Welfare Dept` | Budget Document | Finance Department, Government of Tamil Nadu | Tier 2 |
+| `7` | **G.O.(Ms) No. 240 — Athikadavu-Avinashi Groundwater Recharge & Irrigation Project Administrative Sanction**<br>`G.O.(Ms) No. 240, Water Resources (ISW2) Dept, dated 18.07.2022` | Government Order | Water Resources Department, Government of Tamil Nadu | Tier 1 |
+| `8` | **G.O.(Ms) No. 42 — Free Bus Fare Travel Scheme for Women in Town Buses**<br>`G.O.(Ms) No. 42, Transport (C1) Dept, dated 08.05.2021` | Government Order | Transport Department, Government of Tamil Nadu | Tier 1 |
+| `9` | **DIPR Official Press Release — Statewide Expansion of Primary School Breakfast Scheme**<br>`DIPR Press Release No. 1420 dated 25.08.2023` | Official Press Release | Department of Information and Public Relations (DIPR), Tamil Nadu | Tier 3 |
+| `10` | **Naan Mudhalvan Youth Skill Enhancement & Career Guidance Policy Guidelines**<br>`Policy Note 2022-23, Skill Development Dept` | Policy Note | Skill Development & Employment Department, Tamil Nadu | Tier 2 |
+| `11` | **G.O.(Ms) No. 312 — Makkalai Thedi Maruthuvam (Healthcare at Doorstep) Launch**<br>`G.O.(Ms) No. 312, Health & Family Welfare Dept, dated 05.08.2021` | Government Order | Health & Family Welfare Department, Government of Tamil Nadu | Tier 1 |
+| `12` | **Tamil Nadu Legislative Assembly Act — Cauvery Delta Special Agricultural Protection Zone Act 2020**<br>`Tamil Nadu Act No. 11 of 2020, Legislative Assembly` | Legislative Document | Tamil Nadu Legislative Assembly | Tier 1 |
+| `13` | **TN State Budget 2023-2024 — Sanction for Coimbatore & Madurai Metro Rail Phase 1**<br>`Budget Speech 2023-24, Transport & Urban Infrastructure` | Budget Document | Finance Department, Government of Tamil Nadu | Tier 2 |
 
 ---
 
