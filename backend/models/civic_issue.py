@@ -116,6 +116,21 @@ class CivicIssueStatus(str, enum.Enum):
     DISPUTED = "DISPUTED"
 
 
+class CivicTrackingState(str, enum.Enum):
+    """
+    Standard 9 lifecycle tracking states for grievance resolution tracking.
+    """
+    SUBMITTED = "submitted"
+    ACKNOWLEDGED = "acknowledged"
+    UNDER_REVIEW = "under_review"
+    ACTION_REPORTED = "action_reported"
+    MARKED_RESOLVED = "marked_resolved"
+    INDEPENDENTLY_VERIFIED_RESOLVED = "independently_verified_resolved"
+    REOPENED = "reopened"
+    DISPUTED = "disputed"
+    UNKNOWN = "unknown"
+
+
 class CivicIssueSeverity(str, enum.Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -451,7 +466,50 @@ class ResponseRecord(Base):
     delay_hours = Column(Float, default=0.0)
     is_test_fixture = Column(Boolean, default=False, nullable=False)
 
+    # Phase 8.6 Resolution Tracker Fields
+    reported_status = Column(String(50), default="acknowledged", index=True)
+    verification_status = Column(
+        Enum(ResolutionVerificationStatus), default=ResolutionVerificationStatus.PENDING_VERIFICATION, index=True
+    )
+    response_summary = Column(Text, nullable=True)
+    supporting_evidence = Column(JSON, nullable=True)
+    review_notes = Column(Text, nullable=True)
+    public_work_id = Column(Integer, ForeignKey("civic_public_works.id"), nullable=True)
+    is_evidence_supported = Column(Boolean, default=False)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __init__(self, **kwargs):
+        if "response_summary" in kwargs and "official_remark" not in kwargs:
+            kwargs["official_remark"] = kwargs["response_summary"]
+        elif "official_remark" in kwargs and "response_summary" not in kwargs:
+            kwargs["response_summary"] = kwargs["official_remark"]
+
+        if "response_date" in kwargs and "action_taken_date" not in kwargs:
+            kwargs["action_taken_date"] = kwargs["response_date"]
+        elif "action_taken_date" in kwargs and "response_date" not in kwargs:
+            kwargs["response_date"] = kwargs["action_taken_date"]
+
+        if "issue_id" in kwargs and "civic_issue_id" not in kwargs:
+            kwargs["civic_issue_id"] = kwargs["issue_id"]
+
+        super().__init__(**kwargs)
+
+    @property
+    def issue_id(self):
+        return self.civic_issue_id
+
+    @issue_id.setter
+    def issue_id(self, val):
+        self.civic_issue_id = val
+
+    @property
+    def response_date(self):
+        return self.action_taken_date
+
+    @response_date.setter
+    def response_date(self, val):
+        self.action_taken_date = val
 
     # Relationships
     civic_issue = relationship("CivicIssue", back_populates="responses")
