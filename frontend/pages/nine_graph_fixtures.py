@@ -541,3 +541,138 @@ FIXTURE_INVESTIGATION_PATHS: Dict[str, Dict[str, Any]] = {
         "caveat": "Disclosed campaign funding does not prove quid-pro-quo without independent judicial or statutory finding.",
     },
 }
+
+# -----------------------------------------------------------------------------
+# 6. WORKFLOW AUDITABLE INVESTIGATION SUMMARIES (PHASE 9.9)
+# -----------------------------------------------------------------------------
+FIXTURE_WORKFLOW_RESULTS: Dict[str, Dict[str, Any]] = {
+    "workflow_a": {
+        "workflow": "WORKFLOW_A_PROMISE_DELIVERY",
+        "subject_identifier": "NODE:PROM:DMK_DESAL",
+        "subject_label": "DMK Manifesto 2021 Item 114: Water Desalination",
+        "records_available": {
+            "promise_node": {"node_id": "NODE:PROM:DMK_DESAL", "label": "DMK Manifesto 2021 Item 114: Water Desalination"},
+            "related_schemes": [{"node_id": "NODE:SCHEME:DESAL_NEMMELI", "label": "Nemmeli 150 MLD Desalination Augmentation"}],
+            "budget_allocations": [{"node_id": "NODE:BUDGET:DEMAND_34_CAPITAL", "label": "Demand 34 Head 4215 Capital Outlay"}],
+            "connecting_edges_count": 3,
+        },
+        "missing_information": [
+            "Audited final utilization certificate for FY 2023-24 not yet published in Comptroller and Auditor General state accounts.",
+        ],
+        "unreviewed_candidate_links": [
+            {
+                "proposal_id": "PROP-CANDIDATE-001",
+                "relationship_type": "responds_to",
+                "review_status": "PENDING_REVIEW",
+                "confidence_score": 0.76,
+            }
+        ],
+        "official_reporting_vs_independent_verification": [
+            {"edge_id": "EDGE:DEPT:SCHEME:001", "relationship_type": "implements", "evidence_nature": "OFFICIAL_ADMINISTRATIVE_REPORTING", "review_status": "VERIFIED"},
+            {"edge_id": "EDGE:SCHEME:BUDGET:001", "relationship_type": "funds", "evidence_nature": "INDEPENDENT_VERIFICATION", "review_status": "VERIFIED"},
+        ],
+        "reviewer_audit_history": [
+            {"record_type": "PROPOSAL_REVIEW_DECISION", "reviewed_by": "LEAD_REVIEWER_TN", "disposition": "CONFIRMED", "rationale": "Verified through official Gazette No. 42"},
+        ],
+        "unresolved_questions": [
+            "Does the budget outlay Head of Account represent new dedicated capacity or recurring administrative overhead?",
+            "Has an independent social audit verified that the treated water reached targeted consumers?",
+        ],
+        "epistemic_guardrail": "Policy Association Rule: Funding a scheme does not prove that the political promise was completed without end-user verification.",
+    },
+    "workflow_b": {
+        "workflow": "WORKFLOW_B_CIVIC_ISSUE_RESOLUTION",
+        "subject_identifier": "NODE:ISSUE:WATER_VELACHERY",
+        "subject_label": "Civic Issue: Pipe Water Shortage in Velachery Ward 178",
+        "records_available": {
+            "civic_issue_node": {"node_id": "NODE:ISSUE:WATER_VELACHERY", "label": "Velachery Ward 178 Water Shortage"},
+            "department_responses": [{"node_id": "NODE:DEPT:MAWS", "label": "MAWS Department"}],
+            "resolution_evidence_nodes": [],
+            "connecting_edges_count": 2,
+        },
+        "missing_information": [
+            "Department status marked resolved administratively, but empirical ground proof (geo-tagged photos, water meter telemetry) is missing.",
+        ],
+        "unreviewed_candidate_links": [],
+        "official_reporting_vs_independent_verification": [
+            {"edge_id": "EDGE:ISSUE:CONST:001", "relationship_type": "located_in", "evidence_nature": "OFFICIAL_ADMINISTRATIVE_REPORTING", "review_status": "VERIFIED"},
+        ],
+        "reviewer_audit_history": [],
+        "unresolved_questions": [
+            "Was the grievance resolved through permanent distribution pipeline replacement or temporary water tanker dispatch?",
+        ],
+        "epistemic_guardrail": "Epistemic Status Distinction: 'marked_resolved' represents an official department assertion, not independent verified resolution.",
+    },
+    "workflow_c": {
+        "workflow": "WORKFLOW_C_CLAIM_DIALECTICS",
+        "subject_identifier": "NODE:CLAIM:DESAL_OUTPUT",
+        "subject_label": "Claim: Nemmeli Desalination Plant Operating at 150 MLD Daily Output",
+        "records_available": {
+            "claim_node": {"node_id": "NODE:CLAIM:DESAL_OUTPUT", "label": "Nemmeli 150 MLD Daily Output Claim"},
+            "supporting_evidence_edges": [{"edge_id": "EDGE:CLAIM:DOC:001", "relationship_type": "provides_evidence_for"}],
+            "contradicting_evidence_edges": [{"edge_id": "EDGE:CAG:CLAIM:001", "relationship_type": "contradicts"}],
+            "contextual_edges": [],
+            "active_conflicts": [{"conflict_id": "CONF-DESAL-OUTPUT-01", "severity": "HIGH"}],
+        },
+        "missing_information": [
+            "SCADA continuous real-time flow telemetry data not made publicly accessible by municipal water board.",
+        ],
+        "unreviewed_candidate_links": [],
+        "official_reporting_vs_independent_verification": [
+            {"edge_id": "EDGE:CLAIM:DOC:001", "relationship_type": "provides_evidence_for", "evidence_nature": "OFFICIAL_ADMINISTRATIVE_REPORTING", "review_status": "VERIFIED"},
+            {"edge_id": "EDGE:CAG:CLAIM:001", "relationship_type": "contradicts", "evidence_nature": "INDEPENDENT_VERIFICATION", "review_status": "VERIFIED"},
+        ],
+        "reviewer_audit_history": [],
+        "unresolved_questions": [
+            "Has an updated physical audit reconciled the gap between 150 MLD design capacity and CAG 94.2 MLD measured dispatch?",
+        ],
+        "epistemic_guardrail": "Dialectical Preservation Principle: Statutory constitutional audit findings take precedence over ministerial press releases.",
+    },
+    "workflow_d": {
+        "workflow": "WORKFLOW_D_REPRESENTATIVE_STEWARDSHIP",
+        "subject_identifier": "NODE:REP:VELACHERY_MLA",
+        "subject_label": "J.M.H. Aassan Maulaana (MLA, Velachery)",
+        "records_available": {
+            "representative_node": {"node_id": "NODE:REP:VELACHERY_MLA", "label": "J.M.H. Aassan Maulaana (MLA, Velachery)"},
+            "constituencies": [{"node_id": "NODE:CONST:VELACHERY", "label": "Velachery Constituency (AC-026)"}],
+            "documented_works_and_issues": [{"node_id": "NODE:ISSUE:WATER_VELACHERY", "label": "Water Shortage Velachery"}],
+            "connecting_edges_count": 2,
+        },
+        "missing_information": [
+            "MLA Constituency Development Scheme (MLACDS) localized expenditure utilization certificates for 2023-24.",
+        ],
+        "unreviewed_candidate_links": [],
+        "official_reporting_vs_independent_verification": [
+            {"edge_id": "EDGE:REP:CONST:001", "relationship_type": "represents", "evidence_nature": "INDEPENDENT_VERIFICATION", "review_status": "VERIFIED"},
+        ],
+        "reviewer_audit_history": [],
+        "unresolved_questions": [
+            "What proportion of constituency issues fall under state municipal departments vs. local municipal council jurisdiction?",
+        ],
+        "epistemic_guardrail": "Anti-Causality & Non-Defamation Rule: A representative's democratic tenure does NOT establish personal culpability for municipal service failures.",
+    },
+    "workflow_e": {
+        "workflow": "WORKFLOW_E_POLITICAL_FINANCE",
+        "subject_identifier": "NODE:PARTY:DMK",
+        "subject_label": "Dravida Munnetra Kazhagam (DMK)",
+        "records_available": {
+            "entity_node": {"node_id": "NODE:PARTY:DMK", "label": "Dravida Munnetra Kazhagam (DMK)"},
+            "connected_transactions_count": 1,
+            "source_documents": [{"node_id": "NODE:DOC:GOMS42_2023", "label": "Statutory Gazette Notice"}],
+            "connecting_edges": [{"edge_id": "EDGE:PARTY:REP:001", "relationship_type": "relates_to"}],
+        },
+        "missing_information": [
+            "Individual donor identification for anonymous bearer instruments prior to Supreme Court disclosure verdict.",
+        ],
+        "unreviewed_candidate_links": [],
+        "official_reporting_vs_independent_verification": [
+            {"edge_id": "EDGE:PARTY:REP:001", "relationship_type": "relates_to", "evidence_nature": "INDEPENDENT_VERIFICATION", "review_status": "VERIFIED"},
+        ],
+        "reviewer_audit_history": [],
+        "unresolved_questions": [
+            "Are all contribution dates synchronized with Election Commission annual audit report filings?",
+        ],
+        "epistemic_guardrail": "Statutory Disclosure Rule: Statutory campaign contributions reflect legal disclosures and do NOT infer corrupt intent or unlawful quid-pro-quo without judicial findings.",
+    },
+}
+

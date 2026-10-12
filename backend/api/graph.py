@@ -57,6 +57,7 @@ from backend.services.civic_search_service import (
     verify_graph_authorization,
     AUTHORIZED_GRAPH_ROLES,
 )
+from backend.services.investigation_service import CrossPhaseInvestigationService
 
 logger = logging.getLogger("civiclens.phase9.api.graph")
 
@@ -635,3 +636,132 @@ def defer_proposal(proposal_id: str):
         return error_response(message=str(e), status_code=404)
     finally:
         db.close()
+
+
+# ===========================================================================
+# PHASE 9.9: CROSS-PHASE INVESTIGATION WORKFLOWS AND AUDITABILITY
+# ===========================================================================
+
+@graph_bp.route("/investigate/workflow-a/promise", methods=["GET"])
+def investigate_workflow_a_promise():
+    """
+    Workflow A: Select a political promise, inspect related schemes and budgets,
+    then review available implementation and claim evidence.
+    Query params: id (promise node ID or canonical ID)
+    """
+    identifier = request.args.get("id")
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for Workflow A.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        data = CrossPhaseInvestigationService.investigate_promise_delivery(identifier=identifier, session=db)
+        return success_response(data=data)
+    finally:
+        db.close()
+
+
+@graph_bp.route("/investigate/workflow-b/civic-issue", methods=["GET"])
+def investigate_workflow_b_civic_issue():
+    """
+    Workflow B: Select a civic issue, inspect its original public record, department response,
+    reported status, and resolution evidence.
+    Query params: id (civic issue node ID or code)
+    """
+    identifier = request.args.get("id")
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for Workflow B.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        data = CrossPhaseInvestigationService.investigate_civic_issue_resolution(identifier=identifier, session=db)
+        return success_response(data=data)
+    finally:
+        db.close()
+
+
+@graph_bp.route("/investigate/workflow-c/claim", methods=["GET"])
+def investigate_workflow_c_claim():
+    """
+    Workflow C: Select a public claim and explore supporting, contradicting, and contextual records.
+    Query params: id (claim node ID or text)
+    """
+    identifier = request.args.get("id")
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for Workflow C.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        data = CrossPhaseInvestigationService.investigate_claim_dialectics(identifier=identifier, session=db)
+        return success_response(data=data)
+    finally:
+        db.close()
+
+
+@graph_bp.route("/investigate/workflow-d/representative", methods=["GET"])
+def investigate_workflow_d_representative():
+    """
+    Workflow D: Select a representative and inspect documented constituency, legislative,
+    scheme, and public-work records without assuming personal responsibility for every associated outcome.
+    Query params: id (representative node ID or name)
+    """
+    identifier = request.args.get("id")
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for Workflow D.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        data = CrossPhaseInvestigationService.investigate_representative_stewardship(identifier=identifier, session=db)
+        return success_response(data=data)
+    finally:
+        db.close()
+
+
+@graph_bp.route("/investigate/workflow-e/funding", methods=["GET"])
+def investigate_workflow_e_funding():
+    """
+    Workflow E: Select a disclosed political funding record and inspect its original document
+    and supported entity relationships without inferring wrongdoing.
+    Query params: id (party/donor node ID or code)
+    """
+    identifier = request.args.get("id")
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for Workflow E.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        data = CrossPhaseInvestigationService.investigate_political_finance(identifier=identifier, session=db)
+        return success_response(data=data)
+    finally:
+        db.close()
+
+
+@graph_bp.route("/investigate/report/export", methods=["GET"])
+def export_investigation_report_endpoint():
+    """
+    Exports a source-linked, verifiable investigation report.
+    Query params: workflow, id, format (json or markdown)
+    """
+    workflow = request.args.get("workflow", "workflow_a")
+    identifier = request.args.get("id")
+    fmt = request.args.get("format", "json").lower()
+
+    if not identifier:
+        return error_response(message="Parameter 'id' is required for report export.", status_code=400)
+
+    db: Session = SessionLocal()
+    try:
+        report = CrossPhaseInvestigationService.export_investigation_report(
+            workflow_type=workflow,
+            identifier=identifier,
+            format=fmt,
+            session=db,
+        )
+        if fmt == "markdown":
+            return success_response(data={"report_markdown": report, "format": "markdown"})
+        return success_response(data=report)
+    except ValueError as e:
+        return error_response(message=str(e), status_code=400)
+    finally:
+        db.close()
+

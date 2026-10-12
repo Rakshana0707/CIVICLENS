@@ -1241,6 +1241,59 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # =========================================================================
+    # PHASE 9.9: CROSS-PHASE INVESTIGATION WORKFLOWS AND AUDITABILITY
+    # =========================================================================
+
+    def investigate_workflow_a(self, promise_id: str) -> Tuple[bool, Any]:
+        """Workflow A: Promise -> Schemes -> Budgets -> Implementation."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/workflow-a/promise", params={"id": promise_id}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def investigate_workflow_b(self, issue_id: str) -> Tuple[bool, Any]:
+        """Workflow B: Civic Issue -> Response -> Status -> Resolution."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/workflow-b/civic-issue", params={"id": issue_id}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def investigate_workflow_c(self, claim_id: str) -> Tuple[bool, Any]:
+        """Workflow C: Public Claim -> Supporting, Contradicting & Contextual Records."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/workflow-c/claim", params={"id": claim_id}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def investigate_workflow_d(self, representative_id: str) -> Tuple[bool, Any]:
+        """Workflow D: Representative -> Constituency -> Legislative & Public Works."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/workflow-d/representative", params={"id": representative_id}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def investigate_workflow_e(self, funding_id: str) -> Tuple[bool, Any]:
+        """Workflow E: Political Finance -> Source Document -> Supported Entities."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/workflow-e/funding", params={"id": funding_id}, timeout=15)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def export_investigation_report(self, workflow: str, identifier: str, format: str = "json") -> Tuple[bool, Any]:
+        """Export source-linked auditable investigation report."""
+        params = {"workflow": workflow, "id": identifier, "format": format}
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/report/export", params=params, timeout=20)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()

@@ -40,6 +40,7 @@ from frontend.pages.nine_graph_fixtures import (
     FIXTURE_CANDIDATE_PROPOSALS,
     FIXTURE_CONFLICTS,
     FIXTURE_INVESTIGATION_PATHS,
+    FIXTURE_WORKFLOW_RESULTS,
 )
 from frontend.pages.nine_graph_helper import (
     ENTITY_TYPE_CONFIG,
@@ -425,46 +426,198 @@ with tab_entity:
 
 
 # =============================================================================
-# TAB 3: EVIDENCE-PATH WALKS (PHASE 9.5 ENGINE)
+# TAB 3: CROSS-PHASE INVESTIGATION WORKFLOWS (PHASE 9.9)
 # =============================================================================
 with tab_path:
-    st.subheader("🛤️ Explainable Evidence-Path Traversal")
+    st.subheader("🛤️ Cross-Phase Investigation Workflows & Auditability")
     st.markdown(
-        "Walk step-by-step through multi-hop accountability chains connecting political pledges, "
-        "cabinet schemes, budget grants, and physical grievance resolutions without manufacturing missing links."
+        "Demonstrates end-to-end investigation workflows connecting information across Phases 1–8: "
+        "inspecting available records, preserving source citations, highlighting missing information, "
+        "separating official self-claims from independent verification, and maintaining reviewer audit history."
     )
 
-    path_key = "promise_delivery" if selected_investigation_key == "NONE" else selected_investigation_key
-    path_data = FIXTURE_INVESTIGATION_PATHS.get(path_key, FIXTURE_INVESTIGATION_PATHS["promise_delivery"])
+    WORKFLOW_OPTIONS = {
+        "workflow_a": "Workflow A: Political Promise → Schemes → Budgets → Implementation & Claims",
+        "workflow_b": "Workflow B: Civic Issue → Original Record → Department Response → Resolution Evidence",
+        "workflow_c": "Workflow C: Public Claim → Supporting, Contradicting & Contextual Records",
+        "workflow_d": "Workflow D: Representative → Constituency → Legislative & Public Works",
+        "workflow_e": "Workflow E: Political Finance → Disclosed Entity → Source Document",
+    }
 
-    st.markdown(f"### {path_data['title']}")
-    st.markdown(f"*{path_data['description']}*")
+    selected_wf_key = st.selectbox(
+        "Select Canonical Investigation Workflow:",
+        options=list(WORKFLOW_OPTIONS.keys()),
+        format_func=lambda k: WORKFLOW_OPTIONS[k],
+    )
 
-    col_p1, col_p2 = st.columns([1, 2])
-    with col_p1:
-        st.metric("Path Completeness Score", f"{path_data['completeness_score'] * 100:.0f}%")
-        st.metric("Direct vs. Inferred", "Direct Statutory" if path_data["is_direct"] else "Inferred Association")
-        st.warning(f"⚠️ **Epistemic Safeguard:** {path_data['caveat']}")
+    # Workflow subject selection
+    if selected_wf_key == "workflow_a":
+        wf_candidates = [n for n in nodes if n.get("entity_type") == "POLITICAL_PROMISE"]
+        default_id = wf_candidates[0]["node_id"] if wf_candidates else "NODE:PROM:DMK_DESAL"
+        subject_id = st.text_input("Political Promise Identifier (Node ID or Canonical ID):", value=default_id)
+    elif selected_wf_key == "workflow_b":
+        wf_candidates = [n for n in nodes if n.get("entity_type") in ("CIVIC_ISSUE", "GRIEVANCE_RECORD")]
+        default_id = wf_candidates[0]["node_id"] if wf_candidates else "NODE:ISSUE:WATER_VELACHERY"
+        subject_id = st.text_input("Civic Issue Identifier (Node ID or Code):", value=default_id)
+    elif selected_wf_key == "workflow_c":
+        wf_candidates = [n for n in nodes if n.get("entity_type") in ("PUBLIC_CLAIM", "CLAIM", "ATOMIC_CLAIM")]
+        default_id = wf_candidates[0]["node_id"] if wf_candidates else "NODE:CLAIM:DESAL_OUTPUT"
+        subject_id = st.text_input("Public Claim Identifier (Node ID or Text):", value=default_id)
+    elif selected_wf_key == "workflow_d":
+        wf_candidates = [n for n in nodes if n.get("entity_type") in ("REPRESENTATIVE", "POLITICAL_PERSON")]
+        default_id = wf_candidates[0]["node_id"] if wf_candidates else "NODE:REP:VELACHERY_MLA"
+        subject_id = st.text_input("Representative Identifier (Node ID or Official Name):", value=default_id)
+    else:
+        wf_candidates = [n for n in nodes if n.get("entity_type") in ("POLITICAL_PARTY", "DONOR", "CONTRIBUTION")]
+        default_id = wf_candidates[0]["node_id"] if wf_candidates else "NODE:PARTY:DMK"
+        subject_id = st.text_input("Political Finance Identifier (Party / Donor / Transaction):", value=default_id)
 
-    with col_p2:
-        st.markdown("**Step-by-Step Traversal Chain:**")
-        chain_node_ids = path_data.get("nodes", [])
-        for i, nid in enumerate(chain_node_ids):
-            node_match = next((n for n in FIXTURE_GRAPH_NODES if n["node_id"] == nid), None)
-            lbl = node_match.get("label", nid) if node_match else nid
-            etype = node_match.get("entity_type", "ENTITY") if node_match else "ENTITY"
+    col_btn, col_exp = st.columns([1, 1])
+    with col_btn:
+        run_wf = st.button("🚀 Execute Auditable Investigation", type="primary", use_container_width=True)
 
+    # Fetch or retrieve investigation summary
+    inv_data = None
+    if run_wf or "last_investigation" in st.session_state:
+        if run_wf:
+            st.session_state["last_investigation"] = (selected_wf_key, subject_id)
+        current_wf, current_id = st.session_state.get("last_investigation", (selected_wf_key, subject_id))
+
+        with st.spinner(f"Executing {WORKFLOW_OPTIONS[current_wf]} for '{current_id}'..."):
+            # Try live backend API first
+            live_ok = False
+            if current_wf == "workflow_a":
+                live_ok, res = api_client.investigate_workflow_a(current_id)
+            elif current_wf == "workflow_b":
+                live_ok, res = api_client.investigate_workflow_b(current_id)
+            elif current_wf == "workflow_c":
+                live_ok, res = api_client.investigate_workflow_c(current_id)
+            elif current_wf == "workflow_d":
+                live_ok, res = api_client.investigate_workflow_d(current_id)
+            else:
+                live_ok, res = api_client.investigate_workflow_e(current_id)
+
+            if live_ok and isinstance(res, dict):
+                inv_data = res
+            else:
+                inv_data = FIXTURE_WORKFLOW_RESULTS.get(current_wf, FIXTURE_WORKFLOW_RESULTS["workflow_a"])
+
+    if inv_data:
+        st.markdown("---")
+        st.markdown(f"### 📋 Investigation Dossier: `{inv_data.get('subject_label')}`")
+
+        # Epistemic Banner
+        st.info(f"⚖️ **Epistemic Guardrail:** {inv_data.get('epistemic_guardrail')}")
+
+        # 1. Records Actually Available
+        st.markdown("#### 1. Records Actually Available in CIVICLENS TN")
+        rec_avail = inv_data.get("records_available", {})
+        col_r1, col_r2 = st.columns(2)
+        with col_r1:
+            st.json(rec_avail)
+        with col_r2:
             st.markdown(
                 f"""
-                <div style="background: white; border: 1px solid #ced4da; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;">
-                    <strong>Hop {i+1}:</strong> {render_entity_type_badge(etype)} <b>{lbl}</b><br>
-                    <small><code>{nid}</code></small>
+                <div style="background: white; border: 1px solid #ced4da; padding: 14px; border-radius: 6px;">
+                    <h5 style="margin-top: 0; color: #007bff;">Network Connectivity Metrics</h5>
+                    <p><b>Connected Edges:</b> {rec_avail.get('connecting_edges_count', len(rec_avail.get('connecting_edges', [])))}</p>
+                    <p><b>Subject Record:</b> <code>{inv_data.get('subject_identifier')}</code></p>
+                    <p><b>Data Governance:</b> DPDPA 2023 Compliant</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            if i < len(chain_node_ids) - 1:
-                st.markdown("<div style='text-align: center; color: #007bff; font-weight: bold;'>↓</div>", unsafe_allow_html=True)
+
+        # 2. Official Administrative Reporting vs Independent Verification
+        st.markdown("#### 2. Official Administrative Reporting vs. Independent Verification")
+        matrix = inv_data.get("official_reporting_vs_independent_verification", [])
+        if matrix:
+            st.dataframe(pd.DataFrame(matrix), use_container_width=True)
+        else:
+            st.caption("No edge verification records in this slice.")
+
+        # 3. Missing Information Gaps
+        st.markdown("#### 3. Missing Information & Evidentiary Gaps")
+        gaps = inv_data.get("missing_information", [])
+        if gaps:
+            for g in gaps:
+                st.warning(f"⚠️ **Evidentiary Gap:** {g}")
+        else:
+            st.success("✅ Complete evidentiary lineage available without intermediate gaps.")
+
+        # 4. Unreviewed Candidate Links
+        cand_links = inv_data.get("unreviewed_candidate_links", [])
+        if cand_links:
+            st.markdown("#### 4. Unreviewed Candidate Links (Algorithmic Proposals)")
+            for cl in cand_links:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #fff9db; border: 1px dashed #f59f00; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                        <strong>Candidate Link:</strong> <code>{cl.get('proposal_id', 'CANDIDATE')}</code> |
+                        {render_review_status_badge(cl.get('review_status', 'PENDING_REVIEW'))}
+                        <p style="margin: 4px 0; font-size: 13px;">Proposed relationship: <code>{cl.get('relationship_type')}</code> (Confidence: {cl.get('confidence_score', 0.5):.2f})</p>
+                        <small style="color: #d9480f;">Notice: Not established as fact until human review.</small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        # 5. Reviewer Audit Decisions
+        st.markdown("#### 5. Reviewer Decision Audit History")
+        rev_hist = inv_data.get("reviewer_audit_history", [])
+        if rev_hist:
+            for rh in rev_hist:
+                st.markdown(
+                    f"""
+                    <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 10px; margin-bottom: 6px; border-radius: 4px;">
+                        <b>{rh.get('record_type')}</b> by <code>{rh.get('reviewed_by', rh.get('performed_by', 'REVIEWER'))}</code>:
+                        <span style="color: #333;">{rh.get('rationale')}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("No manual review decisions or override logs recorded for this entity.")
+
+        # 6. Unresolved Questions & Non-Verdict Summary
+        st.markdown("#### 6. Investigation Summary: Unresolved Questions (Non-Verdict)")
+        st.info("💡 CIVICLENS TN provides empirical evidence and frames key unresolved governance questions rather than issuing unsupported final verdicts.")
+        for i, q in enumerate(inv_data.get("unresolved_questions", [])):
+            st.markdown(f"**Q{i+1}:** {q}")
+
+        # 7. Report Export Functionality
+        st.markdown("---")
+        st.markdown("#### 📥 Export Source-Linked Auditable Report")
+        col_exp1, col_exp2 = st.columns(2)
+
+        # Generate markdown report text
+        md_text = f"# CIVICLENS TN Auditable Report — {inv_data.get('workflow')}\n"
+        md_text += f"**Subject:** `{inv_data.get('subject_identifier')}` ({inv_data.get('subject_label')})\n\n"
+        md_text += f"> {inv_data.get('epistemic_guardrail')}\n\n"
+        md_text += "## Missing Information\n"
+        for g in gaps:
+            md_text += f"- {g}\n"
+        md_text += "\n## Unresolved Questions\n"
+        for q in inv_data.get("unresolved_questions", []):
+            md_text += f"- {q}\n"
+
+        with col_exp1:
+            st.download_button(
+                label="📄 Download Markdown Report (.md)",
+                data=md_text,
+                file_name=f"civiclens_report_{selected_wf_key}.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
+        with col_exp2:
+            import json
+            st.download_button(
+                label="📊 Download Auditable JSON Dossier (.json)",
+                data=json.dumps(inv_data, indent=2),
+                file_name=f"civiclens_dossier_{selected_wf_key}.json",
+                mime="application/json",
+                use_container_width=True,
+            )
 
 
 # =============================================================================
