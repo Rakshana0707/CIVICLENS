@@ -381,6 +381,13 @@ class GrievanceRecord(Base):
     ingestion_timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     data_quality_status = Column(String(50), default="VALID", index=True)
 
+    # Classification & Review Metadata (Phase 8.4)
+    original_category = Column(String(200), nullable=True)
+    classification_method = Column(String(50), default="RULE_BASED", nullable=True)
+    classification_confidence = Column(Float, default=1.0, nullable=True)
+    classification_model_version = Column(String(50), default="civic_classifier_v1.0", nullable=True)
+    review_status = Column(String(50), default="AUTOMATED_VERIFIED", index=True)
+
     # Legacy & relational compatibility columns
     record_token = Column(String(100), nullable=True, index=True)
     complaint_summary = Column(Text, nullable=True)

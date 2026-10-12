@@ -18,6 +18,7 @@ Covers:
 """
 
 from typing import Dict, Any, List
+from backend.models.civic_issue import IssueCategoryEnum
 
 IS_TEST_FIXTURE = True
 FIXTURE_VERSION = "8.0-test"
@@ -592,5 +593,183 @@ MOCK_CM_HELPLINE_RECORDS: List[Dict[str, Any]] = [
         "current_status": None  # Unknown status test
     }
 ]
+
+
+# ---------------------------------------------------------------------------
+# 11. Phase 8.4 Issue Classification & Relationship Fixtures
+# ---------------------------------------------------------------------------
+MOCK_CLASSIFICATION_RECORDS: List[Dict[str, Any]] = [
+    {
+        "id": "TC-TAMIL-01",
+        "raw_category": "குடிநீர் விநியோகம்",
+        "description": "குடிநீர் குழாய் உடைந்து வீணாகிறது, குடிநீர் பற்றாக்குறை ஏற்பட்டுள்ளது.",
+        "expected_category": "water_supply",
+        "expected_language": "ta"
+    },
+    {
+        "id": "TC-TAMIL-02",
+        "raw_category": "மின்தடை",
+        "description": "மின்மாற்றி வெடித்து மின்தடை ஏற்பட்டுள்ளது. தாழ்வாக செல்லும் மின்கம்பிகள் ஆபத்தை ஏற்படுத்துகின்றன.",
+        "expected_category": "electricity",
+        "expected_language": "ta"
+    },
+    {
+        "id": "TC-ENGLISH-01",
+        "raw_category": "Streetlight Issue",
+        "description": "Broken streetlight and dark street on 4th Avenue near park. Lamp post is defunct.",
+        "expected_category": "streetlights",
+        "expected_language": "en"
+    },
+    {
+        "id": "TC-ENGLISH-02",
+        "raw_category": "Solid Waste",
+        "description": "Overflowing compactor bin and garbage dumped on road outside government school.",
+        "expected_category": "waste_management",
+        "expected_language": "en"
+    },
+    {
+        "id": "TC-MIXED-01",
+        "raw_category": "Road damage",
+        "description": "Road-la periya pothole irukku, tar saalai damaged and accidents are happening.",
+        "expected_category": "roads",
+        "expected_language": "mixed"
+    },
+    {
+        "id": "TC-MIXED-02",
+        "raw_category": "Electricity complaint",
+        "description": "EB transformer burst aagi current illa for 2 days. Low voltage problem.",
+        "expected_category": "electricity",
+        "expected_language": "mixed"
+    },
+    {
+        "id": "TC-MIXED-03",
+        "raw_category": "Patta delay",
+        "description": "Patta maathal application submit panni 4 months aachu, revenue department delay.",
+        "expected_category": "government_service_delays",
+        "expected_language": "mixed"
+    },
+    {
+        "id": "TC-UNCERTAIN-01",
+        "raw_category": "General civic grievance",
+        "description": "General disturbance and some unspecified public nuisance.",
+        "expected_category": "other_civic_issues",
+        "expected_review": "PENDING_HUMAN_REVIEW"
+    }
+]
+
+MOCK_RELATIONSHIP_SCENARIOS = {
+    # Scenario A: Exact duplicate records
+    "duplicate_pair": [
+        {
+            "grievance_id": "GRV-GCC-TEST-001",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/DUP/101",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Potholes on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-01T10:00:00Z"
+        },
+        {
+            "grievance_id": "GRV-GCC-TEST-001-DUP",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/DUP/101",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Potholes on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-01T10:00:00Z"
+        }
+    ],
+
+    # Scenario B: Multiple complaints about the same active issue
+    "multiple_complaints_same_issue": [
+        {
+            "grievance_id": "GRV-GCC-ACTIVE-01",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/ACT/01",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Dangerous deep pothole on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-10T09:00:00Z"
+        },
+        {
+            "grievance_id": "GRV-GCC-ACTIVE-02",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/ACT/02",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Large crater and damaged road on 4th Main Road, Ward 174 Besant Nagar causing accidents.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-14T11:00:00Z"
+        }
+    ],
+
+    # Scenario C: Recurring issue at the same location (prior resolved, returns months later)
+    "recurring_issue_pair": [
+        {
+            "grievance_id": "GRV-GCC-REC-HISTORIC",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/HIST/01",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Damaged asphalt on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-01-05T09:00:00Z",
+            "status": "RESOLVED"
+        },
+        {
+            "grievance_id": "GRV-GCC-REC-NEW",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/HIST/02",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Monsoon washaway and recurring pothole on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-10-15T10:00:00Z",
+            "status": "OPEN"
+        }
+    ],
+
+    # Scenario D: Separate issues in the same area
+    "separate_issues_same_area": [
+        {
+            "grievance_id": "GRV-GCC-SEP-01",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/SEP/01",
+            "issue_category": IssueCategoryEnum.ROADS,
+            "description_or_permitted_summary": "Damaged road on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-10T10:00:00Z"
+        },
+        {
+            "grievance_id": "GRV-GCC-SEP-02",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/SEP/02",
+            "issue_category": IssueCategoryEnum.STREETLIGHTS,
+            "description_or_permitted_summary": "Broken street light on 4th Main Road, Ward 174 Besant Nagar.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-11T10:00:00Z"
+        }
+    ],
+
+    # Scenario E: Unrelated reports with identical text in different districts/areas
+    "unrelated_similar_reports": [
+        {
+            "grievance_id": "GRV-CHENNAI-SIMILAR",
+            "source_id": "GCC_CHENNAI",
+            "source_record_reference": "GCC/2024/SIM/01",
+            "issue_category": IssueCategoryEnum.WATER_SUPPLY,
+            "description_or_permitted_summary": "Contaminated drinking water and pipeline leakage outside primary school.",
+            "administrative_area_id": "ADM-TN-GCC-WARD-174",
+            "submission_date": "2024-03-10T10:00:00Z"
+        },
+        {
+            "grievance_id": "GRV-MADURAI-SIMILAR",
+            "source_id": "TNEGA_CM_HELPLINE",
+            "source_record_reference": "MM/2024/SIM/02",
+            "issue_category": IssueCategoryEnum.WATER_SUPPLY,
+            "description_or_permitted_summary": "Contaminated drinking water and pipeline leakage outside primary school.",
+            "administrative_area_id": "ADM-TN-DIST-024-MADURAI",
+            "submission_date": "2024-03-10T10:00:00Z"
+        }
+    ]
+}
+
 
 
