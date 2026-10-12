@@ -223,3 +223,47 @@ def get_node_edges_endpoint(node_id: str):
         return success_response(data={"node_id": node_id, "edges": [e.to_dict() for e in edges], "total": len(edges)})
     finally:
         db.close()
+
+
+@graph_bp.route("/conflicts", methods=["GET"])
+def get_conflicts_endpoint():
+    """Detect and list evidentiary conflicts across the graph."""
+    node_id = request.args.get("node_id")
+    from backend.services.evidence_quality_service import EvidenceQualityService
+
+    db: Session = SessionLocal()
+    try:
+        conflicts = EvidenceQualityService.detect_conflicts(session=db, node_id=node_id, persist_records=True)
+        db.commit()
+        return success_response(data={"conflicts": [c.to_dict() for c in conflicts], "total": len(conflicts)})
+    finally:
+        db.close()
+
+
+@graph_bp.route("/edges/<edge_id>/quality", methods=["GET"])
+def get_edge_quality_endpoint(edge_id: str):
+    """Retrieve multi-factor evidence quality scorecard for an edge."""
+    from backend.services.evidence_quality_service import EvidenceQualityService
+
+    db: Session = SessionLocal()
+    try:
+        edge = GraphStorageService.get_edge(db, edge_id)
+        if not edge:
+            return error_response(message=f"Edge '{edge_id}' not found.", status_code=404)
+        scorecard = EvidenceQualityService.assess_edge_evidence_quality(edge)
+        return success_response(data={"scorecard": scorecard})
+    finally:
+        db.close()
+
+
+@graph_bp.route("/nodes/<node_id>/completeness", methods=["GET"])
+def get_node_completeness_endpoint(node_id: str):
+    """Retrieve evidence completeness assessment for a node."""
+    from backend.services.evidence_quality_service import EvidenceQualityService
+
+    db: Session = SessionLocal()
+    try:
+        completeness = EvidenceQualityService.assess_evidence_completeness(db, node_id)
+        return success_response(data={"completeness": completeness})
+    finally:
+        db.close()

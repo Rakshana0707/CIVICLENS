@@ -431,3 +431,93 @@ class CandidateRelationshipProposal(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+# ---------------------------------------------------------------------------
+# 5. Conflict & Evidence Quality Models (Phase 9.6)
+# ---------------------------------------------------------------------------
+class ConflictTypeEnum(str, enum.Enum):
+    """
+    Taxonomy of evidentiary conflicts detected across civic records.
+    """
+    CONFLICTING_DATES = "CONFLICTING_DATES"
+    INCOMPATIBLE_STATUS = "INCOMPATIBLE_STATUS"
+    INCONSISTENT_ENTITY_MATCH = "INCONSISTENT_ENTITY_MATCH"
+    CONTRADICTORY_CLAIM_EVIDENCE = "CONTRADICTORY_CLAIM_EVIDENCE"
+    OUTDATED_DOCUMENT = "OUTDATED_DOCUMENT"
+    DUPLICATE_SOURCE = "DUPLICATE_SOURCE"
+    INCOMPLETE_PROVENANCE = "INCOMPLETE_PROVENANCE"
+
+
+class ConflictSeverityEnum(str, enum.Enum):
+    """
+    Severity rating for evidentiary discrepancies.
+    """
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class ConflictResolutionStatus(str, enum.Enum):
+    """
+    Resolution lifecycle for detected evidentiary conflicts.
+    """
+    UNRESOLVED = "UNRESOLVED"
+    EXPLAINED_DIALECTIC = "EXPLAINED_DIALECTIC"
+    RESOLVED = "RESOLVED"
+    DISMISSED = "DISMISSED"
+
+
+class CivicConflictRecord(Base):
+    """
+    Persistent record of an evidentiary conflict or anomaly between graph edges or nodes.
+    Preserves conflicting evidence and explains why the discrepancy matters.
+    """
+    __tablename__ = "civic_conflict_records"
+
+    conflict_id = Column(String(120), primary_key=True, index=True)
+    conflict_type = Column(Enum(ConflictTypeEnum), nullable=False, index=True)
+    severity = Column(Enum(ConflictSeverityEnum), nullable=False, default=ConflictSeverityEnum.MEDIUM, index=True)
+
+    primary_node_id = Column(String(120), ForeignKey("civic_graph_nodes.node_id", ondelete="CASCADE"), nullable=False, index=True)
+    secondary_node_id = Column(String(120), ForeignKey("civic_graph_nodes.node_id", ondelete="SET NULL"), nullable=True, index=True)
+
+    edge_a_id = Column(String(120), ForeignKey("civic_evidence_edges.edge_id", ondelete="SET NULL"), nullable=True, index=True)
+    edge_b_id = Column(String(120), ForeignKey("civic_evidence_edges.edge_id", ondelete="SET NULL"), nullable=True, index=True)
+
+    description = Column(Text, nullable=False)                      # Why the discrepancy matters
+    epistemic_weight_comparison = Column(JSON, nullable=True)       # Documented weighting inputs & evaluation
+    resolution_status = Column(Enum(ConflictResolutionStatus), default=ConflictResolutionStatus.UNRESOLVED, nullable=False, index=True)
+
+    detected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    resolved_by = Column(String(100), nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+
+    is_test_fixture = Column(Boolean, default=False, nullable=False, index=True)
+
+    # Relationships
+    primary_node = relationship("CivicGraphNode", foreign_keys=[primary_node_id])
+    secondary_node = relationship("CivicGraphNode", foreign_keys=[secondary_node_id])
+    edge_a = relationship("CivicEvidenceEdge", foreign_keys=[edge_a_id])
+    edge_b = relationship("CivicEvidenceEdge", foreign_keys=[edge_b_id])
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "conflict_id": self.conflict_id,
+            "conflict_type": self.conflict_type.value if hasattr(self.conflict_type, "value") else str(self.conflict_type),
+            "severity": self.severity.value if hasattr(self.severity, "value") else str(self.severity),
+            "primary_node_id": self.primary_node_id,
+            "secondary_node_id": self.secondary_node_id,
+            "edge_a_id": self.edge_a_id,
+            "edge_b_id": self.edge_b_id,
+            "description": self.description,
+            "epistemic_weight_comparison": self.epistemic_weight_comparison or {},
+            "resolution_status": self.resolution_status.value if hasattr(self.resolution_status, "value") else str(self.resolution_status),
+            "detected_at": self.detected_at.isoformat() if self.detected_at else None,
+            "resolved_by": self.resolved_by,
+            "resolution_notes": self.resolution_notes,
+            "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
+            "is_test_fixture": self.is_test_fixture,
+        }
