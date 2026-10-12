@@ -73,6 +73,12 @@ class GraphEntityType(str, enum.Enum):
     RESOLUTION_EVIDENCE = "RESOLUTION_EVIDENCE"
     PUBLIC_WORK = "PUBLIC_WORK"
     SOURCE_DOCUMENT = "SOURCE_DOCUMENT"
+    # Phase 10: Policy Outcome & Impact Evaluation Entities
+    POLICY_OBJECTIVE = "POLICY_OBJECTIVE"
+    BENEFICIARY_GROUP = "BENEFICIARY_GROUP"
+    POLICY_INDICATOR = "POLICY_INDICATOR"
+    EVALUATION_STUDY = "EVALUATION_STUDY"
+    EVALUATION_FINDING = "EVALUATION_FINDING"
 
 
 class GraphRelationshipType(str, enum.Enum):
@@ -94,6 +100,10 @@ class GraphRelationshipType(str, enum.Enum):
     CONTEXTUALIZES = "contextualizes"
     LOCATED_IN = "located_in"
     DERIVED_FROM = "derived_from"
+    # Phase 10: Policy Evaluation Relationships
+    EVALUATES = "evaluates"
+    MEASURES = "measures"
+    TARGETS = "targets"
 
     @classmethod
     def from_string(cls, val: Any) -> "GraphRelationshipType":
