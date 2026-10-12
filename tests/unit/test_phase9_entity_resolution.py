@@ -382,8 +382,15 @@ def test_8_entity_split_with_audit_history(seeded_service, db_session):
     assert audit.operation_type.value == "SPLIT"
 
 
-def test_9_api_lookup_and_history_endpoints():
+def test_9_api_lookup_and_history_endpoints(seeded_service, monkeypatch):
     """Verify Flask REST API endpoints for entity lookup, profile, and history."""
+    TestingSessionLocal = sessionmaker(bind=seeded_service.db.bind)
+
+    import backend.database.session
+    import backend.api.entities
+    monkeypatch.setattr(backend.database.session, "SessionLocal", TestingSessionLocal)
+    monkeypatch.setattr(backend.api.entities, "SessionLocal", TestingSessionLocal)
+
     app = create_app()
     app.config["TESTING"] = True
     client = app.test_client()
@@ -393,12 +400,20 @@ def test_9_api_lookup_and_history_endpoints():
     assert resp.status_code == 200
     json_data = resp.get_json()
     assert json_data["status"] == "success"
+    assert json_data["data"]["resolved"] is True
+    assert json_data["data"]["entity"]["entity_id"] == "ENT:REP:MK-STALIN"
 
     # 2. Test lookup with missing params
     err_resp = client.get("/api/entities/lookup")
     assert err_resp.status_code == 400
 
-    # 3. Test duplicates scanning endpoint
+    # 3. Test profile endpoint
+    prof_resp = client.get("/api/entities/ENT:REP:MK-STALIN")
+    assert prof_resp.status_code == 200
+    assert prof_resp.get_json()["data"]["entity_id"] == "ENT:REP:MK-STALIN"
+
+    # 4. Test duplicates scanning endpoint
     dup_resp = client.get("/api/entities/duplicates")
     assert dup_resp.status_code == 200
     assert "candidates" in dup_resp.get_json()["data"]
+

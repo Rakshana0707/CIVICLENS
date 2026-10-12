@@ -159,6 +159,15 @@ class EntityResolutionService:
         tokens2 = set(norm2.split())
         jaccard = len(tokens1 & tokens2) / len(tokens1 | tokens2) if (tokens1 | tokens2) else 0.0
 
+        # Core non-initial tokens (tokens with length > 1, e.g. 'murugesan' vs 'murugesan')
+        core1 = set(t for t in tokens1 if len(t) > 1)
+        core2 = set(t for t in tokens2 if len(t) > 1)
+        core_jaccard = (
+            len(core1 & core2) / len(core1 | core2)
+            if (core1 and core2)
+            else 0.0
+        )
+
         # Bigram character similarity
         bigrams1 = set(norm1[i : i + 2] for i in range(len(norm1) - 1))
         bigrams2 = set(norm2[i : i + 2] for i in range(len(norm2) - 1))
@@ -168,7 +177,12 @@ class EntityResolutionService:
             else 0.0
         )
 
+        # If core names match exactly with only different initials (e.g. R. Murugesan vs K. Murugesan)
+        if core1 and core2 and core_jaccard == 1.0:
+            return round(max(0.80, 0.4 * jaccard + 0.6 * bigram_score), 4)
+
         return round(0.5 * jaccard + 0.5 * bigram_score, 4)
+
 
     # -----------------------------------------------------------------------
     # 2. Canonical Entity Management
@@ -438,17 +452,9 @@ class EntityResolutionService:
             active_ent = self._get_active_entity(ent.entity_id)
             if active_ent and self._satisfies_context(active_ent, context):
                 # Check time-bounded validity for historical names
-                reference_year = context.get("reference_year") or context.get("year")
                 is_hist = False
                 if alias.alias_type == AliasTypeEnum.HISTORICAL_NAME:
                     is_hist = True
-                    if reference_year and alias.valid_to:
-                        try:
-                            if int(str(reference_year)[:4]) > int(str(alias.valid_to)[:4]):
-                                # Queried outside historical period
-                                is_hist = True
-                        except ValueError:
-                            pass
 
                 method = (
                     ResolutionMethod.HISTORICAL_NAME_MATCH
@@ -462,22 +468,40 @@ class EntityResolutionService:
 
                 valid_alias_entities.append((active_ent, alias, method, is_hist))
 
-        if len(valid_alias_entities) == 1:
-            ent, alias, method, is_hist = valid_alias_entities[0]
+        # Group matches by distinct canonical entity_id
+        entity_matches: Dict[str, Tuple[CanonicalEntity, Optional[EntityAlias], ResolutionMethod, bool]] = {}
+
+        # Add name matches
+        for ent in name_matches:
+            active_ent = self._get_active_entity(ent.entity_id)
+            if active_ent and self._satisfies_context(active_ent, context):
+                entity_matches[active_ent.entity_id] = (
+                    active_ent, None, ResolutionMethod.EXACT_NAME, False
+                )
+
+        # Add alias matches
+        for active_ent, alias, method, is_hist in valid_alias_entities:
+            existing_match = entity_matches.get(active_ent.entity_id)
+            if not existing_match or is_hist:
+                entity_matches[active_ent.entity_id] = (active_ent, alias, method, is_hist)
+
+        # If exactly 1 real-world entity matched (either directly or via multiple aliases)
+        if len(entity_matches) == 1:
+            active_ent, alias, method, is_hist = list(entity_matches.values())[0]
+            matched_by = f"alias:{alias.alias_name}:{alias.alias_type.value}" if alias else "canonical_name"
             return {
                 "resolved": True,
-                "entity": ent.to_dict(),
+                "entity": active_ent.to_dict(),
                 "matching_method": method.value,
                 "confidence": 0.98 if is_hist else 1.0,
-                "matched_by": f"alias:{alias.alias_name}:{alias.alias_type.value}",
+                "matched_by": matched_by,
                 "is_historical": is_hist,
             }
 
         # Stage 5: Homonym & Disambiguation Check
         # If multiple entities matched exactly (e.g. multiple "Anna Nagar" or "S. Murugesan")
-        combined_exact = {ent.entity_id: ent for ent in name_matches}
-        for ent, alias, _, _ in valid_alias_entities:
-            combined_exact[ent.entity_id] = ent
+        combined_exact = {ent_tuple[0].entity_id: ent_tuple[0] for ent_tuple in entity_matches.values()}
+
 
         if len(combined_exact) > 1:
             # Context-based disambiguation
