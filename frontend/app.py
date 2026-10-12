@@ -48,6 +48,7 @@ def create_module_card(col, title, description, is_implemented=False):
 with col1:
     create_module_card(col1, "Budget & Schemes", "Analyze state budget allocations and historical scheme intelligence.")
     create_module_card(col1, "Representatives", "Track and evaluate the performance of elected representatives.")
+    create_module_card(col1, "Unified Evidence Graph", "Cross-phase civic intelligence and evidence graph connecting Phases 1–8.", is_implemented=True)
 
 with col2:
     create_module_card(col2, "Political Promises", "Monitor election manifestos and fulfillment of political promises.")

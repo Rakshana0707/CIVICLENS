@@ -953,6 +953,294 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # =========================================================================
+    # PHASE 9: UNIFIED CIVIC INTELLIGENCE AND EVIDENCE GRAPH
+    # =========================================================================
+
+    def search_graph_entities(
+        self,
+        query: str = "",
+        entity_type: Optional[str] = None,
+        source_phase: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Search canonical entities across Phases 1–8 in the Civic Evidence Graph."""
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
+        if query:
+            params["q"] = query
+        if entity_type:
+            params["entity_type"] = entity_type
+        if source_phase:
+            params["source_phase"] = source_phase
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/entities/search", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_node(self, node_id: str) -> Tuple[bool, Any]:
+        """Retrieve full canonical node profile, aliases, and source mappings."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/nodes/{node_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_neighbors(
+        self,
+        node_id: str,
+        direction: str = "both",
+        relationship_type: Optional[str] = None,
+        target_type: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Retrieve directly connected neighbor entities and connecting edges."""
+        params: Dict[str, Any] = {"direction": direction, "limit": limit, "offset": offset}
+        if relationship_type:
+            params["relationship_type"] = relationship_type
+        if target_type:
+            params["target_type"] = target_type
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/nodes/{node_id}/neighbors", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def traverse_graph(
+        self,
+        start_node_id: str,
+        max_depth: int = 3,
+        allowed_relationship_types: Optional[str] = None,
+        min_confidence: float = 0.0,
+        limit: int = 50,
+    ) -> Tuple[bool, Any]:
+        """Traverse multi-hop explainable paths from a start node."""
+        params: Dict[str, Any] = {
+            "start_node_id": start_node_id,
+            "max_depth": max_depth,
+            "min_confidence": min_confidence,
+            "limit": limit,
+        }
+        if allowed_relationship_types:
+            params["allowed_relationship_types"] = allowed_relationship_types
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/traverse", params=params, timeout=12)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def investigate_graph_mode(
+        self,
+        mode: str,
+        start_node_id: str,
+        max_depth: int = 4,
+        limit: int = 20,
+    ) -> Tuple[bool, Any]:
+        """Execute structured investigation walkthrough (promise_delivery, claim_verification, etc.)."""
+        params: Dict[str, Any] = {
+            "start_node_id": start_node_id,
+            "max_depth": max_depth,
+            "limit": limit,
+        }
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/investigate/{mode}", params=params, timeout=12)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_edges(
+        self,
+        relationship_type: Optional[str] = None,
+        matching_method: Optional[str] = None,
+        review_status: Optional[str] = None,
+        source_document_id: Optional[str] = None,
+        min_confidence: float = 0.0,
+        active_only: bool = True,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Filter graph edges by relationship type, review status, and document references."""
+        params: Dict[str, Any] = {
+            "active_only": str(active_only).lower(),
+            "limit": limit,
+            "offset": offset,
+        }
+        if relationship_type:
+            params["relationship_type"] = relationship_type
+        if matching_method:
+            params["matching_method"] = matching_method
+        if review_status:
+            params["review_status"] = review_status
+        if source_document_id:
+            params["source_document_id"] = source_document_id
+        if min_confidence > 0.0:
+            params["min_confidence"] = min_confidence
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/edges", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_edge(self, edge_id: str) -> Tuple[bool, Any]:
+        """Retrieve full evidence details, source hash, and quality scorecard for an edge."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/edges/{edge_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_unresolved_proposals(
+        self,
+        min_confidence: float = 0.0,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """List unreviewed relationship candidates pending human audit."""
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
+        if min_confidence > 0.0:
+            params["min_confidence"] = min_confidence
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/proposals/unresolved", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_conflicts(
+        self,
+        node_id: Optional[str] = None,
+        conflict_type: Optional[str] = None,
+        severity: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Retrieve persistent conflicts and contradictory evidence."""
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
+        if node_id:
+            params["node_id"] = node_id
+        if conflict_type:
+            params["conflict_type"] = conflict_type
+        if severity:
+            params["severity"] = severity
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/conflicts", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_disputes(
+        self,
+        node_id: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Retrieve edges with DISPUTED provenance status."""
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
+        if node_id:
+            params["node_id"] = node_id
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/disputes", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_history(
+        self,
+        node_id: Optional[str] = None,
+        edge_id: Optional[str] = None,
+        reviewer_id: Optional[str] = None,
+        action: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Tuple[bool, Any]:
+        """Retrieve audit history and review decisions."""
+        params: Dict[str, Any] = {"limit": limit, "offset": offset}
+        if node_id:
+            params["node_id"] = node_id
+        if edge_id:
+            params["edge_id"] = edge_id
+        if reviewer_id:
+            params["reviewer_id"] = reviewer_id
+        if action:
+            params["action"] = action
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/history", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_graph_original_record(self, node_id: str) -> Tuple[bool, Any]:
+        """Retrieve the original underlying Phase 1–8 database record for a graph node."""
+        try:
+            response = requests.get(f"{self.base_url}/api/graph/nodes/{node_id}/original-record", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def confirm_graph_proposal(
+        self,
+        proposal_id: str,
+        reviewer_id: str,
+        rationale: str,
+        reviewer_role: str = "LEAD_REVIEWER",
+    ) -> Tuple[bool, Any]:
+        """Confirm a relationship proposal (RBAC guarded)."""
+        headers = {"X-Reviewer-Role": reviewer_role}
+        payload = {"reviewer_id": reviewer_id, "rationale": rationale}
+        try:
+            response = requests.post(
+                f"{self.base_url}/api/graph/proposals/{proposal_id}/confirm",
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def reject_graph_proposal(
+        self,
+        proposal_id: str,
+        reviewer_id: str,
+        rationale: str,
+        reviewer_role: str = "LEAD_REVIEWER",
+    ) -> Tuple[bool, Any]:
+        """Reject a candidate relationship proposal (RBAC guarded)."""
+        headers = {"X-Reviewer-Role": reviewer_role}
+        payload = {"reviewer_id": reviewer_id, "rationale": rationale}
+        try:
+            response = requests.post(
+                f"{self.base_url}/api/graph/proposals/{proposal_id}/reject",
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def defer_graph_proposal(
+        self,
+        proposal_id: str,
+        reviewer_id: str,
+        rationale: str,
+        reviewer_role: str = "LEAD_REVIEWER",
+    ) -> Tuple[bool, Any]:
+        """Defer a relationship proposal for further inquiry (RBAC guarded)."""
+        headers = {"X-Reviewer-Role": reviewer_role}
+        payload = {"reviewer_id": reviewer_id, "rationale": rationale}
+        try:
+            response = requests.post(
+                f"{self.base_url}/api/graph/proposals/{proposal_id}/defer",
+                json=payload,
+                headers=headers,
+                timeout=10,
+            )
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
