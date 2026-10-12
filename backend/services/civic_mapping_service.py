@@ -1,17 +1,40 @@
 """
 Civic Geographic Mapping & Department Jurisdiction Service (CIVICLENS TN - Phase 8.5)
 =====================================================================================
-Resolves:
-  1. Multilingual Administrative Area Mapping (State, 38 Districts, Municipal
-     Corporations, Zones, Wards, Assembly Constituencies).
-  2. Spatial Coordinates to Administrative Area Bounding Box / Nearest Area.
-  3. Department Jurisdiction Resolution (Municipal vs State Line Departments,
-     resolving overlapping jurisdictions e.g. Highways vs Municipalities, CMWSSB vs TWAD).
-  4. Citizen's Charter SLA Mapping (Stipulated turnaround times, target resolution dates).
-  5. Imprecise / Ambiguous Geolocation Quality Auditing (Flags COARSE_GEOGRAPHY).
+Connects civic issues to administrative areas and responsible government departments
+where supported by official information.
+
+Covers:
+  - State (ADM-TN-STATE)
+  - 38 Districts (e.g. ADM-TN-DIST-003-CHENNAI, ADM-TN-DIST-013-MADURAI)
+  - Municipal Corporations / ULBs (e.g. GCC Zones 1 to 15, Madurai Corporation)
+  - Wards and Local Areas (e.g. GCC Ward 1 to 200)
+  - Relevant Government Departments & Responsible Local Authorities
+
+Core Directives & Safeguards:
+  - Uses official administrative boundaries and source records.
+  - Never infers a precise location from vague descriptions.
+  - Never assigns ward-level details when only district-level information is available.
+  - Detects ambiguous place name homonyms (e.g. 'Anna Nagar', 'Gandhi Nagar') without
+    district context, routing to human review rather than guessing.
+  - Resolves historical boundary reorganizations (e.g. Chengalpattu split from
+    Kancheepuram in Nov 2019, Ranipet from Vellore in Nov 2019).
+  - Handles shared or unclear department responsibilities (e.g. state highways inside
+    corporation limits) with candidate departments and unresolved statuses.
+
+For each mapping, records:
+  - issue_id
+  - administrative_area_id
+  - geographic_level
+  - department_id where known
+  - mapping_method
+  - source_reference
+  - confidence
+  - review_status
 """
 
 import math
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple, Any
@@ -43,14 +66,16 @@ class GeographicResolutionResult:
     administrative_level: AdministrativeLevel
     confidence: float
     is_imprecise: bool = False
-    warning_flag: Optional[str] = None  # e.g. COARSE_GEOGRAPHY, UNRESOLVED_WARD
-    matched_via: str = "EXACT_CODE"     # EXACT_CODE, BILINGUAL_NAME, GPS_COORDINATE, TEXT_EXTRACTION
+    warning_flag: Optional[str] = None  # COARSE_GEOGRAPHY, MISSING_LOCATION, AMBIGUOUS_PLACE_NAME, HISTORICAL_BOUNDARY_SPLIT
+    matched_via: str = "EXACT_CODE"     # EXACT_CODE, BILINGUAL_NAME, GPS_COORDINATE, TEXT_EXTRACTION, HISTORICAL_CROSS_REFERENCE, FALLBACK_CONTAINER
+    historical_context: Optional[str] = None
+    candidate_areas: List[str] = field(default_factory=list)
 
 
 @dataclass
 class DepartmentJurisdictionResult:
     """Resolved department jurisdiction and Citizen's Charter SLA."""
-    department_code: str
+    department_code: Optional[str]
     department_name_en: str
     jurisdiction_level: str
     service_standard_code: Optional[str] = None
@@ -59,6 +84,46 @@ class DepartmentJurisdictionResult:
     target_resolution_date: Optional[datetime] = None
     confidence: float = 1.0
     jurisdiction_notes: str = ""
+    candidate_departments: List[str] = field(default_factory=list)
+    responsible_local_authority: Optional[str] = None
+    is_shared_responsibility: bool = False
+    department_status: str = "RESOLVED"  # RESOLVED, SHARED, UNRESOLVED
+    review_status: str = "AUTOMATED_VERIFIED"  # AUTOMATED_VERIFIED, PENDING_HUMAN_REVIEW
+
+
+@dataclass
+class CivicMappingRecord:
+    """Canonical mapping audit record matching Phase 8.5 specifications."""
+    issue_id: Optional[int]
+    administrative_area_id: str
+    geographic_level: str
+    department_id: Optional[str]
+    mapping_method: str
+    source_reference: Optional[str]
+    confidence: float
+    review_status: str
+    candidate_departments: List[str] = field(default_factory=list)
+    responsible_local_authority: Optional[str] = None
+    is_shared_responsibility: bool = False
+    warning_flag: Optional[str] = None
+    historical_context: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "issue_id": self.issue_id,
+            "administrative_area_id": self.administrative_area_id,
+            "geographic_level": self.geographic_level,
+            "department_id": self.department_id,
+            "mapping_method": self.mapping_method,
+            "source_reference": self.source_reference,
+            "confidence": round(self.confidence, 4),
+            "review_status": self.review_status,
+            "candidate_departments": self.candidate_departments,
+            "responsible_local_authority": self.responsible_local_authority,
+            "is_shared_responsibility": self.is_shared_responsibility,
+            "warning_flag": self.warning_flag,
+            "historical_context": self.historical_context
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -70,7 +135,7 @@ class CivicGeographicMapper:
     canonical AdministrativeArea records across Tamil Nadu.
     """
 
-    # 38 Tamil Nadu Districts directory (English & Tamil)
+    # 38 Tamil Nadu Districts directory (English & Tamil with Centroids)
     TN_DISTRICTS: Dict[str, Tuple[str, str, float, float]] = {
         "ADM-TN-DIST-001-ARIYALUR": ("Ariyalur", "அரியலூர்", 11.1401, 79.0786),
         "ADM-TN-DIST-002-CHENGALPATTU": ("Chengalpattu", "செங்கல்பட்டு", 12.6937, 79.9757),
@@ -131,10 +196,110 @@ class CivicGeographicMapper:
         15: ("ADM-TN-GCC-ZONE-15-SHOLINGANALLUR", "Zone 15 - Sholinganallur", "மண்டலம் 15 - சோழிங்கநல்லூர்")
     }
 
+    # Ambiguous Homonyms across Tamil Nadu
+    AMBIGUOUS_HOMONYMS: Dict[str, List[str]] = {
+        "anna nagar": ["Chennai (Zone 8)", "Madurai", "Tiruchirappalli", "Salem"],
+        "அண்ணா நகர்": ["சென்னை", "மதுரை", "திருச்சிராப்பள்ளி", "சேலம்"],
+        "gandhi nagar": ["Vellore (Katpadi)", "Chennai (Adyar)", "Tiruppur"],
+        "காந்தி நகர்": ["வேலூர்", "சென்னை", "திருப்பூர்"],
+        "kottur": ["Chennai (Kotturpuram / Ward 170)", "Tiruvarur (Kottur Block)"],
+        "கோட்டூர்": ["சென்னை", "திருவாரூர்"],
+        "kk nagar": ["Chennai (Kodambakkam / Zone 10)", "Madurai", "Tiruchirappalli"],
+        "கே.கே. நகர்": ["சென்னை", "மதுரை", "திருச்சிராப்பள்ளி"],
+        "ram nagar": ["Coimbatore", "Madurai", "Chennai"],
+        "ராம் நகர்": ["கோயம்புத்தூர்", "மதுரை", "சென்னை"]
+    }
+
+    # Historical District Reorganizations (Bifurcations in 2019 and 2020)
+    HISTORICAL_REORGANIZATIONS: Dict[str, Dict[str, Any]] = {
+        "tambaram": {
+            "current_district_code": "ADM-TN-DIST-002-CHENGALPATTU",
+            "historical_district_code": "ADM-TN-DIST-010-KANCHEEPURAM",
+            "historical_name": "Kancheepuram",
+            "current_name": "Chengalpattu",
+            "split_date": "2019-11-29",
+            "note": "Tambaram was historically part of Kancheepuram District prior to November 2019 reorganization."
+        },
+        "தாம்பரம்": {
+            "current_district_code": "ADM-TN-DIST-002-CHENGALPATTU",
+            "historical_district_code": "ADM-TN-DIST-010-KANCHEEPURAM",
+            "historical_name": "Kancheepuram",
+            "current_name": "Chengalpattu",
+            "split_date": "2019-11-29",
+            "note": "தாம்பரம் 2019 நவம்பருக்கு முன்பு காஞ்சிபுரம் மாவட்டத்தில் இருந்தது."
+        },
+        "arakkonam": {
+            "current_district_code": "ADM-TN-DIST-021-RANIPET",
+            "historical_district_code": "ADM-TN-DIST-035-VELLORE",
+            "historical_name": "Vellore",
+            "current_name": "Ranipet",
+            "split_date": "2019-11-28",
+            "note": "Arakkonam was historically part of Vellore District prior to November 2019 reorganization."
+        },
+        "அரக்கோணம்": {
+            "current_district_code": "ADM-TN-DIST-021-RANIPET",
+            "historical_district_code": "ADM-TN-DIST-035-VELLORE",
+            "historical_name": "Vellore",
+            "current_name": "Ranipet",
+            "split_date": "2019-11-28",
+            "note": "அரக்கோணம் 2019 நவம்பருக்கு முன்பு வேலூர் மாவட்டத்தில் இருந்தது."
+        },
+        "tirupathur": {
+            "current_district_code": "ADM-TN-DIST-030-TIRUPATHUR",
+            "historical_district_code": "ADM-TN-DIST-035-VELLORE",
+            "historical_name": "Vellore",
+            "current_name": "Tirupathur",
+            "split_date": "2019-11-28",
+            "note": "Tirupathur was bifurcated from Vellore District in November 2019."
+        },
+        "tenkasi": {
+            "current_district_code": "ADM-TN-DIST-024-TENKASI",
+            "historical_district_code": "ADM-TN-DIST-029-TIRUNELVELI",
+            "historical_name": "Tirunelveli",
+            "current_name": "Tenkasi",
+            "split_date": "2019-11-22",
+            "note": "Tenkasi was bifurcated from Tirunelveli District in November 2019."
+        },
+        "தென்காசி": {
+            "current_district_code": "ADM-TN-DIST-024-TENKASI",
+            "historical_district_code": "ADM-TN-DIST-029-TIRUNELVELI",
+            "historical_name": "Tirunelveli",
+            "current_name": "Tenkasi",
+            "split_date": "2019-11-22",
+            "note": "தென்காசி 2019 நவம்பருக்கு முன்பு திருநெல்வேலி மாவட்டத்தில் இருந்தது."
+        },
+        "kallakurichi": {
+            "current_district_code": "ADM-TN-DIST-009-KALLAKURICHI",
+            "historical_district_code": "ADM-TN-DIST-036-VILUPPURAM",
+            "historical_name": "Viluppuram",
+            "current_name": "Kallakurichi",
+            "split_date": "2019-11-12",
+            "note": "Kallakurichi was bifurcated from Viluppuram District in November 2019."
+        },
+        "mayiladuthurai": {
+            "current_district_code": "ADM-TN-DIST-014-MAYILADUTHURAI",
+            "historical_district_code": "ADM-TN-DIST-015-NAGAPATTINAM",
+            "historical_name": "Nagapattinam",
+            "current_name": "Mayiladuthurai",
+            "split_date": "2020-12-28",
+            "note": "Mayiladuthurai was bifurcated from Nagapattinam District in December 2020."
+        },
+        "மயிலாடுதுறை": {
+            "current_district_code": "ADM-TN-DIST-014-MAYILADUTHURAI",
+            "historical_district_code": "ADM-TN-DIST-015-NAGAPATTINAM",
+            "historical_name": "Nagapattinam",
+            "current_name": "Mayiladuthurai",
+            "split_date": "2020-12-28",
+            "note": "மயிலாடுதுறை 2020 டிசம்பருக்கு முன்பு நாகப்பட்டினம் மாவட்டத்தில் இருந்தது."
+        }
+    }
+
     @classmethod
     def resolve_by_code(cls, area_code: str) -> Optional[GeographicResolutionResult]:
-        """Resolves known area code directly."""
+        """Resolves known canonical area code directly."""
         code_clean = (area_code or "").strip().upper()
+        if not code_clean:
+            return None
 
         # 1. State check
         if code_clean == "ADM-TN-STATE":
@@ -158,14 +323,13 @@ class CivicGeographicMapper:
                     area_name_ta=ta,
                     administrative_level=AdministrativeLevel.DISTRICT,
                     confidence=1.0,
-                    is_imprecise=True,  # District level is coarse for municipal issues
+                    is_imprecise=True,  # District level is coarse; ward details not assigned
                     warning_flag="COARSE_GEOGRAPHY",
                     matched_via="EXACT_CODE"
                 )
 
         # 3. GCC Ward check
         if "WARD" in code_clean:
-            import re
             m = re.search(r'WARD[-_]?(\d+)', code_clean)
             if m:
                 ward_num = int(m.group(1))
@@ -181,7 +345,6 @@ class CivicGeographicMapper:
 
         # 4. GCC Zone check
         if "ZONE" in code_clean:
-            import re
             m = re.search(r'ZONE[-_]?(\d+)', code_clean)
             if m:
                 zone_num = int(m.group(1))
@@ -200,15 +363,90 @@ class CivicGeographicMapper:
         return None
 
     @classmethod
-    def resolve_by_text(cls, district_text: Optional[str] = None, locality_text: Optional[str] = None) -> GeographicResolutionResult:
+    def resolve_by_text(
+        cls,
+        district_text: Optional[str] = None,
+        locality_text: Optional[str] = None,
+        submission_date: Optional[datetime] = None
+    ) -> GeographicResolutionResult:
         """
-        Resolves administrative area by matching district and locality strings.
+        Resolves administrative area by parsing district, locality, and description texts.
+        Strictly guards against:
+          1. Missing locations (returns State container with warning).
+          2. Ambiguous homonyms without district context (avoids assuming Chennai).
+          3. False ward inference from coarse descriptions.
+          4. Historical boundary split resolution.
         """
-        combined = f"{district_text or ''} {locality_text or ''}".strip().lower()
+        raw_combined = f"{district_text or ''} {locality_text or ''}".strip()
+        lower_combined = raw_combined.lower()
 
-        # Check for Ward specification in text
-        import re
-        ward_match = re.search(r'(?:ward|வார்டு)\s*[-#:]?\s*(\d+)', combined)
+        # ---------------------------------------------------------------------
+        # Guard 1: Missing Location Information
+        # ---------------------------------------------------------------------
+        if not raw_combined or len(lower_combined) < 2:
+            return GeographicResolutionResult(
+                area_code="ADM-TN-STATE",
+                area_name_en="Tamil Nadu",
+                area_name_ta="தமிழ்நாடு",
+                administrative_level=AdministrativeLevel.STATE,
+                confidence=0.20,
+                is_imprecise=True,
+                warning_flag="MISSING_LOCATION",
+                matched_via="FALLBACK_CONTAINER"
+            )
+
+        # ---------------------------------------------------------------------
+        # Guard 2: Ambiguous Place Name Homonyms (Without District Context)
+        # ---------------------------------------------------------------------
+        for homonym, candidates in cls.AMBIGUOUS_HOMONYMS.items():
+            if homonym in lower_combined:
+                # Check if district context is explicitly provided
+                has_explicit_district = False
+                for dist_code, (en, ta, _, _) in cls.TN_DISTRICTS.items():
+                    if (en.lower() in lower_combined and en.lower() not in homonym) or (ta in lower_combined and ta not in homonym):
+                        has_explicit_district = True
+                        break
+
+                # Also check if explicit Ward number is specified
+                has_explicit_ward = bool(re.search(r'(?:ward|வார்டு)\s*[-#:]?\s*(\d+)', lower_combined))
+
+                if not has_explicit_district and not has_explicit_ward:
+                    # STRICT RULE: Refuse to assume Chennai! Flag as ambiguous place name
+                    return GeographicResolutionResult(
+                        area_code="ADM-TN-STATE",
+                        area_name_en="Tamil Nadu",
+                        area_name_ta="தமிழ்நாடு",
+                        administrative_level=AdministrativeLevel.STATE,
+                        confidence=0.35,
+                        is_imprecise=True,
+                        warning_flag="AMBIGUOUS_PLACE_NAME",
+                        matched_via="FALLBACK_CONTAINER",
+                        candidate_areas=candidates
+                    )
+
+        # ---------------------------------------------------------------------
+        # Guard 3: Historical Boundary Reorganizations
+        # ---------------------------------------------------------------------
+        for loc_key, reorg_data in cls.HISTORICAL_REORGANIZATIONS.items():
+            if loc_key in lower_combined:
+                curr_dist_code = reorg_data["current_district_code"]
+                en, ta, _, _ = cls.TN_DISTRICTS[curr_dist_code]
+                return GeographicResolutionResult(
+                    area_code=curr_dist_code,
+                    area_name_en=en,
+                    area_name_ta=ta,
+                    administrative_level=AdministrativeLevel.DISTRICT,
+                    confidence=0.92,
+                    is_imprecise=True,  # Coarse district container
+                    warning_flag="HISTORICAL_BOUNDARY_SPLIT",
+                    matched_via="HISTORICAL_CROSS_REFERENCE",
+                    historical_context=reorg_data["note"]
+                )
+
+        # ---------------------------------------------------------------------
+        # Step 4: Ward-Level Resolution (Only if explicitly supported by source)
+        # ---------------------------------------------------------------------
+        ward_match = re.search(r'(?:ward|வார்டு)\s*[-#:]?\s*(\d+)', lower_combined)
         if ward_match:
             ward_num = int(ward_match.group(1))
             return GeographicResolutionResult(
@@ -221,8 +459,10 @@ class CivicGeographicMapper:
                 matched_via="TEXT_EXTRACTION"
             )
 
-        # Check for GCC Zone specification in text
-        zone_match = re.search(r'(?:zone|மண்டலம்)\s*[-#:]?\s*(\d+)', combined)
+        # ---------------------------------------------------------------------
+        # Step 5: Zone-Level Resolution
+        # ---------------------------------------------------------------------
+        zone_match = re.search(r'(?:zone|மண்டலம்)\s*[-#:]?\s*(\d+)', lower_combined)
         if zone_match:
             zone_num = int(zone_match.group(1))
             if zone_num in cls.GCC_ZONES:
@@ -237,16 +477,18 @@ class CivicGeographicMapper:
                     matched_via="TEXT_EXTRACTION"
                 )
 
-        # Match Districts
+        # ---------------------------------------------------------------------
+        # Step 6: District-Level Resolution (Never infer ward!)
+        # ---------------------------------------------------------------------
         for dist_code, (en, ta, _, _) in cls.TN_DISTRICTS.items():
-            if en.lower() in combined or ta in combined:
+            if en.lower() in lower_combined or ta in lower_combined:
                 return GeographicResolutionResult(
                     area_code=dist_code,
                     area_name_en=en,
                     area_name_ta=ta,
                     administrative_level=AdministrativeLevel.DISTRICT,
                     confidence=0.90,
-                    is_imprecise=True,
+                    is_imprecise=True,  # Coarse district container
                     warning_flag="COARSE_GEOGRAPHY",
                     matched_via="BILINGUAL_NAME"
                 )
@@ -257,10 +499,10 @@ class CivicGeographicMapper:
             area_name_en="Tamil Nadu",
             area_name_ta="தமிழ்நாடு",
             administrative_level=AdministrativeLevel.STATE,
-            confidence=0.50,
+            confidence=0.40,
             is_imprecise=True,
             warning_flag="COARSE_GEOGRAPHY",
-            matched_via="FALLBACK"
+            matched_via="FALLBACK_CONTAINER"
         )
 
     @classmethod
@@ -301,11 +543,10 @@ class CivicGeographicMapper:
 # ---------------------------------------------------------------------------
 class CivicDepartmentResolver:
     """
-    Resolves operational departmental jurisdiction, Citizen's Charter service standards,
-    and statutory SLA deadlines across Tamil Nadu.
+    Resolves operational departmental jurisdiction, responsible local authorities,
+    shared responsibilities, and statutory Citizen's Charter SLA deadlines.
     """
 
-    # Citizen's Charter Statutory SLAs
     SERVICE_STANDARDS: Dict[str, Dict[str, Any]] = {
         "STD-STREETLIGHT-REPAIR": {
             "department_code": "DEPT_GCC",
@@ -313,7 +554,7 @@ class CivicDepartmentResolver:
             "service_name_en": "Street Light Defect Repair / Replacement",
             "service_name_ta": "தெருவிளக்கு பழுது நீக்குதல்",
             "stipulated_time_hours": 24,
-            "designated_officer": "Assistant Engineer (Electrical), GCC / TANGEDCO",
+            "designated_officer": "Assistant Engineer (Electrical), GCC / Line Agency",
             "penalty_clause": "Fine of INR 50 per day of unexcused delay"
         },
         "STD-POTHOLE-RESTORE": {
@@ -378,99 +619,173 @@ class CivicDepartmentResolver:
         category_code: str,
         area_code: Optional[str] = None,
         source_id: Optional[str] = None,
+        description_text: Optional[str] = None,
         submission_date: Optional[datetime] = None
     ) -> DepartmentJurisdictionResult:
         """
-        Determines the appropriate line department or local body,
-        resolves overlapping jurisdictions, and assigns Citizen's Charter SLA.
+        Determines line department and local authority, resolving shared and
+        unclear jurisdictions where applicable.
         """
         cat_clean = category_code.lower()
         area_clean = (area_code or "").upper()
+        desc_clean = (description_text or "").lower()
         is_chennai = ("GCC" in area_clean or "CHENNAI" in area_clean or source_id == "GCC_CHENNAI")
 
         # ---------------------------------------------------------------------
-        # Jurisdiction Routing Rules
+        # Shared Jurisdiction: State Highway inside Municipal Limits
         # ---------------------------------------------------------------------
-        # Rule 1: Electricity -> Always TANGEDCO statewide
+        is_highway_keyword = any(kw in desc_clean for kw in ["state highway", "arterial road", "gst road", "anna salai", "bypass", "highways"])
+        if cat_clean == IssueCategoryEnum.ROADS.value and is_highway_keyword and is_chennai:
+            # Overlapping responsibility: Highways Department (carriageway) & GCC (drains & lighting)
+            std = cls.SERVICE_STANDARDS["STD-POTHOLE-RESTORE"]
+            target_date = (submission_date + timedelta(hours=48)) if submission_date else None
+            return DepartmentJurisdictionResult(
+                department_code="DEPT_HIGHWAYS",
+                department_name_en="Highways and Minor Ports Department (Shared with GCC)",
+                jurisdiction_level="STATE",
+                service_standard_code="STD-POTHOLE-RESTORE",
+                sla_hours=48,
+                designated_officer="Divisional Engineer (Highways) & Zonal Officer (GCC)",
+                target_resolution_date=target_date,
+                confidence=0.80,
+                jurisdiction_notes="Shared jurisdiction: Arterial highway corridor within GCC municipal boundaries.",
+                candidate_departments=["DEPT_HIGHWAYS", "DEPT_GCC"],
+                responsible_local_authority="Highways Department (Carriageway) & Greater Chennai Corporation (Lighting & Footpaths)",
+                is_shared_responsibility=True,
+                department_status="SHARED",
+                review_status="AUTOMATED_VERIFIED"
+            )
+
+        # ---------------------------------------------------------------------
+        # Unclear / Disputed Jurisdiction (Encroachments & Other Civic Issues)
+        # ---------------------------------------------------------------------
+        if cat_clean == IssueCategoryEnum.OTHER_CIVIC_ISSUES.value or "disputed" in desc_clean or "boundary dispute" in desc_clean:
+            return DepartmentJurisdictionResult(
+                department_code=None,
+                department_name_en="Unresolved Line Department Jurisdiction",
+                jurisdiction_level="UNRESOLVED",
+                service_standard_code=None,
+                sla_hours=72,
+                designated_officer="Designated Revenue Divisional Officer / Municipal Commissioner",
+                target_resolution_date=None,
+                confidence=0.40,
+                jurisdiction_notes="Unclear or disputed operational jurisdiction across departments.",
+                candidate_departments=["DEPT_REVENUE", "DEPT_MAWS"],
+                responsible_local_authority="Joint Inspection Committee (Revenue & Local Body)",
+                is_shared_responsibility=True,
+                department_status="UNRESOLVED",
+                review_status="PENDING_HUMAN_REVIEW"
+            )
+
+        # ---------------------------------------------------------------------
+        # Standard Domain Jurisdictions
+        # ---------------------------------------------------------------------
+        # 1. Electricity -> Statewide TANGEDCO
         if cat_clean == IssueCategoryEnum.ELECTRICITY.value:
             dept_code = "DEPT_TANGEDCO"
             dept_name = "Tamil Nadu Generation and Distribution Corporation (TANGEDCO)"
             std_key = "STD-TRANSFORMER-REPLACE"
+            local_authority = "Superintending Engineer (Distribution), TANGEDCO"
             notes = "Statewide electricity infrastructure governed exclusively by TANGEDCO."
 
-        # Rule 2: Government Service Delays (Patta, Pension, Certificates) -> Revenue Department
+        # 2. Government Service Delays -> Revenue Department
         elif cat_clean == IssueCategoryEnum.GOVERNMENT_SERVICE_DELAYS.value:
             dept_code = "DEPT_REVENUE"
             dept_name = "Revenue and Disaster Management Department"
             std_key = "STD-PATTA-TRANSFER"
+            local_authority = "District Collectorate / Taluk Tahsildar"
             notes = "Citizen services and land records governed by Revenue Administration."
 
-        # Rule 3: Roads / Footpaths
+        # 3. Roads / Footpaths
         elif cat_clean == IssueCategoryEnum.ROADS.value:
             if is_chennai:
                 dept_code = "DEPT_GCC"
                 dept_name = "Greater Chennai Corporation (Works Department)"
                 std_key = "STD-POTHOLE-RESTORE"
-                notes = "Municipal corporation roads maintained by GCC Bus Route Roads / Interior Roads division."
+                local_authority = "Commissioner, Greater Chennai Corporation"
+                notes = "Interior and bus route municipal roads maintained by GCC."
             else:
                 dept_code = "DEPT_HIGHWAYS"
                 dept_name = "Highways and Minor Ports Department"
                 std_key = "STD-POTHOLE-RESTORE"
+                local_authority = "Divisional Engineer (Highways & Minor Ports)"
                 notes = "State highways, major district roads, and municipal corridors."
 
-        # Rule 4: Solid Waste Management
+        # 4. Solid Waste Management
         elif cat_clean == IssueCategoryEnum.WASTE_MANAGEMENT.value:
-            dept_code = "DEPT_GCC" if is_chennai else "DEPT_MAWS"
-            dept_name = "Greater Chennai Corporation (Solid Waste Management)" if is_chennai else "Municipal Administration & Water Supply Department"
-            std_key = "STD-GARBAGE-CLEARANCE"
-            notes = "Local body conservancy and solid waste management."
+            if is_chennai:
+                dept_code = "DEPT_GCC"
+                dept_name = "Greater Chennai Corporation (Solid Waste Management)"
+                std_key = "STD-GARBAGE-CLEARANCE"
+                local_authority = "Zonal Officer, Greater Chennai Corporation"
+                notes = "Urban local body conservancy and solid waste management."
+            else:
+                dept_code = "DEPT_MAWS"
+                dept_name = "Municipal Administration & Water Supply Department"
+                std_key = "STD-GARBAGE-CLEARANCE"
+                local_authority = "Municipal Commissioner / Executive Officer"
+                notes = "Local body conservancy and solid waste management."
 
-        # Rule 5: Streetlights
+        # 5. Streetlights
         elif cat_clean == IssueCategoryEnum.STREETLIGHTS.value:
-            dept_code = "DEPT_GCC" if is_chennai else "DEPT_MAWS"
-            dept_name = "Greater Chennai Corporation (Electrical Department)" if is_chennai else "Municipal Administration & Water Supply Department"
-            std_key = "STD-STREETLIGHT-REPAIR"
-            notes = "Street lighting assets maintained by municipal electrical wing."
+            if is_chennai:
+                dept_code = "DEPT_GCC"
+                dept_name = "Greater Chennai Corporation (Electrical Department)"
+                std_key = "STD-STREETLIGHT-REPAIR"
+                local_authority = "Executive Engineer (Electrical), GCC"
+                notes = "Street lighting assets maintained by municipal electrical wing."
+            else:
+                dept_code = "DEPT_MAWS"
+                dept_name = "Municipal Administration & Water Supply Department"
+                std_key = "STD-STREETLIGHT-REPAIR"
+                local_authority = "Municipal Commissioner / Block Development Officer"
+                notes = "Municipal and rural street lighting maintenance."
 
-        # Rule 6: Water Supply
+        # 6. Water Supply
         elif cat_clean == IssueCategoryEnum.WATER_SUPPLY.value:
             if is_chennai:
                 dept_code = "DEPT_MAWS"
                 dept_name = "Chennai Metropolitan Water Supply and Sewerage Board (CMWSSB)"
                 std_key = "STD-WATER-CONTAMINATION"
+                local_authority = "Managing Director, CMWSSB (Metro Water)"
                 notes = "Chennai metropolitan drinking water supply managed by CMWSSB under MAWS."
             else:
                 dept_code = "DEPT_MAWS"
                 dept_name = "Tamil Nadu Water Supply and Drainage Board (TWAD Board)"
                 std_key = "STD-WATER-CONTAMINATION"
+                local_authority = "Managing Director, TWAD Board"
                 notes = "Tamil Nadu statewide water supply managed by TWAD Board under MAWS."
 
-        # Rule 7: Drainage & Sewerage
+        # 7. Drainage & Sewerage
         elif cat_clean == IssueCategoryEnum.DRAINAGE.value:
             dept_code = "DEPT_MAWS"
             dept_name = "Municipal Administration and Water Supply Department (Drainage Wing)"
             std_key = "STD-DRAINAGE-OVERFLOW"
+            local_authority = "CMWSSB Area Engineer (Chennai) / Municipal Commissioner"
             notes = "Stormwater drains and underground sewerage network."
 
-        # Rule 8: Healthcare Facilities
+        # 8. Healthcare Facilities
         elif cat_clean == IssueCategoryEnum.HEALTHCARE_ACCESS.value:
             dept_code = "DEPT_HEALTH"
             dept_name = "Health and Family Welfare Department"
             std_key = None
+            local_authority = "Directorate of Public Health and Preventive Medicine (DPH)"
             notes = "Primary Health Centres, taluk hospitals, and government medical facilities."
 
-        # Rule 9: School Infrastructure
+        # 9. School Infrastructure
         elif cat_clean == IssueCategoryEnum.EDUCATION_INFRASTRUCTURE.value:
             dept_code = "DEPT_EDUCATION"
             dept_name = "School Education Department"
             std_key = None
+            local_authority = "Chief Educational Officer (CEO) & PWD (Buildings)"
             notes = "Government school buildings and educational infrastructure."
 
-        # Default fallback
+        # Fallback
         else:
             dept_code = "DEPT_GCC" if is_chennai else "DEPT_MAWS"
             dept_name = "Greater Chennai Corporation" if is_chennai else "Municipal Administration Department"
             std_key = None
+            local_authority = "Municipal Local Body Commissioner"
             notes = "General municipal line agency jurisdiction."
 
         # Retrieve standard SLA
@@ -491,7 +806,12 @@ class CivicDepartmentResolver:
             designated_officer=officer,
             target_resolution_date=target_date,
             confidence=0.95,
-            jurisdiction_notes=notes
+            jurisdiction_notes=notes,
+            candidate_departments=[dept_code],
+            responsible_local_authority=local_authority,
+            is_shared_responsibility=False,
+            department_status="RESOLVED",
+            review_status="AUTOMATED_VERIFIED"
         )
 
 
@@ -501,7 +821,7 @@ class CivicDepartmentResolver:
 class CivicMappingIntegrationService:
     """
     Applies geographic resolution and department jurisdiction to GrievanceRecord
-    and CivicIssue database entities.
+    and CivicIssue database entities, emitting canonical CivicMappingRecords.
     """
 
     @classmethod
@@ -510,10 +830,10 @@ class CivicMappingIntegrationService:
         db_session: Session,
         civic_issue: CivicIssue,
         grievance: Optional[GrievanceRecord] = None
-    ) -> Tuple[GeographicResolutionResult, DepartmentJurisdictionResult]:
+    ) -> Tuple[GeographicResolutionResult, DepartmentJurisdictionResult, CivicMappingRecord]:
         """
         Enriches a CivicIssue with resolved administrative area, department,
-        and statutory Citizen's Charter SLA.
+        and statutory Citizen's Charter SLA, returning a canonical CivicMappingRecord.
         """
         # 1. Geographic Resolution
         raw_area = grievance.administrative_area_id if grievance else None
@@ -527,22 +847,23 @@ class CivicMappingIntegrationService:
 
         if not geo_res:
             text_desc = grievance.description_or_permitted_summary if grievance else civic_issue.description
-            geo_res = CivicGeographicMapper.resolve_by_text(locality_text=text_desc)
+            sub_dt = grievance.submission_date if grievance else civic_issue.reported_date
+            geo_res = CivicGeographicMapper.resolve_by_text(locality_text=text_desc, submission_date=sub_dt)
 
         # Sync administrative area on CivicIssue
         area_entity = db_session.query(AdministrativeArea).filter_by(area_code=geo_res.area_code).first()
         if area_entity:
             civic_issue.administrative_area_id = area_entity.id
 
-        # Flag coarse geography data quality issue if applicable
-        if geo_res.is_imprecise and geo_res.warning_flag == "COARSE_GEOGRAPHY":
+        # Flag data quality issues if applicable
+        if geo_res.is_imprecise and geo_res.warning_flag:
             dq_issue = DataQualityIssue(
                 civic_issue_id=civic_issue.id,
                 severity=DataQualitySeverity.WARNING,
-                issue_type="COARSE_GEOGRAPHY",
+                issue_type=geo_res.warning_flag,
                 description=(
-                    f"Civic issue mapped to coarse administrative container '{geo_res.area_code}' "
-                    f"({geo_res.administrative_level.value}) without ward-level granularity."
+                    f"Geographic mapping notice: '{geo_res.warning_flag}' for area '{geo_res.area_code}' "
+                    f"({geo_res.administrative_level.value}). Context: {geo_res.historical_context or 'Coarse mapping'}."
                 )
             )
             db_session.add(dq_issue)
@@ -550,21 +871,46 @@ class CivicMappingIntegrationService:
         # 2. Department & SLA Resolution
         cat_val = civic_issue.category.code.value if (civic_issue.category and hasattr(civic_issue.category.code, 'value')) else (civic_issue.category.code if civic_issue.category else IssueCategoryEnum.OTHER_CIVIC_ISSUES.value)
         source_id = grievance.source_id if grievance else None
+        desc_text = grievance.description_or_permitted_summary if grievance else civic_issue.description
         sub_dt = civic_issue.reported_date
 
         dept_res = CivicDepartmentResolver.resolve_jurisdiction(
             category_code=cat_val,
             area_code=geo_res.area_code,
             source_id=source_id,
+            description_text=desc_text,
             submission_date=sub_dt
         )
 
-        dept_entity = db_session.query(CivicDepartment).filter_by(code=dept_res.department_code).first()
-        if dept_entity:
-            civic_issue.department_id = dept_entity.id
+        if dept_res.department_code:
+            dept_entity = db_session.query(CivicDepartment).filter_by(code=dept_res.department_code).first()
+            if dept_entity:
+                civic_issue.department_id = dept_entity.id
 
         # Set target resolution date from Citizen's Charter SLA
         if dept_res.target_resolution_date:
             civic_issue.target_resolution_date = dept_res.target_resolution_date
 
-        return geo_res, dept_res
+        # 3. Create Canonical CivicMappingRecord
+        overall_confidence = min(geo_res.confidence, dept_res.confidence)
+        review_status = "AUTOMATED_VERIFIED"
+        if geo_res.warning_flag in ("MISSING_LOCATION", "AMBIGUOUS_PLACE_NAME") or dept_res.department_status == "UNRESOLVED" or overall_confidence < 0.70:
+            review_status = "PENDING_HUMAN_REVIEW"
+
+        mapping_record = CivicMappingRecord(
+            issue_id=civic_issue.id,
+            administrative_area_id=geo_res.area_code,
+            geographic_level=geo_res.administrative_level.value,
+            department_id=dept_res.department_code,
+            mapping_method=geo_res.matched_via,
+            source_reference=grievance.source_record_reference if grievance else None,
+            confidence=overall_confidence,
+            review_status=review_status,
+            candidate_departments=dept_res.candidate_departments,
+            responsible_local_authority=dept_res.responsible_local_authority,
+            is_shared_responsibility=dept_res.is_shared_responsibility,
+            warning_flag=geo_res.warning_flag,
+            historical_context=geo_res.historical_context
+        )
+
+        return geo_res, dept_res, mapping_record
