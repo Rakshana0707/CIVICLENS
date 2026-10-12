@@ -56,5 +56,6 @@ with col2:
 with col3:
     create_module_card(col3, "Tamil News", "AI-driven framing analysis and topic modeling on Tamil news media.", is_implemented=True)
     create_module_card(col3, "Claim Verification", "Automated evidence extraction and explainable claim verification.", is_implemented=True)
+    create_module_card(col3, "Civic Issue Intelligence", "Empirical tracking, departmental redressal auditing, and resolution evidence.", is_implemented=True)
 
 st.info("👈 Use the sidebar navigation to explore the different modules as they become available.")

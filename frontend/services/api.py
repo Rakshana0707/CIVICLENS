@@ -846,6 +846,113 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             return False, {"message": str(e)}
 
+    # -------------------------------------------------------------------------
+    # PHASE 8: CIVIC ISSUE INTELLIGENCE ENDPOINTS
+    # -------------------------------------------------------------------------
+    def get_civic_issues(self, params: Optional[Dict[str, Any]] = None) -> Tuple[bool, Any]:
+        """List and search civic issues with multi-attribute filters."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_issue_detail(self, issue_id: str) -> Tuple[bool, Any]:
+        """Get full issue details, department, area, metrics, and cross-phase links."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues/{issue_id}", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_categories(self) -> Tuple[bool, Any]:
+        """List canonical categories with SLA standards and issue counts."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/categories", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_areas(self) -> Tuple[bool, Any]:
+        """List administrative areas with population and tier context."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/areas", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_departments(self) -> Tuple[bool, Any]:
+        """List departments with docket counts and resolution stats."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/departments", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_department_summary(self, department_id: str) -> Tuple[bool, Any]:
+        """Detailed department performance summary & SLA compliance."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/departments/{department_id}/summary", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_responses(self, issue_id: str) -> Tuple[bool, Any]:
+        """Response history and action-taken reports for an issue."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues/{issue_id}/responses", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_evidence(self, issue_id: str) -> Tuple[bool, Any]:
+        """Resolution evidence artifacts (empirical proof) for an issue."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues/{issue_id}/evidence", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_clusters(self) -> Tuple[bool, Any]:
+        """Recurring issue hotspots by administrative area and category."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/clusters", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_trends(self, params: Optional[Dict[str, Any]] = None) -> Tuple[bool, Any]:
+        """Trend analytics across core metrics with guarded anomaly detection."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/analytics/trends", params=params, timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_source_documents(self) -> Tuple[bool, Any]:
+        """Statutory gazettes, council proceedings, and data dumps."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/source-documents", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_issue_source_documents(self, issue_id: str) -> Tuple[bool, Any]:
+        """Source documents linked directly to an issue."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues/{issue_id}/source-documents", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
+    def get_civic_cross_phase(self, issue_id: str) -> Tuple[bool, Any]:
+        """Cross-phase associations linked to an issue."""
+        try:
+            response = requests.get(f"{self.base_url}/api/civic/issues/{issue_id}/cross-phase", timeout=10)
+            return self._handle_response(response)
+        except requests.exceptions.RequestException as e:
+            return False, {"message": str(e)}
+
 
 # Global instance for use across Streamlit pages
 api_client = APIClient()
