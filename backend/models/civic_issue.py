@@ -210,6 +210,18 @@ class IssueCategory(Base):
     civic_issues = relationship("CivicIssue", back_populates="category")
     service_standards = relationship("ServiceStandard", back_populates="category")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "code": self.code.value if hasattr(self.code, "value") else str(self.code),
+            "name_en": self.name_en,
+            "name_ta": self.name_ta,
+            "description": self.description,
+            "default_department_code": self.default_department_code,
+            "priority_weight": self.priority_weight,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 2. CivicDepartment / GovernmentDepartment Entity
@@ -236,6 +248,19 @@ class CivicDepartment(Base):
     service_standards = relationship("ServiceStandard", back_populates="department")
     responses = relationship("ResponseRecord", back_populates="department")
     metrics = relationship("IssueMetric", back_populates="department")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "code": self.code,
+            "name_en": self.name_en,
+            "name_ta": self.name_ta,
+            "portal_id": self.portal_id,
+            "jurisdiction_level": self.jurisdiction_level,
+            "contact_email_public": self.contact_email_public,
+            "helpline_number": self.helpline_number,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
 
 
 # Canonical alias for Phase 8 data entity specification
@@ -270,6 +295,22 @@ class AdministrativeArea(Base):
     civic_issues = relationship("CivicIssue", back_populates="administrative_area")
     metrics = relationship("IssueMetric", back_populates="administrative_area")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "area_code": self.area_code,
+            "name_en": self.name_en,
+            "name_ta": self.name_ta,
+            "administrative_level": self.administrative_level.value if hasattr(self.administrative_level, "value") else str(self.administrative_level),
+            "parent_id": self.parent_id,
+            "lgd_code": self.lgd_code,
+            "census_code": self.census_code,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "population": self.population,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 4. ServiceStandard Entity
@@ -297,6 +338,21 @@ class ServiceStandard(Base):
     department = relationship("CivicDepartment", back_populates="service_standards")
     category = relationship("IssueCategory", back_populates="service_standards")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "standard_code": self.standard_code,
+            "department_id": self.department_id,
+            "category_id": self.category_id,
+            "service_name_en": self.service_name_en,
+            "service_name_ta": self.service_name_ta,
+            "stipulated_time_hours": self.stipulated_time_hours,
+            "designated_officer": self.designated_officer,
+            "appellate_authority": self.appellate_authority,
+            "penalty_clause": self.penalty_clause,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 5. SourceDocument Entity
@@ -322,6 +378,20 @@ class SourceDocument(Base):
     # Relationships
     grievances = relationship("GrievanceRecord", back_populates="source_document")
     responses = relationship("ResponseRecord", back_populates="source_document")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "document_code": self.document_code,
+            "title": self.title,
+            "source_tier": self.source_tier,
+            "source_url": self.source_url,
+            "publisher": self.publisher,
+            "published_date": self.published_date.isoformat() if self.published_date else None,
+            "sha256_hash": self.sha256_hash,
+            "file_format": self.file_format,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -367,6 +437,41 @@ class CivicIssue(Base):
     public_works = relationship("PublicWork", back_populates="civic_issue")
     metrics = relationship("IssueMetric", back_populates="civic_issue")
     quality_issues = relationship("DataQualityIssue", back_populates="civic_issue")
+    cross_phase_links = relationship("CivicCrossPhaseLink", back_populates="civic_issue", cascade="all, delete-orphan")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "issue_code": self.issue_code,
+            "title": self.title,
+            "title_ta": self.title_ta,
+            "description": self.description,
+            "category_id": self.category_id,
+            "category_code": self.category.code.value if self.category and hasattr(self.category.code, "value") else (str(self.category.code) if self.category else None),
+            "category_name": self.category.name_en if self.category else None,
+            "department_id": self.department_id,
+            "department_code": self.department.code if self.department else None,
+            "department_name": self.department.name_en if self.department else None,
+            "administrative_area_id": self.administrative_area_id,
+            "area_code": self.administrative_area.area_code if self.administrative_area else None,
+            "area_name": self.administrative_area.name_en if self.administrative_area else None,
+            "status": self.status.value if hasattr(self.status, "value") else str(self.status),
+            "severity": self.severity.value if hasattr(self.severity, "value") else str(self.severity),
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "reported_date": self.reported_date.isoformat() if self.reported_date else None,
+            "target_resolution_date": self.target_resolution_date.isoformat() if self.target_resolution_date else None,
+            "actual_resolution_date": self.actual_resolution_date.isoformat() if self.actual_resolution_date else None,
+            "repeat_count": self.repeat_count,
+            "resolution_verification_status": (
+                self.resolution_verification_status.value
+                if hasattr(self.resolution_verification_status, "value")
+                else str(self.resolution_verification_status)
+            ),
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -444,6 +549,28 @@ class GrievanceRecord(Base):
     civic_issue = relationship("CivicIssue", back_populates="grievance_records")
     source_document = relationship("SourceDocument", back_populates="grievances")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "grievance_id": self.grievance_id,
+            "source_id": self.source_id,
+            "issue_category": self.issue_category.value if hasattr(self.issue_category, "value") else (str(self.issue_category) if self.issue_category else None),
+            "description_or_permitted_summary": self.description_or_permitted_summary,
+            "submission_date": self.submission_date.isoformat() if self.submission_date else None,
+            "department_id": self.department_id,
+            "administrative_area_id": self.administrative_area_id,
+            "status": self.status,
+            "acknowledgement_date": self.acknowledgement_date.isoformat() if self.acknowledgement_date else None,
+            "resolution_date": self.resolution_date.isoformat() if self.resolution_date else None,
+            "source_document_id": self.source_document_id,
+            "source_record_reference": self.source_record_reference,
+            "data_quality_status": self.data_quality_status,
+            "civic_issue_id": self.civic_issue_id,
+            "is_anonymized": self.is_anonymized,
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 8. ResponseRecord Entity
@@ -472,6 +599,7 @@ class ResponseRecord(Base):
         Enum(ResolutionVerificationStatus), default=ResolutionVerificationStatus.PENDING_VERIFICATION, index=True
     )
     response_summary = Column(Text, nullable=True)
+    action_taken_by = Column(String(150), nullable=True)
     supporting_evidence = Column(JSON, nullable=True)
     review_notes = Column(Text, nullable=True)
     public_work_id = Column(Integer, ForeignKey("civic_public_works.id"), nullable=True)
@@ -480,6 +608,11 @@ class ResponseRecord(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __init__(self, **kwargs):
+        import uuid
+
+        if "response_code" not in kwargs:
+            kwargs["response_code"] = f"RESP-{uuid.uuid4().hex[:10].upper()}"
+
         if "response_summary" in kwargs and "official_remark" not in kwargs:
             kwargs["official_remark"] = kwargs["response_summary"]
         elif "official_remark" in kwargs and "response_summary" not in kwargs:
@@ -493,7 +626,18 @@ class ResponseRecord(Base):
         if "issue_id" in kwargs and "civic_issue_id" not in kwargs:
             kwargs["civic_issue_id"] = kwargs["issue_id"]
 
+        if "is_sla_breached" in kwargs and "sla_breached" not in kwargs:
+            kwargs["sla_breached"] = kwargs["is_sla_breached"]
+
         super().__init__(**kwargs)
+
+    @property
+    def is_sla_breached(self):
+        return self.sla_breached
+
+    @is_sla_breached.setter
+    def is_sla_breached(self, val):
+        self.sla_breached = val
 
     @property
     def issue_id(self):
@@ -516,6 +660,29 @@ class ResponseRecord(Base):
     department = relationship("CivicDepartment", back_populates="responses")
     source_document = relationship("SourceDocument", back_populates="responses")
     evidences = relationship("ResolutionEvidence", back_populates="response")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "civic_issue_id": self.civic_issue_id,
+            "issue_id": self.issue_id,
+            "action_taken_by": self.action_taken_by,
+            "action_type": self.action_type.value if hasattr(self.action_type, "value") else str(self.action_type),
+            "reported_status": self.reported_status,
+            "verification_status": self.verification_status.value if hasattr(self.verification_status, "value") else str(self.verification_status),
+            "response_summary": self.response_summary or self.official_remark,
+            "official_remark": self.official_remark or self.response_summary,
+            "action_taken_date": self.action_taken_date.isoformat() if self.action_taken_date else None,
+            "response_date": self.action_taken_date.isoformat() if self.action_taken_date else None,
+            "is_sla_breached": self.is_sla_breached,
+            "delay_hours": self.delay_hours,
+            "is_evidence_supported": self.is_evidence_supported,
+            "public_work_id": self.public_work_id,
+            "supporting_evidence": self.supporting_evidence,
+            "review_notes": self.review_notes,
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -544,6 +711,22 @@ class ResolutionEvidence(Base):
     # Relationships
     response = relationship("ResponseRecord", back_populates="evidences")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "response_id": self.response_id,
+            "evidence_type": self.evidence_type.value if hasattr(self.evidence_type, "value") else str(self.evidence_type),
+            "title": self.title,
+            "description": self.description,
+            "evidence_url": self.evidence_url,
+            "sha256_hash": self.sha256_hash,
+            "is_verified": self.is_verified,
+            "verified_by": self.verified_by,
+            "verification_date": self.verification_date.isoformat() if self.verification_date else None,
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 10. PublicWork Entity
@@ -571,6 +754,22 @@ class PublicWork(Base):
     # Relationships
     civic_issue = relationship("CivicIssue", back_populates="public_works")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "work_code": self.work_code,
+            "civic_issue_id": self.civic_issue_id,
+            "work_title": self.work_title,
+            "executing_agency": self.executing_agency,
+            "sanctioned_amount_inr": self.sanctioned_amount_inr,
+            "tender_ref": self.tender_ref,
+            "status": self.status,
+            "commencement_date": self.commencement_date.isoformat() if self.commencement_date else None,
+            "completion_date": self.completion_date.isoformat() if self.completion_date else None,
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 11. IssueEvent Entity
@@ -590,6 +789,16 @@ class IssueEvent(Base):
 
     # Relationships
     civic_issue = relationship("CivicIssue", back_populates="events")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "civic_issue_id": self.civic_issue_id,
+            "event_timestamp": self.event_timestamp.isoformat() if self.event_timestamp else None,
+            "event_type": self.event_type,
+            "actor_type": self.actor_type,
+            "notes": self.notes,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -625,6 +834,25 @@ class IssueMetric(Base):
     administrative_area = relationship("AdministrativeArea", back_populates="metrics")
     department = relationship("CivicDepartment", back_populates="metrics")
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "metric_code": self.metric_code,
+            "civic_issue_id": self.civic_issue_id,
+            "administrative_area_id": self.administrative_area_id,
+            "department_id": self.department_id,
+            "period": self.period,
+            "metric_name": self.metric_name,
+            "metric_value": self.metric_value,
+            "unit": self.unit,
+            "data_source": self.data_source,
+            "sample_size": self.sample_size,
+            "caveats": self.caveats,
+            "extra_metadata": self.extra_metadata or {},
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 
 # ---------------------------------------------------------------------------
 # 13. DataQualityIssue Entity
@@ -645,3 +873,64 @@ class DataQualityIssue(Base):
 
     # Relationships
     civic_issue = relationship("CivicIssue", back_populates="quality_issues")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "civic_issue_id": self.civic_issue_id,
+            "severity": self.severity.value if hasattr(self.severity, "value") else str(self.severity),
+            "issue_type": self.issue_type,
+            "description": self.description,
+            "detected_at": self.detected_at.isoformat() if self.detected_at else None,
+            "resolved": self.resolved,
+        }
+
+
+# ---------------------------------------------------------------------------
+# 14. CivicCrossPhaseLink Entity
+# ---------------------------------------------------------------------------
+class CivicCrossPhaseLink(Base):
+    """
+    Explicit junction linking a CivicIssue to entities across earlier phases:
+    Phase 1-2: BudgetLine / HistoricalScheme / Scheme
+    Phase 3: PoliticalPromise
+    Phase 4: Article (News)
+    Phase 5: FinancialDocument / Funding allocation
+    Phase 6: Representative / Constituency
+    Phase 7: Claim
+
+    RULE: Do not create causal links merely because two records concern the same area.
+    Every link must document matching_method and maintain provenance.
+    """
+    __tablename__ = "civic_cross_phase_links"
+
+    link_id = Column(String(100), primary_key=True, index=True)
+    civic_issue_id = Column(Integer, ForeignKey("civic_issues.id", ondelete="CASCADE"), nullable=False, index=True)
+    target_phase = Column(String(50), nullable=False, index=True)
+    entity_type = Column(String(50), nullable=False, index=True)
+    entity_id = Column(String(100), nullable=False, index=True)
+    relationship_nature = Column(String(100), nullable=False)
+    matching_method = Column(String(100), nullable=False)
+    confidence = Column(Float, default=1.0)
+    provenance_summary = Column(Text, nullable=False)
+    is_test_fixture = Column(Boolean, default=False, nullable=False)
+    extra_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    civic_issue = relationship("CivicIssue", back_populates="cross_phase_links")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "link_id": self.link_id,
+            "civic_issue_id": self.civic_issue_id,
+            "target_phase": self.target_phase,
+            "entity_type": self.entity_type,
+            "entity_id": self.entity_id,
+            "relationship_nature": self.relationship_nature,
+            "matching_method": self.matching_method,
+            "confidence": self.confidence,
+            "provenance_summary": self.provenance_summary,
+            "extra_metadata": self.extra_metadata or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

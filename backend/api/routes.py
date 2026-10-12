@@ -8,6 +8,7 @@ from backend.api.news import news_bp
 from backend.api.funding import funding_bp
 from backend.api.representatives import representatives_bp
 from backend.api.claims import claims_bp
+from backend.api.civic import civic_bp
 
 # Central router combining all modular blueprints
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -24,6 +25,7 @@ api_bp.register_blueprint(news_bp)
 api_bp.register_blueprint(funding_bp)
 api_bp.register_blueprint(representatives_bp)
 api_bp.register_blueprint(claims_bp)
+api_bp.register_blueprint(civic_bp)
 
 # Register placeholder namespaces for remaining future modules
 namespaces = []
