@@ -611,6 +611,13 @@ class IssueMetric(Base):
     metric_value = Column(Float, nullable=False)
     unit = Column(String(50), default="COUNT")
 
+    # Phase 8.7 Analytics Attributes
+    data_source = Column(String(150), nullable=True, default="VALIDATED_RECORDS")
+    sample_size = Column(Integer, default=0)
+    caveats = Column(Text, nullable=True)
+    extra_metadata = Column(JSON, nullable=True)
+    is_test_fixture = Column(Boolean, default=False, nullable=False)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
