@@ -360,22 +360,63 @@ class CivicIssue(Base):
 class GrievanceRecord(Base):
     """
     Individual public complaint petition, strictly anonymized with zero PII.
+    Conforms to the Phase 8.3 canonical grievance record schema.
     """
     __tablename__ = "grievance_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    record_token = Column(String(100), unique=True, nullable=False, index=True)
-    civic_issue_id = Column(Integer, ForeignKey("civic_issues.id"), nullable=True)
+    # Canonical Phase 8.3 schema fields
+    grievance_id = Column(String(100), unique=True, nullable=False, index=True)
+    source_id = Column(String(100), nullable=False, index=True, default="CM_HELPLINE_1100")
+    issue_category = Column(Enum(IssueCategoryEnum), nullable=True, index=True)
+    description_or_permitted_summary = Column(Text, nullable=False)
+    submission_date = Column(DateTime, nullable=False, index=True)
+    department_id = Column(String(50), nullable=True, index=True)
+    administrative_area_id = Column(String(100), nullable=True, index=True)
+    status = Column(String(50), default="PENDING", index=True)
+    acknowledgement_date = Column(DateTime, nullable=True)
+    resolution_date = Column(DateTime, nullable=True)
     source_document_id = Column(Integer, ForeignKey("civic_source_documents.id"), nullable=True)
-    complaint_summary = Column(Text, nullable=False)
+    source_record_reference = Column(String(150), nullable=True, index=True)
+    ingestion_timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    data_quality_status = Column(String(50), default="VALID", index=True)
+
+    # Legacy & relational compatibility columns
+    record_token = Column(String(100), nullable=True, index=True)
+    complaint_summary = Column(Text, nullable=True)
     complaint_summary_ta = Column(Text, nullable=True)
-    lodged_date = Column(DateTime, nullable=False, index=True)
-    source_portal = Column(String(100), default="CM_HELPLINE_1100")
+    lodged_date = Column(DateTime, nullable=True)
+    source_portal = Column(String(100), nullable=True)
+    civic_issue_id = Column(Integer, ForeignKey("civic_issues.id"), nullable=True)
     is_anonymized = Column(Boolean, default=True, nullable=False)
     raw_metadata = Column(JSON, nullable=True)
     is_test_fixture = Column(Boolean, default=False, nullable=False)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __init__(self, **kwargs):
+        # Synchronize legacy and canonical field aliases
+        if "record_token" in kwargs and "grievance_id" not in kwargs:
+            kwargs["grievance_id"] = kwargs["record_token"]
+        elif "grievance_id" in kwargs and "record_token" not in kwargs:
+            kwargs["record_token"] = kwargs["grievance_id"]
+
+        if "complaint_summary" in kwargs and "description_or_permitted_summary" not in kwargs:
+            kwargs["description_or_permitted_summary"] = kwargs["complaint_summary"]
+        elif "description_or_permitted_summary" in kwargs and "complaint_summary" not in kwargs:
+            kwargs["complaint_summary"] = kwargs["description_or_permitted_summary"]
+
+        if "lodged_date" in kwargs and "submission_date" not in kwargs:
+            kwargs["submission_date"] = kwargs["lodged_date"]
+        elif "submission_date" in kwargs and "lodged_date" not in kwargs:
+            kwargs["lodged_date"] = kwargs["submission_date"]
+
+        if "source_portal" in kwargs and "source_id" not in kwargs:
+            kwargs["source_id"] = kwargs["source_portal"]
+        elif "source_id" in kwargs and "source_portal" not in kwargs:
+            kwargs["source_portal"] = kwargs["source_id"]
+
+        super().__init__(**kwargs)
 
     # Relationships
     civic_issue = relationship("CivicIssue", back_populates="grievance_records")

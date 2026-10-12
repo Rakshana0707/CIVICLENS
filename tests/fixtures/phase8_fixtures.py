@@ -524,3 +524,73 @@ MOCK_JSON_DATA: str = """[
   }
 ]"""
 
+# ---------------------------------------------------------------------------
+# 11. Heterogeneous Grievance Ingestion Test Fixtures (Phase 8.3)
+# ---------------------------------------------------------------------------
+MOCK_DARPG_RECORDS: List[Dict[str, Any]] = [
+    {
+        "Registration Number": "DARPG/TN/2024/0001",
+        "Received Date": "14/03/2024",
+        "Ministry/Dept": "Municipal Administration and Water Supply",
+        "Category": "Drinking water contamination",
+        "Grievance Description": "Water coming through pipeline in Adyar has foul smell. Complainant Thiru R. Mani, Phone: 9840234567.",
+        "Status": "Closed",
+        "Resolution Date": "20/03/2024",
+        "State/UT": "Chennai"
+    },
+    {
+        "Registration Number": "DARPG/TN/2024/0002",
+        "Received Date": "2024-03-16",
+        "Ministry/Dept": "TANGEDCO",
+        "Category": "Electricity Transformer Burnt",
+        "Grievance Description": "Residential transformer exploded near temple. Madurai district.",
+        "Status": "Under Enquiry",
+        "State/UT": "Madurai"
+    }
+]
+
+MOCK_GCC_RECORDS: List[Dict[str, Any]] = [
+    {
+        "complaint_no": "GCC/2024/1913/0101",
+        "date": "10-Mar-2024",
+        "complaint_type": "Potholes on Road",
+        "details": "Huge pothole on 4th Main Road, Ward 174 Besant Nagar. Please contact Tmt Revathi at 9444123456.",
+        "ward_no": "174",
+        "zone": "13",
+        "status": "Completed",
+        "closed_date": "12-Mar-2024"
+    },
+    {
+        "complaint_no": "GCC/2024/1913/0102",
+        "date": "12/03/2024",
+        "complaint_type": "Garbage Not Cleared",
+        "details": "Overflowing dumper placer bin outside school.",
+        "ward_no": "45",
+        "zone": "4",
+        "status": "In Progress"
+    }
+]
+
+MOCK_CM_HELPLINE_RECORDS: List[Dict[str, Any]] = [
+    {
+        "petition_id": "MM-2024-88901",
+        "lodged_on": "15/02/2024",
+        "department_name": "நெடுஞ்சாலைத்துறை",
+        "grievance_nature": "சாலை சேதம் மற்றும் நடைபாதை ஆக்கிரமிப்பு",
+        "petition_summary": "மாநில நெடுஞ்சாலையில் பெரிய பள்ளங்கள் ஏற்பட்டு விபத்து ஏற்படுகிறது. தாம்பரம் பகுதி.",
+        "district": "செங்கல்பட்டு",
+        "current_status": "தீர்க்கப்பட்டது",
+        "disposal_date": "25/02/2024"
+    },
+    {
+        "petition_id": "MM-2024-88902",
+        "lodged_on": "01/03/2024",
+        "department_name": "வருவாய்த்துறை",
+        "grievance_nature": "பட்டா மாறுதல் தாமதம்",
+        "petition_summary": "6 மாதங்களாக பட்டா மாறுதல் விண்ணப்பம் நிலுவையில் உள்ளது.",
+        "district": "திருச்சிராப்பள்ளி",
+        "current_status": None  # Unknown status test
+    }
+]
+
+
