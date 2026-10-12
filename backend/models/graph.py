@@ -138,6 +138,18 @@ class GraphReviewStatus(str, enum.Enum):
     OVERRIDDEN = "OVERRIDDEN"
 
 
+class EdgeOperationType(str, enum.Enum):
+    """
+    Audit ledger operation categories for evidence edges.
+    """
+    CREATE = "CREATE"
+    UPDATE = "UPDATE"
+    CORRECT = "CORRECT"
+    RETRACT = "RETRACT"
+    SUPERSEDE = "SUPERSEDE"
+    RESTORE = "RESTORE"
+
+
 # ---------------------------------------------------------------------------
 # 1. CivicGraphNode Entity
 # ---------------------------------------------------------------------------
@@ -151,6 +163,7 @@ class CivicGraphNode(Base):
     node_id = Column(String(120), primary_key=True, index=True)  # e.g., "NODE:REP:REP-MK-STALIN", "NODE:SCHEME:SCH-042"
     entity_type = Column(Enum(GraphEntityType), nullable=False, index=True)
     canonical_id = Column(String(100), nullable=False, index=True)  # ID in underlying Phase 1-8 table
+    canonical_entity_id = Column(String(120), ForeignKey("canonical_entities.entity_id", ondelete="SET NULL"), nullable=True, index=True)
     label = Column(String(300), nullable=False, index=True)
     label_ta = Column(String(400), nullable=True)
     source_phase = Column(String(50), nullable=False, index=True)  # "PHASE_1", "PHASE_2", ..., "PHASE_8"
@@ -184,6 +197,7 @@ class CivicGraphNode(Base):
             "node_id": self.node_id,
             "entity_type": self.entity_type.value if hasattr(self.entity_type, "value") else str(self.entity_type),
             "canonical_id": self.canonical_id,
+            "canonical_entity_id": self.canonical_entity_id,
             "label": self.label,
             "label_ta": self.label_ta,
             "source_phase": self.source_phase,
@@ -210,6 +224,7 @@ class CivicEvidenceEdge(Base):
     - Retains source document reference (document ID, official URL, SHA-256 hash).
     - Retains matching method (documentary, deterministic, candidate, human-reviewed).
     - Retains confidence score and human review status.
+    - Retains temporal validity (valid_from, valid_to).
     - Retains creation timestamp and provenance status.
     """
     __tablename__ = "civic_evidence_edges"
@@ -232,6 +247,10 @@ class CivicEvidenceEdge(Base):
     review_status = Column(Enum(GraphReviewStatus), default=GraphReviewStatus.PENDING_REVIEW, index=True)
     provenance_status = Column(Enum(GraphProvenanceStatus), default=GraphProvenanceStatus.VALID, index=True)
 
+    # Temporal Validity
+    valid_from = Column(String(50), nullable=True, index=True)  # e.g., "2021-05-07", "2021-22"
+    valid_to = Column(String(50), nullable=True, index=True)    # e.g., "2026-05-06", "present"
+
     epistemic_notes = Column(Text, nullable=True)           # Causal caveat or justification
     properties_json = Column(JSON, nullable=True)           # Domain attributes (e.g. amount_inr, fiscal_year, vote_count)
     is_test_fixture = Column(Boolean, default=False, nullable=False, index=True)
@@ -249,6 +268,12 @@ class CivicEvidenceEdge(Base):
         "CivicGraphNode",
         foreign_keys=[target_node_id],
         back_populates="incoming_edges",
+    )
+    audit_records = relationship(
+        "CivicEdgeAuditRecord",
+        foreign_keys="[CivicEdgeAuditRecord.edge_id]",
+        back_populates="edge",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
@@ -269,9 +294,51 @@ class CivicEvidenceEdge(Base):
             "confidence_score": self.confidence_score,
             "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
             "provenance_status": self.provenance_status.value if hasattr(self.provenance_status, "value") else str(self.provenance_status),
+            "valid_from": self.valid_from,
+            "valid_to": self.valid_to,
             "epistemic_notes": self.epistemic_notes,
             "properties": self.properties_json or {},
             "is_test_fixture": self.is_test_fixture,
+            "audit_records_count": len(self.audit_records) if self.audit_records else 0,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+# ---------------------------------------------------------------------------
+# 3. CivicEdgeAuditRecord Model
+# ---------------------------------------------------------------------------
+class CivicEdgeAuditRecord(Base):
+    """
+    Immutable audit history recording all edge modifications, corrections, reversals,
+    and provenance updates without deleting historical provenance.
+    """
+    __tablename__ = "civic_edge_audit_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    audit_id = Column(String(120), unique=True, nullable=False, index=True)
+    operation_type = Column(Enum(EdgeOperationType), nullable=False, index=True)
+
+    edge_id = Column(String(120), ForeignKey("civic_evidence_edges.edge_id", ondelete="CASCADE"), nullable=False, index=True)
+
+    rationale = Column(Text, nullable=False)                            # Mandatory justification
+    performed_by = Column(String(100), nullable=False, default="SYSTEM")
+    previous_state_json = Column(JSON, nullable=True)
+    new_state_json = Column(JSON, nullable=True)
+
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+    # Relationships
+    edge = relationship("CivicEvidenceEdge", foreign_keys=[edge_id], back_populates="audit_records")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "audit_id": self.audit_id,
+            "operation_type": self.operation_type.value if hasattr(self.operation_type, "value") else str(self.operation_type),
+            "edge_id": self.edge_id,
+            "rationale": self.rationale,
+            "performed_by": self.performed_by,
+            "previous_state": self.previous_state_json or {},
+            "new_state": self.new_state_json or {},
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }
