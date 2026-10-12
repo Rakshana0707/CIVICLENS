@@ -342,3 +342,92 @@ class CivicEdgeAuditRecord(Base):
             "new_state": self.new_state_json or {},
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
         }
+
+
+# ---------------------------------------------------------------------------
+# 4. CandidateRelationshipProposal Model (Phase 9.4)
+# ---------------------------------------------------------------------------
+class CandidateReviewDisposition(str, enum.Enum):
+    """
+    Review disposition states for proposed relationship candidates.
+    """
+    PENDING_REVIEW = "PENDING_REVIEW"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+    DEFERRED = "DEFERRED"
+
+
+class CandidateRelationshipProposal(Base):
+    """
+    Candidate relationship discovered across Phase 1–8 records.
+    Kept strictly separated from confirmed CivicEvidenceEdges until
+    authorized human review or documentary corroboration confirms it.
+    """
+    __tablename__ = "candidate_relationship_proposals"
+
+    proposal_id = Column(String(120), primary_key=True, index=True)
+    source_node_id = Column(String(120), ForeignKey("civic_graph_nodes.node_id", ondelete="CASCADE"), nullable=False, index=True)
+    target_node_id = Column(String(120), ForeignKey("civic_graph_nodes.node_id", ondelete="CASCADE"), nullable=False, index=True)
+
+    relationship_type = Column(Enum(GraphRelationshipType), nullable=False, index=True)
+    evidence_supporting_candidate = Column(Text, nullable=False)
+    matching_method = Column(Enum(MatchingMethod), nullable=False, default=MatchingMethod.AUTOMATED_CANDIDATE, index=True)
+    confidence_score = Column(Float, nullable=False, default=0.5)
+
+    source_document_id = Column(String(120), nullable=True, index=True)
+    source_document_url = Column(String(500), nullable=True)
+    source_document_hash = Column(String(64), nullable=True)
+
+    # Contextual Compatibility
+    temporal_validity_json = Column(JSON, nullable=True)   # {"valid_from": ..., "valid_to": ..., "compatible": True}
+    geographic_context_json = Column(JSON, nullable=True)  # {"district": ..., "ac_code": ..., "compatible": True}
+    possible_conflicts_json = Column(JSON, nullable=True)  # ["TEMPORAL_MISMATCH", ...]
+    epistemic_notes = Column(Text, nullable=True)
+
+    # Review disposition
+    review_status = Column(Enum(CandidateReviewDisposition), default=CandidateReviewDisposition.PENDING_REVIEW, nullable=False, index=True)
+    reviewed_by = Column(String(100), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    reviewer_notes = Column(Text, nullable=True)
+    confirmed_edge_id = Column(String(120), nullable=True, index=True)
+
+    properties_json = Column(JSON, nullable=True)
+    is_test_fixture = Column(Boolean, default=False, nullable=False, index=True)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    source_node = relationship("CivicGraphNode", foreign_keys=[source_node_id])
+    target_node = relationship("CivicGraphNode", foreign_keys=[target_node_id])
+
+    __table_args__ = (
+        UniqueConstraint('source_node_id', 'target_node_id', 'relationship_type', 'matching_method', name='uq_candidate_proposal'),
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "proposal_id": self.proposal_id,
+            "source_node_id": self.source_node_id,
+            "target_node_id": self.target_node_id,
+            "relationship_type": self.relationship_type.value if hasattr(self.relationship_type, "value") else str(self.relationship_type),
+            "evidence_supporting_candidate": self.evidence_supporting_candidate,
+            "matching_method": self.matching_method.value if hasattr(self.matching_method, "value") else str(self.matching_method),
+            "confidence_score": self.confidence_score,
+            "source_document_id": self.source_document_id,
+            "source_document_url": self.source_document_url,
+            "source_document_hash": self.source_document_hash,
+            "temporal_validity": self.temporal_validity_json or {},
+            "geographic_context": self.geographic_context_json or {},
+            "possible_conflicts": self.possible_conflicts_json or [],
+            "epistemic_notes": self.epistemic_notes,
+            "review_status": self.review_status.value if hasattr(self.review_status, "value") else str(self.review_status),
+            "reviewed_by": self.reviewed_by,
+            "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,
+            "reviewer_notes": self.reviewer_notes,
+            "confirmed_edge_id": self.confirmed_edge_id,
+            "properties": self.properties_json or {},
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
