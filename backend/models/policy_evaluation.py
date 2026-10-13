@@ -567,9 +567,101 @@ class ImplementationActivity(Base):
         }
 
 
+class IndicatorDomain(str, enum.Enum):
+    """
+    Phase 10.4 — Standardized thematic domains for policy indicators.
+    """
+    BUDGET_EXPENDITURE = "BUDGET_EXPENDITURE"
+    BENEFICIARY_COUNT = "BENEFICIARY_COUNT"
+    FACILITIES_CONSTRUCTED_UPGRADED = "FACILITIES_CONSTRUCTED_UPGRADED"
+    SERVICE_DELIVERY_COUNT = "SERVICE_DELIVERY_COUNT"
+    TARGET_ACHIEVEMENT = "TARGET_ACHIEVEMENT"
+    SERVICE_ACCESS = "SERVICE_ACCESS"
+    EDUCATION_INDICATOR = "EDUCATION_INDICATOR"
+    HEALTH_INDICATOR = "HEALTH_INDICATOR"
+    INFRASTRUCTURE_DEVELOPMENT = "INFRASTRUCTURE_DEVELOPMENT"
+    COMPLAINT_OR_RESOLUTION = "COMPLAINT_OR_RESOLUTION"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "IndicatorDomain":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown IndicatorDomain: {val}")
+
+
+class ReportingFrequency(str, enum.Enum):
+    """
+    Reporting cadence of an indicator series.
+    """
+    ANNUAL = "ANNUAL"
+    QUARTERLY = "QUARTERLY"
+    MONTHLY = "MONTHLY"
+    MULTI_YEAR_SURVEY = "MULTI_YEAR_SURVEY"
+    DECENNIAL = "DECENNIAL"
+    AD_HOC = "AD_HOC"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "ReportingFrequency":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown ReportingFrequency: {val}")
+
+
+class BaselineConstructionStatus(str, enum.Enum):
+    """
+    Records whether a constructed baseline value is officially published,
+    calculated from source data, or unavailable.
+    """
+    OFFICIAL_PUBLISHED = "OFFICIAL_PUBLISHED"
+    CALCULATED_FROM_SOURCE_DATA = "CALCULATED_FROM_SOURCE_DATA"
+    UNAVAILABLE = "UNAVAILABLE"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "BaselineConstructionStatus":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown BaselineConstructionStatus: {val}")
+
+
+class MissingDataStatus(str, enum.Enum):
+    """
+    Explicit missing-data status — missing data is NEVER treated as zero.
+    """
+    COMPLETE = "COMPLETE"
+    MISSING_BASELINE = "MISSING_BASELINE"
+    MISSING_COMPARISON = "MISSING_COMPARISON"
+    MISSING_BOTH = "MISSING_BOTH"
+    PARTIAL_GEOGRAPHIC_COVERAGE = "PARTIAL_GEOGRAPHIC_COVERAGE"
+    NOT_PUBLISHED_BY_SOURCE = "NOT_PUBLISHED_BY_SOURCE"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "MissingDataStatus":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown MissingDataStatus: {val}")
+
+
 class PolicyIndicator(Base):
     """
     Measurable quantitative metric situated strictly along the Five-Tier Results Chain.
+    Phase 10.4 extends PolicyIndicator into a full Indicator Registry with baseline
+    construction provenance, missing-data status, calculation formulas, and boundary tracking.
     """
     __tablename__ = "policy_indicators"
 
@@ -580,11 +672,40 @@ class PolicyIndicator(Base):
     indicator_name = Column(String, nullable=False, index=True)
     indicator_name_ta = Column(String, nullable=True)
     indicator_type = Column(Enum(IndicatorType), nullable=False, index=True) # INPUT, ACTIVITY, OUTPUT, OUTCOME, IMPACT
+    indicator_domain = Column(Enum(IndicatorDomain), nullable=True, index=True)
+    
+    definition = Column(Text, nullable=True)
+    definition_code = Column(String, nullable=True, index=True)
+    description = Column(Text, nullable=True)
     unit = Column(String, nullable=False)                      # PERCENT, COUNT, RUPEES_CRORE, RATIO, PER_1000
+    
+    source = Column(String, nullable=True)
+    reporting_frequency = Column(Enum(ReportingFrequency), nullable=False, default=ReportingFrequency.ANNUAL)
+    geographic_level = Column(String, nullable=False, default="STATE", index=True)
+    boundary_reference = Column(String, nullable=True, default="TN_38_DISTRICTS_2020")
+    
+    baseline_period = Column(String, nullable=True)
+    baseline_value = Column(Float, nullable=True)              # Nullable: NEVER treat missing data as 0.0
+    baseline_construction_status = Column(
+        Enum(BaselineConstructionStatus),
+        nullable=False,
+        default=BaselineConstructionStatus.UNAVAILABLE,
+    )
+    
+    comparison_period = Column(String, nullable=True)
+    comparison_value = Column(Float, nullable=True)            # Nullable: NEVER treat missing data as 0.0
+    
+    collection_method = Column(String, nullable=True)
+    missing_data_status = Column(
+        Enum(MissingDataStatus),
+        nullable=False,
+        default=MissingDataStatus.COMPLETE,
+    )
+    calculation_formula = Column(Text, nullable=True)
+    known_limitations = Column(Text, nullable=True)
     
     direction_of_improvement = Column(String, default="INCREASE") # INCREASE, DECREASE
     aggregation_method = Column(String, default="SUM")         # SUM, MEAN, WEIGHTED_AVERAGE, MEDIAN
-    description = Column(Text, nullable=True)
     
     is_test_fixture = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -602,10 +723,42 @@ class PolicyIndicator(Base):
             "indicator_name": self.indicator_name,
             "indicator_name_ta": self.indicator_name_ta,
             "indicator_type": self.indicator_type.value if hasattr(self.indicator_type, "value") else str(self.indicator_type),
+            "indicator_domain": (
+                self.indicator_domain.value
+                if self.indicator_domain and hasattr(self.indicator_domain, "value")
+                else self.indicator_domain
+            ),
+            "definition": self.definition or self.description,
+            "definition_code": self.definition_code,
+            "description": self.description or self.definition,
             "unit": self.unit,
+            "source": self.source,
+            "reporting_frequency": (
+                self.reporting_frequency.value
+                if hasattr(self.reporting_frequency, "value")
+                else str(self.reporting_frequency)
+            ),
+            "geographic_level": self.geographic_level,
+            "boundary_reference": self.boundary_reference,
+            "baseline_period": self.baseline_period,
+            "baseline_value": self.baseline_value,
+            "baseline_construction_status": (
+                self.baseline_construction_status.value
+                if hasattr(self.baseline_construction_status, "value")
+                else str(self.baseline_construction_status)
+            ),
+            "comparison_period": self.comparison_period,
+            "comparison_value": self.comparison_value,
+            "collection_method": self.collection_method,
+            "missing_data_status": (
+                self.missing_data_status.value
+                if hasattr(self.missing_data_status, "value")
+                else str(self.missing_data_status)
+            ),
+            "calculation_formula": self.calculation_formula,
+            "known_limitations": self.known_limitations,
             "direction_of_improvement": self.direction_of_improvement,
             "aggregation_method": self.aggregation_method,
-            "description": self.description,
             "is_test_fixture": self.is_test_fixture,
         }
 
@@ -613,25 +766,43 @@ class PolicyIndicator(Base):
 class IndicatorObservation(Base):
     """
     Discrete empirical observation recorded at a specific time and geographic level.
+    Supports explicit missing-data handling (value=None) and compatibility metadata
+    (unit_override, definition_code, reporting_frequency, boundary_reference).
     """
     __tablename__ = "indicator_observations"
 
     observation_id = Column(String, primary_key=True, index=True)
     indicator_id = Column(String, ForeignKey("policy_indicators.indicator_id", ondelete="CASCADE"), nullable=False, index=True)
     
-    value = Column(Float, nullable=False)
+    value = Column(Float, nullable=True)                           # Nullable: missing data is NEVER coerced to 0.0
     reference_period = Column(String, nullable=False, index=True)  # e.g., "2018", "2021", "2023-24"
     geographic_level = Column(String, nullable=False, index=True)  # STATE, DISTRICT, BLOCK, CONSTITUENCY
     geographic_unit_id = Column(String, nullable=False, index=True) # e.g., "TN", "DISTRICT-03", "AC-013"
     
     stage = Column(Enum(ObservationStage), nullable=False, index=True) # BASELINE, INTERMEDIATE, FOLLOW_UP, TARGET
     
+    # Compatibility & Provenance Metadata (Phase 10.4)
+    unit_override = Column(String, nullable=True)                  # Detects unit mismatches against indicator.unit
+    definition_code = Column(String, nullable=True)                # Detects definition changes across survey waves
+    reporting_frequency = Column(String, nullable=True)            # e.g. ANNUAL vs QUARTERLY
+    boundary_reference = Column(String, nullable=True)             # e.g. TN_32_DISTRICTS_2011 vs TN_38_DISTRICTS_2020
+    value_origin = Column(
+        Enum(BaselineConstructionStatus),
+        nullable=False,
+        default=BaselineConstructionStatus.OFFICIAL_PUBLISHED,
+    )
+    missing_data_status = Column(
+        Enum(MissingDataStatus),
+        nullable=False,
+        default=MissingDataStatus.COMPLETE,
+    )
+
     source_document_id = Column(String, nullable=True, index=True)
     source_reference = Column(String, nullable=True)               # e.g., "NFHS-5 Factsheet Table 2"
     source_url = Column(String, nullable=True)
     document_hash = Column(String, nullable=True)                  # SHA-256 digest
     
-    data_quality_status = Column(String, default="VERIFIED")       # VERIFIED, PROVISIONAL, ESTIMATED
+    data_quality_status = Column(String, default="VERIFIED")       # VERIFIED, PROVISIONAL, ESTIMATED, MISSING
     is_test_fixture = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -647,6 +818,20 @@ class IndicatorObservation(Base):
             "geographic_level": self.geographic_level,
             "geographic_unit_id": self.geographic_unit_id,
             "stage": self.stage.value if hasattr(self.stage, "value") else str(self.stage),
+            "unit_override": self.unit_override,
+            "definition_code": self.definition_code,
+            "reporting_frequency": self.reporting_frequency,
+            "boundary_reference": self.boundary_reference,
+            "value_origin": (
+                self.value_origin.value
+                if hasattr(self.value_origin, "value")
+                else str(self.value_origin)
+            ),
+            "missing_data_status": (
+                self.missing_data_status.value
+                if hasattr(self.missing_data_status, "value")
+                else str(self.missing_data_status)
+            ),
             "source_document_id": self.source_document_id,
             "source_reference": self.source_reference,
             "source_url": self.source_url,
