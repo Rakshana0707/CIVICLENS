@@ -165,47 +165,324 @@ class LimitationCategory(str, enum.Enum):
     AGGREGATION_BIAS = "AGGREGATION_BIAS"
 
 
+class PolicyEvaluationStatus(str, enum.Enum):
+    """
+    Lifecycle status of a policy in the Policy Evaluation Registry.
+    """
+    NOT_STARTED = "NOT_STARTED"
+    PLAN_DEFINED = "PLAN_DEFINED"
+    DATA_COLLECTION = "DATA_COLLECTION"
+    IN_PROGRESS = "IN_PROGRESS"
+    EVALUATED = "EVALUATED"
+    INCONCLUSIVE = "INCONCLUSIVE"
+    FLAGGED_FOR_REVIEW = "FLAGGED_FOR_REVIEW"
+    ARCHIVED = "ARCHIVED"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "PolicyEvaluationStatus":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown PolicyEvaluationStatus: {val}")
+
+
+class TargetProvenanceType(str, enum.Enum):
+    """
+    Distinguishes officially stated government targets from analyst-proposed benchmarks
+    or policies with no published quantitative target.
+    Never invent an official policy target.
+    """
+    OFFICIALLY_STATED = "OFFICIALLY_STATED"                      # Explicitly published in GO, Budget, Policy Note, or Manifesto
+    ANALYST_PROPOSED_BENCHMARK = "ANALYST_PROPOSED_BENCHMARK"    # Explicitly labelled analytical comparison benchmark
+    NO_PUBLISHED_TARGET = "NO_PUBLISHED_TARGET"                  # No target published; target_value must be None
+
+    @classmethod
+    def from_string(cls, val: Any) -> "TargetProvenanceType":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown TargetProvenanceType: {val}")
+
+
+class ObjectiveReviewStatus(str, enum.Enum):
+    """
+    Review status for policy objectives, flagging ambiguous or underspecified wording.
+    """
+    VERIFIED_CLEAR = "VERIFIED_CLEAR"
+    FLAGGED_AMBIGUOUS = "FLAGGED_AMBIGUOUS"
+    PENDING_HUMAN_REVIEW = "PENDING_HUMAN_REVIEW"
+
+
 # ===========================================================================
 # Core Models
 # ===========================================================================
 
+class PolicyRegistryEntry(Base):
+    """
+    Phase 10.3 — Canonical Policy Evaluation Registry Entry.
+    Links directly to existing Phase 1 (BudgetScheme), Phase 2 (HistoricalScheme),
+    and Phase 3 (PoliticalPromise) models wherever available.
+    """
+    __tablename__ = "policy_registry"
+
+    policy_id = Column(String, primary_key=True, index=True)
+
+    # Canonical links to Phase 1–3 entities
+    budget_scheme_id = Column(Integer, ForeignKey("budget_schemes.id", ondelete="SET NULL"), nullable=True, index=True)
+    historical_scheme_id = Column(Integer, ForeignKey("historical_schemes.id", ondelete="SET NULL"), nullable=True, index=True)
+    promise_id = Column(String, ForeignKey("political_promises.promise_id", ondelete="SET NULL"), nullable=True, index=True)
+    canonical_scheme_code = Column(String, nullable=False, index=True)
+
+    # Names & Aliases
+    policy_name = Column(String, nullable=False, index=True)
+    policy_name_ta = Column(String, nullable=True)
+    aliases = Column(JSON, default=list)
+
+    # Department & Governance
+    responsible_department = Column(String, nullable=True, index=True)
+    department_id = Column(Integer, ForeignKey("budget_departments.id", ondelete="SET NULL"), nullable=True, index=True)
+
+    # Objectives & Ambiguity Preservation
+    objectives_summary = Column(Text, nullable=False)
+    original_objective_wording = Column(Text, nullable=False)
+    is_objective_ambiguous = Column(Boolean, default=False, index=True)
+    ambiguity_review_notes = Column(Text, nullable=True)
+    objective_review_status = Column(
+        Enum(ObjectiveReviewStatus),
+        nullable=False,
+        default=ObjectiveReviewStatus.VERIFIED_CLEAR,
+        index=True,
+    )
+
+    # Beneficiaries, Scope, and Timeline
+    intended_beneficiaries = Column(Text, nullable=False)
+    geographic_scope = Column(String, nullable=False, default="STATEWIDE", index=True)
+    covered_districts = Column(JSON, default=list)
+    start_date = Column(String, nullable=True)
+    end_date = Column(String, nullable=True)
+
+    # Rules, Targets, and Provenance
+    implementation_rules = Column(JSON, default=dict)
+    stated_targets = Column(JSON, default=list)
+    source_documents = Column(JSON, default=list)
+    evaluation_status = Column(
+        Enum(PolicyEvaluationStatus),
+        nullable=False,
+        default=PolicyEvaluationStatus.NOT_STARTED,
+        index=True,
+    )
+
+    is_test_fixture = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    objectives = relationship("PolicyObjective", back_populates="policy_entry", cascade="all, delete-orphan")
+    evaluation_plans = relationship("PolicyEvaluationPlan", back_populates="policy_entry", cascade="all, delete-orphan")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "policy_id": self.policy_id,
+            "budget_scheme_id": self.budget_scheme_id,
+            "historical_scheme_id": self.historical_scheme_id,
+            "promise_id": self.promise_id,
+            "canonical_scheme_code": self.canonical_scheme_code,
+            "policy_name": self.policy_name,
+            "policy_name_ta": self.policy_name_ta,
+            "aliases": self.aliases or [],
+            "responsible_department": self.responsible_department,
+            "department_id": self.department_id,
+            "objectives_summary": self.objectives_summary,
+            "original_objective_wording": self.original_objective_wording,
+            "is_objective_ambiguous": self.is_objective_ambiguous,
+            "ambiguity_review_notes": self.ambiguity_review_notes,
+            "objective_review_status": (
+                self.objective_review_status.value
+                if hasattr(self.objective_review_status, "value")
+                else str(self.objective_review_status)
+            ),
+            "intended_beneficiaries": self.intended_beneficiaries,
+            "geographic_scope": self.geographic_scope,
+            "covered_districts": self.covered_districts or [],
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "implementation_rules": self.implementation_rules or {},
+            "stated_targets": self.stated_targets or [],
+            "source_documents": self.source_documents or [],
+            "evaluation_status": (
+                self.evaluation_status.value
+                if hasattr(self.evaluation_status, "value")
+                else str(self.evaluation_status)
+            ),
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
 class PolicyObjective(Base):
     """
     Formal policy or programmatic objective announced by the Government of Tamil Nadu.
+    Preserves exact original wording and flags ambiguous objectives for human review.
     """
     __tablename__ = "policy_objectives"
 
     objective_id = Column(String, primary_key=True, index=True)
+    policy_id = Column(String, ForeignKey("policy_registry.policy_id", ondelete="SET NULL"), nullable=True, index=True)
     scheme_id = Column(String, nullable=True, index=True)      # FK reference to schemes table if present
     promise_id = Column(String, nullable=True, index=True)     # FK reference to political_promises if present
     
     title = Column(String, nullable=False, index=True)
     title_ta = Column(String, nullable=True)                   # Tamil title
     description = Column(Text, nullable=False)
+    original_wording = Column(Text, nullable=True)             # Verbatim source text preserved
     sector = Column(String, nullable=False, index=True)        # Education, Health, Social Welfare, Infrastructure
     
     is_statutory = Column(Boolean, default=False)              # Backed by legislation vs executive order
     target_metrics = Column(JSON, default=dict)                # Quantitative milestone definitions
+    is_ambiguous = Column(Boolean, default=False, index=True)
+    ambiguity_flag_reason = Column(Text, nullable=True)
+    review_status = Column(
+        Enum(ObjectiveReviewStatus),
+        nullable=False,
+        default=ObjectiveReviewStatus.VERIFIED_CLEAR,
+        index=True,
+    )
     
     is_test_fixture = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
+    policy_entry = relationship("PolicyRegistryEntry", back_populates="objectives")
     indicators = relationship("PolicyIndicator", back_populates="policy_objective", cascade="all, delete-orphan")
     beneficiary_groups = relationship("BeneficiaryGroup", back_populates="policy_objective", cascade="all, delete-orphan")
+    evaluation_plans = relationship("PolicyEvaluationPlan", back_populates="objective")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "objective_id": self.objective_id,
+            "policy_id": self.policy_id,
             "scheme_id": self.scheme_id,
             "promise_id": self.promise_id,
             "title": self.title,
             "title_ta": self.title_ta,
             "description": self.description,
+            "original_wording": self.original_wording or self.description,
             "sector": self.sector,
             "is_statutory": self.is_statutory,
             "target_metrics": self.target_metrics,
+            "is_ambiguous": self.is_ambiguous,
+            "ambiguity_flag_reason": self.ambiguity_flag_reason,
+            "review_status": (
+                self.review_status.value
+                if hasattr(self.review_status, "value")
+                else str(self.review_status)
+            ),
+            "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class PolicyEvaluationPlan(Base):
+    """
+    Phase 10.3 — Structured Policy Evaluation Plan.
+    Connects an evaluation question, objective, indicator definition, baseline/comparison periods,
+    target provenance (officially stated vs analyst benchmark vs none), actual values,
+    data source, calculation method, geographic level, and explicit limitations.
+    """
+    __tablename__ = "policy_evaluation_plans"
+
+    plan_id = Column(String, primary_key=True, index=True)
+    policy_id = Column(String, ForeignKey("policy_registry.policy_id", ondelete="CASCADE"), nullable=False, index=True)
+    objective_id = Column(String, ForeignKey("policy_objectives.objective_id", ondelete="SET NULL"), nullable=True, index=True)
+    indicator_id = Column(String, ForeignKey("policy_indicators.indicator_id", ondelete="SET NULL"), nullable=True, index=True)
+
+    evaluation_question = Column(Text, nullable=False)
+    evaluation_type = Column(Enum(EvaluationType), nullable=False, default=EvaluationType.EVIDENCE_BASED_OUTCOME, index=True)
+    objective_being_assessed = Column(Text, nullable=False)
+    original_objective_wording = Column(Text, nullable=True)
+    is_objective_ambiguous = Column(Boolean, default=False, index=True)
+
+    indicator_definition = Column(Text, nullable=False)
+    indicator_type = Column(Enum(IndicatorType), nullable=False, default=IndicatorType.OUTCOME, index=True)
+    unit = Column(String, nullable=False, default="PERCENT")
+
+    baseline_period = Column(String, nullable=False)
+    comparison_period = Column(String, nullable=False)
+    baseline_value = Column(Float, nullable=True)
+
+    # Target provenance — strictly distinguishes official vs analyst vs none
+    target_value = Column(Float, nullable=True)
+    target_provenance = Column(
+        Enum(TargetProvenanceType),
+        nullable=False,
+        default=TargetProvenanceType.NO_PUBLISHED_TARGET,
+        index=True,
+    )
+    target_source_reference = Column(String, nullable=True)
+
+    actual_value = Column(Float, nullable=True)
+
+    data_source = Column(String, nullable=False)
+    source_document_ids = Column(JSON, default=list)
+    calculation_method = Column(Text, nullable=False)
+    geographic_level = Column(String, nullable=False, index=True)
+    limitations = Column(Text, nullable=False)
+
+    plan_status = Column(String, nullable=False, default="ACTIVE", index=True)
+    is_test_fixture = Column(Boolean, default=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    policy_entry = relationship("PolicyRegistryEntry", back_populates="evaluation_plans")
+    objective = relationship("PolicyObjective", back_populates="evaluation_plans")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "plan_id": self.plan_id,
+            "policy_id": self.policy_id,
+            "objective_id": self.objective_id,
+            "indicator_id": self.indicator_id,
+            "evaluation_question": self.evaluation_question,
+            "evaluation_type": (
+                self.evaluation_type.value
+                if hasattr(self.evaluation_type, "value")
+                else str(self.evaluation_type)
+            ),
+            "objective_being_assessed": self.objective_being_assessed,
+            "original_objective_wording": self.original_objective_wording,
+            "is_objective_ambiguous": self.is_objective_ambiguous,
+            "indicator_definition": self.indicator_definition,
+            "indicator_type": (
+                self.indicator_type.value
+                if hasattr(self.indicator_type, "value")
+                else str(self.indicator_type)
+            ),
+            "unit": self.unit,
+            "baseline_period": self.baseline_period,
+            "comparison_period": self.comparison_period,
+            "baseline_value": self.baseline_value,
+            "target_value": self.target_value,
+            "target_provenance": (
+                self.target_provenance.value
+                if hasattr(self.target_provenance, "value")
+                else str(self.target_provenance)
+            ),
+            "target_source_reference": self.target_source_reference,
+            "actual_value": self.actual_value,
+            "data_source": self.data_source,
+            "source_document_ids": self.source_document_ids or [],
+            "calculation_method": self.calculation_method,
+            "geographic_level": self.geographic_level,
+            "limitations": self.limitations,
+            "plan_status": self.plan_status,
             "is_test_fixture": self.is_test_fixture,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
