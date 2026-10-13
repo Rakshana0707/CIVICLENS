@@ -529,40 +529,64 @@ class BeneficiaryGroup(Base):
 class ImplementationActivity(Base):
     """
     Operational workflow, tendering, construction, or distribution activity executed under a policy.
+    Phase 10.5 extends ImplementationActivity with planned vs completed output quantities,
+    financial year, department, geographic breakdown, and source document links.
     """
     __tablename__ = "implementation_activities"
 
     activity_id = Column(String, primary_key=True, index=True)
+    policy_id = Column(String, ForeignKey("policy_registry.policy_id", ondelete="SET NULL"), nullable=True, index=True)
     scheme_id = Column(String, nullable=False, index=True)
     activity_name = Column(String, nullable=False, index=True)
     activity_type = Column(String, nullable=False)             # PROCUREMENT, CONSTRUCTION, TRAINING, REGISTRATION
     
+    financial_year = Column(String, nullable=True, index=True) # e.g., "2023-24" (distinct from calendar year)
+    department_name = Column(String, nullable=True, index=True)
+    geographic_level = Column(String, nullable=True, default="STATE", index=True)
+    geographic_unit_id = Column(String, nullable=True, default="TN-STATE", index=True)
+
     scheduled_start = Column(String, nullable=True)            # YYYY-MM-DD
     scheduled_end = Column(String, nullable=True)              # YYYY-MM-DD
     actual_end = Column(String, nullable=True)                 # YYYY-MM-DD
     status = Column(String, nullable=False, default="IN_PROGRESS") # PLANNED, IN_PROGRESS, COMPLETED, DELAYED
     
-    budget_allocated = Column(Float, default=0.0)              # In Crores ₹
-    expenditure_incurred = Column(Float, default=0.0)          # In Crores ₹
+    budget_allocated = Column(Float, nullable=True)            # In Crores ₹ (nullable: never assume spent)
+    expenditure_incurred = Column(Float, nullable=True)        # In Crores ₹ (nullable: never assume 0.0 or 100%)
+    planned_output_quantity = Column(Float, nullable=True)     # Planned physical deliverable count
+    completed_output_quantity = Column(Float, nullable=True)   # Completed physical deliverable count
+    output_unit = Column(String, nullable=True)                # e.g., "CLASSROOMS", "CAMPS", "PORTALS", "KM"
     implementing_agency = Column(String, nullable=True)        # PWD, TWAD, Health Dept
     
-    source_document_id = Column(String, nullable=True)
+    source_document_id = Column(String, nullable=True, index=True)
+    source_reference = Column(String, nullable=True)
+    source_url = Column(String, nullable=True)
     is_test_fixture = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "activity_id": self.activity_id,
+            "policy_id": self.policy_id,
             "scheme_id": self.scheme_id,
             "activity_name": self.activity_name,
             "activity_type": self.activity_type,
+            "financial_year": self.financial_year,
+            "department_name": self.department_name,
+            "geographic_level": self.geographic_level,
+            "geographic_unit_id": self.geographic_unit_id,
             "scheduled_start": self.scheduled_start,
             "scheduled_end": self.scheduled_end,
             "actual_end": self.actual_end,
             "status": self.status,
             "budget_allocated": self.budget_allocated,
             "expenditure_incurred": self.expenditure_incurred,
+            "planned_output_quantity": self.planned_output_quantity,
+            "completed_output_quantity": self.completed_output_quantity,
+            "output_unit": self.output_unit,
             "implementing_agency": self.implementing_agency,
+            "source_document_id": self.source_document_id,
+            "source_reference": self.source_reference,
+            "source_url": self.source_url,
             "is_test_fixture": self.is_test_fixture,
         }
 
