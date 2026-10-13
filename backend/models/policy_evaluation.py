@@ -122,13 +122,53 @@ class CausalRigorGrade(str, enum.Enum):
 
 class FindingType(str, enum.Enum):
     """
-    Qualitative trajectory of an evaluation finding.
+    Phase 10.1 & 10.7 — Evidence classifications for evaluation findings.
+    These are strictly evidence classifications, NOT political verdicts.
     """
+    # Phase 10.1 trajectory classifications
     POSITIVE_IMPACT = "POSITIVE_IMPACT"
     NEUTRAL_OR_INSIGNIFICANT = "NEUTRAL_OR_INSIGNIFICANT"
     NEGATIVE_OR_ADVERSE = "NEGATIVE_OR_ADVERSE"
     MIXED_RESULTS = "MIXED_RESULTS"
     INCONCLUSIVE_DATA = "INCONCLUSIVE_DATA"
+
+    # Phase 10.7 canonical evidence synthesis classifications
+    IMPLEMENTATION_EVIDENCE_AVAILABLE = "IMPLEMENTATION_EVIDENCE_AVAILABLE"
+    TARGET_ACHIEVEMENT_DOCUMENTED = "TARGET_ACHIEVEMENT_DOCUMENTED"
+    OUTCOME_CHANGE_OBSERVED = "OUTCOME_CHANGE_OBSERVED"
+    CONFLICTING_FINDINGS = "CONFLICTING_FINDINGS"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    EVALUATION_PENDING_REVIEW = "EVALUATION_PENDING_REVIEW"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "FindingType":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown FindingType: {val}")
+
+
+class FindingReviewStatus(str, enum.Enum):
+    """
+    Phase 10.7 — Review status of a synthesized evaluation finding.
+    """
+    PENDING_REVIEW = "PENDING_REVIEW"
+    VERIFIED = "VERIFIED"
+    FLAGGED_CONFLICTING = "FLAGGED_CONFLICTING"
+    REJECTED_UNSUPPORTED = "REJECTED_UNSUPPORTED"
+
+    @classmethod
+    def from_string(cls, val: Any) -> "FindingReviewStatus":
+        if isinstance(val, cls):
+            return val
+        s = str(val).strip().upper()
+        for member in cls:
+            if member.value == s:
+                return member
+        raise ValueError(f"Unknown FindingReviewStatus: {val}")
 
 
 class ConfidenceLevel(str, enum.Enum):
@@ -914,17 +954,46 @@ class EvaluationStudy(Base):
 
 class EvaluationFinding(Base):
     """
-    Synthesized empirical conclusion regarding effect size, direction, and significance.
+    Phase 10.1 & 10.7 — Synthesized evidence-backed policy evaluation finding.
+    Records all 12 required Phase 10.7 attributes:
+    - evaluation_id (study_id)
+    - policy_id
+    - evaluation_question
+    - finding_statement (finding_text)
+    - evidence_references
+    - indicator_values_used
+    - calculation_method
+    - supporting_evidence
+    - contradicting_or_contextual_evidence
+    - limitations
+    - review_status
+    - created_at
     """
     __tablename__ = "evaluation_findings"
 
     finding_id = Column(String, primary_key=True, index=True)
     study_id = Column(String, ForeignKey("evaluation_studies.study_id", ondelete="CASCADE"), nullable=False, index=True)
+    policy_id = Column(String, ForeignKey("policy_registry.policy_id", ondelete="SET NULL"), nullable=True, index=True)
     indicator_id = Column(String, ForeignKey("policy_indicators.indicator_id", ondelete="SET NULL"), nullable=True, index=True)
     
+    evaluation_question = Column(Text, nullable=True)
     finding_type = Column(Enum(FindingType), nullable=False, index=True)
     finding_text = Column(Text, nullable=False)
+    statement_origin = Column(String, nullable=False, default="DETERMINISTIC_CALCULATION")
     
+    evidence_references = Column(JSON, default=list)
+    indicator_values_used = Column(JSON, default=dict)
+    calculation_method = Column(Text, nullable=True)
+    supporting_evidence = Column(JSON, default=list)
+    contradicting_or_contextual_evidence = Column(JSON, default=list)
+    limitations = Column(JSON, default=list)
+    review_status = Column(
+        Enum(FindingReviewStatus),
+        nullable=False,
+        default=FindingReviewStatus.PENDING_REVIEW,
+        index=True,
+    )
+
     quantified_effect = Column(Float, nullable=True)               # e.g., +5.9 (percentage points or effect size)
     p_value = Column(Float, nullable=True)                         # Statistical p-value
     confidence_level = Column(Enum(ConfidenceLevel), nullable=False, default=ConfidenceLevel.MODERATE)
@@ -938,18 +1007,44 @@ class EvaluationFinding(Base):
     policy_indicator = relationship("PolicyIndicator", back_populates="findings")
     evidence_links = relationship("FindingEvidenceLink", back_populates="finding", cascade="all, delete-orphan")
 
+    @property
+    def evaluation_id(self) -> str:
+        return self.study_id
+
+    @property
+    def finding_statement(self) -> str:
+        return self.finding_text
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "finding_id": self.finding_id,
+            "evaluation_id": self.study_id,
             "study_id": self.study_id,
+            "policy_id": self.policy_id,
             "indicator_id": self.indicator_id,
+            "evaluation_question": self.evaluation_question,
             "finding_type": self.finding_type.value if hasattr(self.finding_type, "value") else str(self.finding_type),
+            "classification_nature": "EVIDENCE_CLASSIFICATION_NOT_POLITICAL_VERDICT",
+            "finding_statement": self.finding_text,
             "finding_text": self.finding_text,
+            "statement_origin": self.statement_origin,
+            "evidence_references": self.evidence_references or [],
+            "indicator_values_used": self.indicator_values_used or {},
+            "calculation_method": self.calculation_method,
+            "supporting_evidence": self.supporting_evidence or [],
+            "contradicting_or_contextual_evidence": self.contradicting_or_contextual_evidence or [],
+            "limitations": self.limitations or [],
+            "review_status": (
+                self.review_status.value
+                if hasattr(self.review_status, "value")
+                else str(self.review_status)
+            ),
             "quantified_effect": self.quantified_effect,
             "p_value": self.p_value,
             "confidence_level": self.confidence_level.value if hasattr(self.confidence_level, "value") else str(self.confidence_level),
             "has_contradicting_evidence": self.has_contradicting_evidence,
             "is_test_fixture": self.is_test_fixture,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 
